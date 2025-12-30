@@ -1,22 +1,57 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import api from '../../lib/api';
 
 export default function Login() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthLayout
       title="Welcome Back"
       subtitle="Sign in to continue to your library"
     >
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+            {error}
+          </div>
+        )}
         <Input
           type="email"
+          name="email"
           placeholder="Email address"
           required
         />
         <Input
           type="password"
+          name="password"
           placeholder="Password"
           required
         />
@@ -31,8 +66,8 @@ export default function Login() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" size="lg">
-          Sign In
+        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          {loading ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
 
