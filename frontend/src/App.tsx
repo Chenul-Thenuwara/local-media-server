@@ -1,12 +1,15 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Welcome from './pages/public/Welcome';
+
 function App() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-600">
-        Local Media Server
-      </h1>
-      <p className="ml-4 text-gray-600">Frontend + Backend Initialized</p>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Welcome />} />
+        {/* We will add more routes later */}
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
