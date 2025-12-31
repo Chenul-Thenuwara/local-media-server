@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Play, Info, Plus } from 'lucide-react';
+import { Play, Info, Plus, FolderPlus, Film, Tv } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import api from '../../lib/api';
 
 interface Movie {
@@ -12,25 +13,155 @@ interface Movie {
   poster_path: string;
 }
 
+interface Library {
+  _id: string;
+  name: string;
+  path: string;
+  type: 'movies' | 'tv';
+}
+
 export default function Home() {
+  const [libraries, setLibraries] = useState<Library[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Dashboard Data
   const [featured, setFeatured] = useState<Movie | null>(null);
   const [trending, setTrending] = useState<Movie[]>([]);
 
+  // Setup Form State
+  const [setupName, setSetupName] = useState('');
+  const [setupPath, setSetupPath] = useState('');
+  const [setupType, setSetupType] = useState<'movies' | 'tv'>('movies');
+  const [setupLoading, setSetupLoading] = useState(false);
+
   useEffect(() => {
-    // Re-using the public endpoint for now, but via our axios instance
-    // In a real app we might have a protected /api/media/trending endpoint
+    checkLibraries();
+  }, []);
+
+  const checkLibraries = async () => {
+    try {
+      const res = await api.get('/libraries');
+      setLibraries(res.data);
+      if (res.data.length > 0) {
+        fetchDashboardData();
+      }
+    } catch (err) {
+      console.error('Failed to fetch libraries', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDashboardData = () => {
     fetch('http://localhost:3000/api/tmdb/trending')
       .then(res => res.json())
       .then(data => {
         const movies = data.results || [];
         setTrending(movies);
-        // Pick a random movie for the hero
-        setFeatured(movies[Math.floor(Math.random() * movies.length)]);
+        if (movies.length > 0) {
+          setFeatured(movies[Math.floor(Math.random() * movies.length)]);
+        }
       })
       .catch(err => console.error(err));
-  }, []);
+  };
 
-  if (!featured) return <div className="h-full flex items-center justify-center text-gray-500">Loading...</div>;
+  const handleAddLibrary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSetupLoading(true);
+    try {
+      await api.post('/libraries', {
+        name: setupName,
+        path: setupPath,
+        type: setupType
+      });
+      // Refresh to switch to dashboard view
+      await checkLibraries();
+    } catch (err) {
+      console.error('Failed to create library', err);
+      alert('Failed to add folder');
+    } finally {
+      setSetupLoading(false);
+    }
+  };
+
+  if (loading) return <div className="h-full flex items-center justify-center text-gray-500">Loading...</div>;
+
+  // EMPTY STATE: Show Setup Wizard
+  if (libraries.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 bg-black">
+        <div className="w-full max-w-md space-y-8 text-center">
+          <div className="mx-auto w-20 h-20 bg-apple-blue/10 rounded-[28px] flex items-center justify-center text-apple-blue mb-6">
+            <FolderPlus size={40} />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Add Your Media</h1>
+            <p className="text-gray-400">
+              To get started, point LMS to a folder containing your movies or TV shows.
+            </p>
+          </div>
+
+          <form onSubmit={handleAddLibrary} className="bg-[#1c1c1e] p-6 rounded-[24px] border border-white/5 space-y-4 text-left shadow-2xl">
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Library Name</label>
+              <Input
+                placeholder="e.g. My Movies"
+                value={setupName}
+                onChange={(e) => setSetupName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Folder Path</label>
+              <Input
+                placeholder="e.g. D:/Videos/Movies"
+                value={setupPath}
+                onChange={(e) => setSetupPath(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3 ml-1">Content Type</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSetupType('movies')}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'movies'
+                      ? 'bg-apple-blue text-white border-apple-blue'
+                      : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                    }`}
+                >
+                  <Film size={24} />
+                  <span className="text-sm font-medium">Movies</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSetupType('tv')}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'tv'
+                      ? 'bg-apple-blue text-white border-apple-blue'
+                      : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                    }`}
+                >
+                  <Tv size={24} />
+                  <span className="text-sm font-medium">TV Shows</span>
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" size="lg" className="w-full mt-4" disabled={setupLoading}>
+              {setupLoading ? 'Adding Library...' : 'Add Library'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // DASHBOARD STATE (Existing Logic)
+  if (!featured) return <div className="h-full flex items-center justify-center text-gray-500">Preparing Custom Dashboard...</div>;
 
   return (
     <div className="min-h-full pb-20">
