@@ -3,6 +3,7 @@ import { Play, Info, Plus, FolderPlus, Film, Tv } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { FolderPicker } from '../../components/ui/FolderPicker';
 import api from '../../lib/api';
 
 interface Movie {
@@ -27,12 +28,14 @@ export default function Home() {
   // Dashboard Data
   const [featured, setFeatured] = useState<Movie | null>(null);
   const [trending, setTrending] = useState<Movie[]>([]);
+  const [localMedia, setLocalMedia] = useState<any[]>([]);
 
   // Setup Form State
   const [setupName, setSetupName] = useState('');
   const [setupPath, setSetupPath] = useState('');
   const [setupType, setSetupType] = useState<'movies' | 'tv'>('movies');
   const [setupLoading, setSetupLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     checkLibraries();
@@ -52,7 +55,8 @@ export default function Home() {
     }
   };
 
-  const fetchDashboardData = () => {
+  const fetchDashboardData = async () => {
+    // 1. Fetch Trending from TMDB (External)
     fetch('http://localhost:3000/api/tmdb/trending')
       .then(res => res.json())
       .then(data => {
@@ -63,6 +67,14 @@ export default function Home() {
         }
       })
       .catch(err => console.error(err));
+
+    // 2. Fetch Local Media (Internal)
+    try {
+      const res = await api.get('/media/recent');
+      setLocalMedia(res.data);
+    } catch (err) {
+      console.error('Failed to fetch local media', err);
+    }
   };
 
   const handleAddLibrary = async (e: React.FormEvent) => {
@@ -89,7 +101,17 @@ export default function Home() {
   // EMPTY STATE: Show Setup Wizard
   if (libraries.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 bg-black">
+      <div className="h-full flex flex-col items-center justify-center p-8 bg-black relative">
+        {showPicker && (
+          <FolderPicker
+            onCancel={() => setShowPicker(false)}
+            onSelect={(path) => {
+              setSetupPath(path);
+              setShowPicker(false);
+            }}
+          />
+        )}
+
         <div className="w-full max-w-md space-y-8 text-center">
           <div className="mx-auto w-20 h-20 bg-apple-blue/10 rounded-[28px] flex items-center justify-center text-apple-blue mb-6">
             <FolderPlus size={40} />
@@ -115,12 +137,23 @@ export default function Home() {
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Folder Path</label>
-              <Input
-                placeholder="e.g. D:/Videos/Movies"
-                value={setupPath}
-                onChange={(e) => setSetupPath(e.target.value)}
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="No folder selected"
+                  value={setupPath}
+                  readOnly
+                  className="cursor-default text-gray-400 bg-white/5 border-dashed"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="glass"
+                  className="shrink-0 px-4"
+                  onClick={() => setShowPicker(true)}
+                >
+                  Browse
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -130,8 +163,8 @@ export default function Home() {
                   type="button"
                   onClick={() => setSetupType('movies')}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'movies'
-                      ? 'bg-apple-blue text-white border-apple-blue'
-                      : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                    ? 'bg-apple-blue text-white border-apple-blue'
+                    : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
                     }`}
                 >
                   <Film size={24} />
@@ -141,8 +174,8 @@ export default function Home() {
                   type="button"
                   onClick={() => setSetupType('tv')}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'tv'
-                      ? 'bg-apple-blue text-white border-apple-blue'
-                      : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                    ? 'bg-apple-blue text-white border-apple-blue'
+                    : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
                     }`}
                 >
                   <Tv size={24} />
@@ -215,9 +248,72 @@ export default function Home() {
 
       {/* Media Rows */}
       <div className="px-12 -mt-20 relative z-20 space-y-12">
+        {localMedia.length > 0 && (
+          <LocalMediaSection
+            title="My Library"
+            items={localMedia}
+            onRefresh={async () => {
+              if (libraries.length > 0) {
+                await api.post(`/libraries/${libraries[0]._id}/refresh`);
+                // Poll or wait a bit then refresh (naive approach for now)
+                setTimeout(fetchDashboardData, 2000);
+              }
+            }}
+          />
+        )}
         <MediaSection title="Trending Now" movies={trending} />
         {/* Placeholder for other sections */}
         <MediaSection title="Recently Added" movies={[...trending].reverse()} />
+      </div>
+    </div>
+  );
+}
+
+import { RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+function LocalMediaSection({ title, items, onRefresh }: { title: string, items: any[], onRefresh?: () => void }) {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <h2 className="text-xl font-semibold text-gray-200 pl-1">{title}</h2>
+        {onRefresh && (
+          <button onClick={onRefresh} className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+            <RefreshCw size={16} />
+          </button>
+        )}
+      </div>
+      <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x">
+        {items.map((item) => (
+          <motion.div
+            key={item._id}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => navigate(`/media/${item._id}`)}
+            className="flex-none w-[200px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800 cursor-pointer snap-start relative group"
+          >
+            {/* Show Poster if available, else placeholder */}
+            {item.posterPath ? (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${item.posterPath}`}
+                alt={item.title || item.filename}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4 text-center">
+                <Film size={32} className="text-apple-blue mb-2" />
+                <span className="text-sm font-medium text-gray-300 line-clamp-2">{item.filename}</span>
+              </div>
+            )}
+
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                <Play size={24} fill="currentColor" />
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

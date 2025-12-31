@@ -4,9 +4,9 @@ import { cn } from '../lib/utils';
 
 export default function AppLayout() {
   return (
-    <div className="flex h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden">
-      {/* Sidebar - Apple TV app style */}
-      <aside className="w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col p-6 z-20">
+    <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative">
+      {/* Sidebar - Overlay style */}
+      <aside className="absolute left-0 top-0 bottom-0 w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col p-6 z-50">
         <div className="flex items-center gap-3 px-2 mb-10">
           <div className="w-8 h-8 bg-apple-blue rounded-lg text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Play size={16} fill="currentColor" />
@@ -35,9 +35,7 @@ export default function AppLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 h-full relative overflow-y-auto">
-        {/* Top gradient for sidebar blending */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent z-10 pointer-events-none" />
+      <main className="w-full h-full relative overflow-y-auto pl-64">
         <Outlet />
       </main>
     </div>

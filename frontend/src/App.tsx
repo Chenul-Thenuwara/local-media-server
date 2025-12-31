@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Welcome from './pages/public/Welcome';
 
 import Login from './pages/public/Login';
@@ -7,6 +7,7 @@ import ForgotPassword from './pages/public/ForgotPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/app/Home';
+import MovieDetail from './pages/app/MovieDetail';
 
 function App() {
   return (
@@ -18,10 +19,11 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected App Routes */}
+        {/* Protected App Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/home" element={<Home />} />
-            {/* Redirect root to home if authenticated, but for now we keep Welcome at / */}
+            <Route path="/media/:id" element={<MovieDetail />} />
           </Route>
         </Route>
       </Routes>
