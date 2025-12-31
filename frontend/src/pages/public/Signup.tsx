@@ -31,7 +31,7 @@ export default function Signup() {
       const res = await api.post('/auth/register', { name, email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/');
+      navigate('/home');
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.message || 'Failed to create account');
