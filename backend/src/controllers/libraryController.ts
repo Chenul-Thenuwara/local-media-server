@@ -18,6 +18,13 @@ export const createLibrary = async (req: Request, res: Response): Promise<void> 
     // @ts-ignore
     const userId = req.user.id;
 
+    // Check for duplicates
+    const existing = await Library.findOne({ userId, path });
+    if (existing) {
+      res.status(409).json({ message: 'Library with this path already exists' });
+      return;
+    }
+
     const newLibrary = new Library({
       name,
       path,

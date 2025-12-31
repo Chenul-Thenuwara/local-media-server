@@ -18,11 +18,14 @@ interface MediaDetail {
   type: 'movie' | 'tv';
 }
 
+import VideoPlayer from '../../components/player/VideoPlayer';
+
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -48,6 +51,11 @@ export default function MovieDetail() {
   return (
     // -ml-64 pulls the container back under the sidebar (Immersive effect)
     <div className="relative min-h-screen bg-black text-white -ml-64 w-[calc(100%+16rem)]">
+      {/* Video Player Overlay */}
+      {playing && (
+        <VideoPlayer mediaId={id!} onClose={() => setPlaying(false)} />
+      )}
+
       {/* Backdrop */}
       <div className="absolute inset-0 h-[70vh] w-full overflow-hidden">
         {backdropUrl ? (
@@ -120,7 +128,11 @@ export default function MovieDetail() {
             </motion.div>
 
             <div className="flex items-center gap-4 mb-10">
-              <Button size="lg" className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg">
+              <Button
+                size="lg"
+                onClick={() => setPlaying(true)}
+                className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg"
+              >
                 <Play fill="currentColor" className="mr-3" />
                 Play Movie
               </Button>
