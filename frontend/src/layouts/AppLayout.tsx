@@ -1,26 +1,50 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, Library, Settings, LogOut, Play } from 'lucide-react';
+import {
+  Home, Compass, Search, Bookmark, Bell,
+  Film, Tv, Music, Image, Video, Radio,
+  Shield, User, LogOut, Play
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function AppLayout() {
   return (
     <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative">
       {/* Sidebar - Overlay style */}
-      <aside className="absolute left-0 top-0 bottom-0 w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col p-6 z-50">
-        <div className="flex items-center gap-3 px-2 mb-10">
+      <aside className="absolute left-0 top-0 bottom-0 w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col p-6 z-50 overflow-y-auto custom-scrollbar">
+        <div className="flex items-center gap-3 px-2 mb-8">
           <div className="w-8 h-8 bg-apple-blue rounded-lg text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Play size={16} fill="currentColor" />
           </div>
           <span className="font-semibold text-xl tracking-tight">LMS</span>
         </div>
 
-        <nav className="flex-1 space-y-2">
-          <NavItem to="/home" icon={Home}>Home</NavItem>
-          <NavItem to="/library" icon={Library}>Library</NavItem>
+        <nav className="flex-1 space-y-6">
+          <div className="space-y-1">
+            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+            <NavItem to="/home" icon={Home}>Home</NavItem>
+            <NavItem to="/discover" icon={Compass}>Discover</NavItem>
+            <NavItem to="/search" icon={Search}>Search</NavItem>
+            <NavItem to="/watchlist" icon={Bookmark}>Watchlist</NavItem>
+          </div>
+
+          <div className="space-y-1">
+            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Libraries</p>
+            <NavItem to="/libraries/movies" icon={Film}>Movies</NavItem>
+            <NavItem to="/libraries/tv" icon={Tv}>TV Shows</NavItem>
+            <NavItem to="/libraries/music" icon={Music}>Music</NavItem>
+            <NavItem to="/libraries/photos" icon={Image}>Photos</NavItem>
+            <NavItem to="/libraries/personal" icon={Video}>Personal</NavItem>
+          </div>
+
+          <div className="space-y-1">
+            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">System</p>
+            <NavItem to="/admin" icon={Shield}>Admin Panel</NavItem>
+            <NavItem to="/notifications" icon={Bell}>Notifications</NavItem>
+          </div>
         </nav>
 
-        <div className="pt-6 border-t border-white/10 space-y-2">
-          <NavItem to="/settings" icon={Settings}>Settings</NavItem>
+        <div className="pt-6 mt-2 border-t border-white/10 space-y-2">
+          <NavItem to="/profile/account" icon={User}>My Profile</NavItem>
           <button
             onClick={() => {
               localStorage.clear();
