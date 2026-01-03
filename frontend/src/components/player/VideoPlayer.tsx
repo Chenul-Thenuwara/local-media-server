@@ -1,47 +1,316 @@
-import { useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { X, Play, Pause, Volume2, Volume1, VolumeX, Maximize, Minimize, FastForward, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface VideoPlayerProps {
   mediaId: string;
   onClose: () => void;
 }
 
+const Volume3 = ({ size = 24, className }: { size?: number, className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polygon points="9 5 4 9 0 9 0 15 4 15 9 19 9 5" />
+    <path d="M13.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M16.36 5.64a9 9 0 0 1 0 12.72" />
+    <path d="M19.19 2.81a13 13 0 0 1 0 18.38" />
+  </svg>
+);
+
+function formatTime(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
-
-  // Construct stream URL with auth token
   const streamUrl = `http://localhost:3000/api/stream/${mediaId}?token=${token}`;
 
-  useEffect(() => {
-    // Auto-play when mounted
-    if (videoRef.current) {
-      videoRef.current.play().catch(err => console.error("Auto-play blocked", err));
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isVolAnimating, setIsVolAnimating] = useState(false);
+  const volAnimTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Seek feedback state
+  const [seekFeedback, setSeekFeedback] = useState<{ type: 'forward' | 'backward'; seconds: number } | null>(null);
+  const seekAccumulatorRef = useRef(0);
+  const seekTimeoutRef = useRef<NodeJS.Timeout>();
+
+  const triggerVolAnim = useCallback(() => {
+    setIsVolAnimating(true);
+    if (volAnimTimeoutRef.current) clearTimeout(volAnimTimeoutRef.current);
+    volAnimTimeoutRef.current = setTimeout(() => setIsVolAnimating(false), 200);
+  }, []);
+
+  // Helpers defined first with useCallback for stability
+  const handleActivity = useCallback(() => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    if (!videoRef.current?.paused) {
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
     }
   }, []);
 
-  return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
-      {/* Header / Controls */}
-      <div className="absolute top-0 left-0 right-0 p-6 flex justify-end z-10 bg-gradient-to-b from-black/80 to-transparent">
-        <button
-          onClick={onClose}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-        >
-          <X size={24} />
-        </button>
-      </div>
+  const togglePlay = useCallback(() => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setPlaying(true);
+      } else {
+        videoRef.current.pause();
+        setPlaying(false);
+      }
+    }
+  }, []);
 
-      {/* Video Element */}
+  const seek = useCallback((amount: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime += amount;
+
+      // Feedback logic
+      if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+
+      seekAccumulatorRef.current += amount;
+      const totalSeconds = Math.abs(seekAccumulatorRef.current);
+      const isForward = seekAccumulatorRef.current > 0;
+
+      setSeekFeedback({
+        type: isForward ? 'forward' : 'backward',
+        seconds: totalSeconds
+      });
+
+      seekTimeoutRef.current = setTimeout(() => {
+        setSeekFeedback(null);
+        seekAccumulatorRef.current = 0;
+      }, 1000);
+    }
+  }, []);
+
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    if (videoRef.current) {
+      videoRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    if (videoRef.current) {
+      const newMuted = !videoRef.current.muted;
+      videoRef.current.muted = newMuted;
+      setMuted(newMuted);
+    }
+  }, []);
+
+  const adjustVolume = useCallback((delta: number) => {
+    if (videoRef.current) {
+      const newVol = Math.min(Math.max(videoRef.current.volume + delta, 0), 1);
+      videoRef.current.volume = newVol;
+      setVolume(newVol);
+      setMuted(newVol === 0);
+      triggerVolAnim();
+    }
+  }, [triggerVolAnim]);
+
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const vol = parseFloat(e.target.value);
+    if (videoRef.current) {
+      videoRef.current.volume = vol;
+      setVolume(vol);
+      setMuted(vol === 0);
+      triggerVolAnim();
+    }
+  }, [triggerVolAnim]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      playerRef.current?.requestFullscreen();
+      setFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setFullscreen(false);
+    }
+  }, []);
+
+  // Keyboard Event Listener
+  useEffect(() => {
+    // Auto-play
+    if (videoRef.current) {
+      videoRef.current.play().catch(console.error);
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      handleActivity();
+      switch (e.key) {
+        case ' ':
+        case 'k': e.preventDefault(); togglePlay(); break;
+        case 'f': toggleFullscreen(); break;
+        case 'm': toggleMute(); break;
+        case 'ArrowRight': seek(5); break;
+        case 'ArrowLeft': seek(-5); break;
+        case 'ArrowUp': e.preventDefault(); adjustVolume(0.1); break;
+        case 'ArrowDown': e.preventDefault(); adjustVolume(-0.1); break;
+        case 'Escape': onClose(); break;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleActivity, togglePlay, toggleFullscreen, toggleMute, seek, adjustVolume, onClose]);
+
+  return (
+    <div
+      ref={playerRef}
+      className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center group"
+      onMouseMove={handleActivity}
+      onClick={handleActivity}
+    >
       <video
         ref={videoRef}
         src={streamUrl}
         className="w-full h-full object-contain"
-        controls
-        autoPlay
-      >
-        Your browser does not support the video tag.
-      </video>
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onClick={togglePlay}
+        onEnded={() => setPlaying(false)}
+      />
+
+      {/* Seek Feedback Overlay */}
+      {seekFeedback && (
+        <div className={cn(
+          "absolute inset-0 flex items-center z-30 pointer-events-none px-20 animate-in fade-in zoom-in-95 duration-200",
+          seekFeedback.type === 'backward' ? "justify-start" : "justify-end"
+        )}>
+          <div className="flex items-center gap-4 text-3xl font-bold text-white drop-shadow-md">
+            {seekFeedback.type === 'backward' && <ChevronLeft size={48} />}
+            <span>
+              {seekFeedback.type === 'forward' ? '+' : '-'} {seekFeedback.seconds}
+            </span>
+            {seekFeedback.type === 'forward' && <ChevronRight size={48} />}
+          </div>
+        </div>
+      )}
+
+      {/* Overlay Gradient */}
+      <div className={cn(
+        "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none transition-opacity duration-300",
+        showControls ? "opacity-100" : "opacity-0"
+      )} />
+
+      {/* Controls Container */}
+      <div className={cn(
+        "absolute bottom-0 left-0 right-0 p-6 transition-all duration-300 flex flex-col gap-2 z-20",
+        showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      )}>
+        {/* Progress Bar */}
+        <div className="flex items-center gap-3 group/timeline cursor-pointer">
+          <input
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            onChange={handleSeek}
+            className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 transition-all hover:h-2"
+            style={{
+              background: `linear-gradient(to right, #dc2626 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.2) ${(currentTime / duration) * 100}%)`
+            }}
+          />
+        </div>
+
+        {/* Buttons Row */}
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-4">
+            <button onClick={togglePlay} className="text-white hover:text-gray-200 transition-transform active:scale-95 focus:outline-none">
+              {playing ? <Pause fill="currentColor" size={28} /> : <Play fill="currentColor" size={28} />}
+            </button>
+
+            <button onClick={() => seek(10)} className="text-gray-300 hover:text-white focus:outline-none">
+              <FastForward size={24} />
+            </button>
+
+            <div className="flex items-center gap-2 group/vol">
+              <button
+                onClick={toggleMute}
+                className={cn(
+                  "text-white hover:text-gray-200 transition-transform duration-200 focus:outline-none",
+                  isVolAnimating && "scale-125"
+                )}
+              >
+                {muted || volume === 0 ? (
+                  <VolumeX size={24} />
+                ) : volume < 0.33 ? (
+                  <Volume1 size={24} />
+                ) : volume < 0.66 ? (
+                  <Volume2 size={24} />
+                ) : (
+                  <Volume3 size={24} />
+                )}
+              </button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={muted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-0 overflow-hidden group-hover/vol:w-28 transition-all duration-300 h-1 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full hover:h-1.5"
+                style={{
+                  background: `linear-gradient(to right, #ffffff ${(muted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(muted ? 0 : volume) * 100}%)`
+                }}
+              />
+            </div>
+
+            <span className="text-sm text-gray-300 font-medium">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleFullscreen}
+              className="text-white hover:text-gray-200 focus:outline-none"
+            >
+              {fullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Controls */}
+      <div className={cn(
+        "absolute top-0 right-0 p-6 z-20 transition-opacity duration-300",
+        showControls ? "opacity-100" : "opacity-0"
+      )}>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-black/50 hover:bg-white/20 text-white backdrop-blur-md transition-colors focus:outline-none"
+        >
+          <X size={24} />
+        </button>
+      </div>
     </div>
   );
 }
