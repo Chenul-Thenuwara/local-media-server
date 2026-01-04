@@ -16,6 +16,7 @@ interface MediaDetail {
   backdropPath?: string;
   releaseDate?: string;
   type: 'movie' | 'tv';
+  isTmdb?: boolean;
 }
 
 import VideoPlayer from '../../components/player/VideoPlayer';
@@ -30,7 +31,13 @@ export default function MovieDetail() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await api.get(`/media/${id}`);
+        let endpoint = `/media/${id}`;
+        // If ID is numeric (TMDB ID), use TMDB endpoint
+        if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
+          endpoint = `/tmdb/movie/${id}`;
+        }
+
+        const res = await api.get(endpoint);
         setMedia(res.data);
       } catch (err) {
         console.error('Failed to fetch media', err);
@@ -128,14 +135,16 @@ export default function MovieDetail() {
             </motion.div>
 
             <div className="flex items-center gap-4 mb-10">
-              <Button
-                size="lg"
-                onClick={() => setPlaying(true)}
-                className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg"
-              >
-                <Play fill="currentColor" className="mr-3" />
-                Play Movie
-              </Button>
+              {!media.isTmdb && (
+                <Button
+                  size="lg"
+                  onClick={() => setPlaying(true)}
+                  className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg"
+                >
+                  <Play fill="currentColor" className="mr-3" />
+                  Play Movie
+                </Button>
+              )}
             </div>
 
             <motion.div
