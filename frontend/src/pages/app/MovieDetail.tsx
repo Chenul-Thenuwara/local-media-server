@@ -16,15 +16,21 @@ interface MediaDetail {
   backdropPath?: string;
   releaseDate?: string;
   type: 'movie' | 'tv';
+  tmdbId?: number;
+  credits?: {
+    cast: any[];
+  };
   isTmdb?: boolean;
 }
 
 import VideoPlayer from '../../components/player/VideoPlayer';
+import { CastCarousel } from '../../components/media/CastCarousel';
 
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [media, setMedia] = useState<MediaDetail | null>(null);
+  const [cast, setCast] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
 
@@ -32,13 +38,31 @@ export default function MovieDetail() {
     const fetchMedia = async () => {
       try {
         let endpoint = `/media/${id}`;
+        let isTmdbItem = false;
+
         // If ID is numeric (TMDB ID), use TMDB endpoint
         if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
           endpoint = `/tmdb/movie/${id}`;
+          isTmdbItem = true;
         }
 
         const res = await api.get(endpoint);
-        setMedia(res.data);
+        const mediaData = res.data;
+        setMedia(mediaData);
+
+        // Handle Cast
+        if (isTmdbItem && mediaData.credits) {
+          setCast(mediaData.credits.cast);
+        } else if (mediaData.tmdbId) {
+          // Fetch cast for local media if TMDB ID exists
+          try {
+            const castRes = await api.get(`/tmdb/credits/${mediaData.tmdbId}`);
+            setCast(castRes.data.cast || []);
+          } catch (e) {
+            console.error('Failed to load cast', e);
+          }
+        }
+
       } catch (err) {
         console.error('Failed to fetch media', err);
       } finally {
@@ -153,11 +177,18 @@ export default function MovieDetail() {
               transition={{ delay: 0.3 }}
             >
               <h3 className="text-xl font-semibold mb-3 text-gray-200">Synopsis</h3>
-              <p className="text-lg text-gray-400 leading-relaxed max-w-3xl">
+              <p className="text-lg text-gray-400 leading-relaxed max-w-3xl mb-12">
                 {media.overview || "No overview available for this title."}
               </p>
+
+
             </motion.div>
           </div>
+        </div>
+
+        {/* Cast Carousel (Full Width) */}
+        <div className="mt-12">
+          <CastCarousel cast={cast} />
         </div>
       </div>
     </div>
