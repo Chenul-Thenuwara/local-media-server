@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { FolderPicker } from '../../components/ui/FolderPicker';
+import { MediaRow } from '../../components/media/MediaRow';
 import api from '../../lib/api';
 
 interface Movie {
@@ -249,13 +250,12 @@ export default function Home() {
       {/* Media Rows */}
       <div className="px-12 -mt-20 relative z-20 space-y-12">
         {localMedia.length > 0 && (
-          <LocalMediaSection
+          <MediaRow
             title="My Library"
             items={localMedia}
             onRefresh={async () => {
               if (libraries.length > 0) {
                 await api.post(`/libraries/${libraries[0]._id}/refresh`);
-                // Poll or wait a bit then refresh (naive approach for now)
                 setTimeout(fetchDashboardData, 2000);
               }
             }}
@@ -269,55 +269,7 @@ export default function Home() {
   );
 }
 
-import { RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-function LocalMediaSection({ title, items, onRefresh }: { title: string, items: any[], onRefresh?: () => void }) {
-  const navigate = useNavigate();
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-200 pl-1">{title}</h2>
-        {onRefresh && (
-          <button onClick={onRefresh} className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
-            <RefreshCw size={16} />
-          </button>
-        )}
-      </div>
-      <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x">
-        {items.map((item) => (
-          <motion.div
-            key={item._id}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => navigate(`/media/${item._id}`)}
-            className="flex-none w-[200px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800 cursor-pointer snap-start relative group"
-          >
-            {/* Show Poster if available, else placeholder */}
-            {item.posterPath ? (
-              <img
-                src={`https://image.tmdb.org/t/p/w500${item.posterPath}`}
-                alt={item.title || item.filename}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4 text-center">
-                <Film size={32} className="text-apple-blue mb-2" />
-                <span className="text-sm font-medium text-gray-300 line-clamp-2">{item.filename}</span>
-              </div>
-            )}
-
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                <Play size={24} fill="currentColor" />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function MediaSection({ title, movies }: { title: string, movies: Movie[] }) {
   return (
