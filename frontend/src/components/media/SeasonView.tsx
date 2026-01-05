@@ -120,12 +120,9 @@ export function SeasonView({ tmdbId, seasons, onSeasonSelect }: SeasonViewProps)
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-700">
-                        <Play size={32} />
+                        <Calendar size={32} />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play fill="white" size={32} />
-                    </div>
                   </div>
 
                   {/* Details */}

@@ -22,6 +22,14 @@ interface MediaDetail {
   };
   isTmdb?: boolean;
   seasons?: any[];
+  // Technical Info
+  mediaInfo?: {
+    resolution?: '4K' | '1080p' | '720p' | 'SD';
+    videoCodec?: string;
+    audioCodec?: string;
+    isHdr?: boolean;
+    audioChannels?: number;
+  };
 }
 
 import VideoPlayer from '../../components/player/VideoPlayer';
@@ -67,7 +75,12 @@ export default function MovieDetail() {
         if (isTmdbItem && mediaData.credits) {
           setCast(mediaData.credits.cast);
         } else if (mediaData.tmdbId) {
-          // ... cast fetching for local
+          try {
+            const castRes = await api.get(`/tmdb/credits/${mediaData.tmdbId}`);
+            setCast(castRes.data.cast || []);
+          } catch (e) {
+            console.error('Failed to load local cast', e);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch media', err);
@@ -165,19 +178,52 @@ export default function MovieDetail() {
                 <HardDrive size={16} />
                 {media.filename}
               </span>
+
+
             </motion.div>
 
             <div className="flex items-center gap-4 mb-10">
-              {/* ... (buttons) ... */}
+              {/* TMDB Button */}
               {!media.isTmdb && (
                 <Button
                   size="lg"
                   onClick={() => setPlaying(true)}
-                  className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg"
+                  className="bg-gradient-to-r from-blue-600/60 to-indigo-600/60 hover:from-blue-500/70 hover:to-indigo-500/70 backdrop-blur-md border border-white/20 text-white px-10 py-7 text-xl font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 active:scale-95 group"
                 >
-                  <Play fill="currentColor" className="mr-3" />
-                  Play Movie
+                  <Play fill="currentColor" className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Play Now
                 </Button>
+              )}
+
+              {/* Technical Badges */}
+              {media.mediaInfo && (
+                <div className="flex items-center gap-3 pl-4 ml-2 select-none">
+                  {media.mediaInfo.resolution && (
+                    <span title="Resolution" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
+                      {media.mediaInfo.resolution}
+                    </span>
+                  )}
+                  {media.mediaInfo.isHdr && (
+                    <span title="High Dynamic Range" className="px-2 py-1 bg-purple-500/10 border border-purple-500/20 rounded-md text-xs font-semibold text-purple-200 cursor-help hover:bg-purple-500/20 hover:border-purple-500/30 transition-all shadow-sm backdrop-blur-sm">
+                      HDR
+                    </span>
+                  )}
+                  {media.mediaInfo.audioCodec && (
+                    <span title="Audio Codec" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
+                      {media.mediaInfo.audioCodec}
+                    </span>
+                  )}
+                  {media.mediaInfo.audioChannels && (
+                    <span title="Audio Channels" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 cursor-help group">
+                      <span className="bg-blue-500/10 border border-blue-500/20 text-blue-200 px-2 py-1 rounded-md group-hover:bg-blue-500/20 group-hover:border-blue-500/30 transition-all shadow-sm backdrop-blur-sm font-semibold">
+                        {media.mediaInfo.audioChannels === 2 ? '2.0' :
+                          media.mediaInfo.audioChannels === 6 ? '5.1' :
+                            media.mediaInfo.audioChannels === 8 ? '7.1' :
+                              `${media.mediaInfo.audioChannels}ch`}
+                      </span>
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 

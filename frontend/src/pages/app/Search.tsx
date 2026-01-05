@@ -12,11 +12,14 @@ interface SearchResult {
   _id: string;
   title: string;
   original_title?: string;
-  poster_path?: string;
-  backdrop_path?: string;
+  posterPath?: string; // matched to MediaItem
+  backdropPath?: string;
   overview?: string;
   type: 'movie' | 'tv';
-  mediaType: 'movie' | 'tv'; // normalized for MediaCard
+  mediaType: 'movie' | 'tv';
+  tmdbId?: number;
+  isTmdb?: boolean;
+  filename: string; // Required by MediaCard
 }
 
 export default function Search() {
@@ -57,22 +60,25 @@ export default function Search() {
       const [localRes, globalRes] = await Promise.all([localReq, globalReq]);
 
       // Normalize Local
-      const localNormalized = localRes.data.map((item: any) => ({
+      const localNormalized: SearchResult[] = localRes.data.map((item: any) => ({
         ...item,
         posterPath: item.poster_path || item.posterPath, // Handle both cases
         backdropPath: item.backdrop_path || item.backdropPath,
-        mediaType: item.type === 'movies' ? 'movie' : 'tv'
+        mediaType: item.type === 'movies' ? 'movie' : 'tv',
+        filename: item.filename || item.title // Ensure filename exists
       }));
 
       // Normalize Global (exclude items already in library)
-      const libraryTmdbIds = new Set(localNormalized.map((i: any) => i.tmdbId));
-      const globalNormalized = globalRes.data
+      const libraryTmdbIds = new Set(localNormalized.map((i) => i.tmdbId));
+      const globalNormalized: SearchResult[] = globalRes.data
         .filter((item: any) => !libraryTmdbIds.has(item.tmdbId)) // Dedup against library
         .map((item: any) => ({
           ...item,
           posterPath: item.posterPath || item.poster_path, // Ensure camelCase
           backdropPath: item.backdropPath || item.backdrop_path,
-          mediaType: item.mediaType
+          mediaType: item.mediaType,
+          filename: 'TMDB Content', // Placeholder for global items
+          isTmdb: true
         }));
 
       setResults(localNormalized);
