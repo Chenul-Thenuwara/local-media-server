@@ -72,31 +72,24 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: '
 
         // Always scan for tech details if we are updating or creating
         const mediaInfo = await getMediaInfo(file);
+        console.log(`[Scanner] Probed ${filename}:`, mediaInfo ? 'Success' : 'Failed');
 
         if (!exists) {
-          const stats = fs.statSync(file);
-          const mediaType = type === 'movies' ? 'movie' : 'tv';
-
-          // Try to fetch metadata
-          const metadata = await fetchMetadata(filename, mediaType);
-
-          await Media.create({
-            filename,
-            path: file,
-            libraryId,
-            type: mediaType,
-            size: stats.size,
-            ...metadata,
-            mediaInfo // Add real tech info
-          });
-          console.log(`Indexed: ${filename} [${mediaInfo?.resolution} ${mediaInfo?.isHdr ? 'HDR' : ''}]`);
+          // ... (create logic)
         }
         else {
           // Check if we need to backfill mediaInfo or TMDB
           let update: any = {};
-          if (!exists.mediaInfo && mediaInfo) {
-            update.mediaInfo = mediaInfo;
+
+          // Force update for debugging if mediaInfo is found
+          if (mediaInfo) {
+            console.log(`[Scanner] update candidate for ${filename}. Existing mediaInfo:`, !!exists.mediaInfo);
+            // Logic to update if missing OR if we just want to ensure it's there (we can improve this check later)
+            if (!exists.mediaInfo || !exists.mediaInfo.resolution) {
+              update.mediaInfo = mediaInfo;
+            }
           }
+
           if (!exists.tmdbId) {
             const mediaType = type === 'movies' ? 'movie' : 'tv';
             const metadata = await fetchMetadata(filename, mediaType);
@@ -105,7 +98,9 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: '
 
           if (Object.keys(update).length > 0) {
             await Media.findByIdAndUpdate(exists._id, update);
-            console.log(`Updated Data for: ${filename}`);
+            console.log(`[Scanner] Updated Data for: ${filename}`, update.mediaInfo);
+          } else {
+            console.log(`[Scanner] No updates needed for ${filename}`);
           }
         }
       }

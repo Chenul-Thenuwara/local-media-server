@@ -179,35 +179,11 @@ export default function MovieDetail() {
                 {media.filename}
               </span>
 
-              {/* Technical Badges */}
-              {media.mediaInfo && (
-                <div className="flex items-center gap-2 border-l border-white/20 pl-6 ml-2">
-                  {media.mediaInfo.resolution && (
-                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
-                      {media.mediaInfo.resolution}
-                    </span>
-                  )}
-                  {media.mediaInfo.isHdr && (
-                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
-                      HDR
-                    </span>
-                  )}
-                  {media.mediaInfo.audioCodec && (
-                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
-                      {media.mediaInfo.audioCodec}
-                    </span>
-                  )}
-                  {media.mediaInfo.audioChannels && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-gray-400">
-                      <span className="bg-gray-800 px-1 rounded">{media.mediaInfo.audioChannels}</span>
-                    </span>
-                  )}
-                </div>
-              )}
+
             </motion.div>
 
             <div className="flex items-center gap-4 mb-10">
-              {/* ... (buttons) ... */}
+              {/* TMDB Button */}
               {!media.isTmdb && (
                 <Button
                   size="lg"
@@ -217,6 +193,37 @@ export default function MovieDetail() {
                   <Play fill="currentColor" className="mr-3" />
                   Play Movie
                 </Button>
+              )}
+
+              {/* Technical Badges */}
+              {media.mediaInfo && (
+                <div className="flex items-center gap-3 pl-4 ml-2 select-none">
+                  {media.mediaInfo.resolution && (
+                    <span title="Resolution" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
+                      {media.mediaInfo.resolution}
+                    </span>
+                  )}
+                  {media.mediaInfo.isHdr && (
+                    <span title="High Dynamic Range" className="px-2 py-1 bg-purple-500/10 border border-purple-500/20 rounded-md text-xs font-semibold text-purple-200 cursor-help hover:bg-purple-500/20 hover:border-purple-500/30 transition-all shadow-sm backdrop-blur-sm">
+                      HDR
+                    </span>
+                  )}
+                  {media.mediaInfo.audioCodec && (
+                    <span title="Audio Codec" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
+                      {media.mediaInfo.audioCodec}
+                    </span>
+                  )}
+                  {media.mediaInfo.audioChannels && (
+                    <span title="Audio Channels" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 cursor-help group">
+                      <span className="bg-blue-500/10 border border-blue-500/20 text-blue-200 px-2 py-1 rounded-md group-hover:bg-blue-500/20 group-hover:border-blue-500/30 transition-all shadow-sm backdrop-blur-sm font-semibold">
+                        {media.mediaInfo.audioChannels === 2 ? '2.0' :
+                          media.mediaInfo.audioChannels === 6 ? '5.1' :
+                            media.mediaInfo.audioChannels === 8 ? '7.1' :
+                              `${media.mediaInfo.audioChannels}ch`}
+                      </span>
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 
