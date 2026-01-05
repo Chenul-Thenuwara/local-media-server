@@ -50,6 +50,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/media/:id" element={<MovieDetail />} />
+            <Route path="/media/tmdb/:type/:id" element={<MovieDetail />} />
 
             {/* Core */}
             <Route path="/discover" element={<Discover />} />

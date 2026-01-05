@@ -7,6 +7,9 @@ interface MediaItem {
   title?: string;
   filename: string;
   posterPath?: string;
+  isTmdb?: boolean;     // New field
+  mediaType?: 'movie' | 'tv'; // New field
+  tmdbId?: number;
 }
 
 interface MediaCardProps {
@@ -16,10 +19,20 @@ interface MediaCardProps {
 export function MediaCard({ item }: MediaCardProps) {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    if (item.isTmdb) {
+      // Navigate to new global route
+      navigate(`/media/tmdb/${item.mediaType}/${item.tmdbId}`);
+    } else {
+      // Local route
+      navigate(`/media/${item._id}`);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      onClick={() => navigate(`/media/${item._id}`)}
+      onClick={handleClick}
       className="flex-none w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800 cursor-pointer relative group"
     >
       {/* Show Poster if available, else placeholder */}
