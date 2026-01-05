@@ -5,7 +5,6 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { FolderPicker } from '../../components/ui/FolderPicker';
 import { MediaRow } from '../../components/media/MediaRow';
-import TrendingBackground from '../../components/ui/TrendingBackground';
 import api from '../../lib/api';
 
 interface Movie {
@@ -200,18 +199,13 @@ export default function Home() {
 
   return (
     <div className="min-h-full pb-20 relative">
-      {/* Interactive Background */}
-      <div className="fixed inset-0 z-0">
-        <TrendingBackground />
-      </div>
-
       {/* Hero Section */}
-      <div className="relative h-[70vh] w-full overflow-hidden shrink-0 z-10 pointer-events-none">
+      <div className="relative h-[70vh] w-full overflow-hidden shrink-0 z-10">
         <div className="absolute inset-0">
           <img
             src={`https://image.tmdb.org/t/p/original${featured.backdrop_path}`}
             alt={featured.title}
-            className="w-full h-full object-cover opacity-60" // Reduced opacity to let background peek through slightly or blend
+            className="w-full h-full object-cover"
           />
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
