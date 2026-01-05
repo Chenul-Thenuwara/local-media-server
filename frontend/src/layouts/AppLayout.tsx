@@ -163,7 +163,7 @@ function NavItem({ to, icon: Icon, children, collapsed }: { to: string; icon: an
     <NavLink
       to={to}
       className={({ isActive }) => cn(
-        "flex items-center gap-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden relative",
+        "flex items-center gap-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden relative focus:outline-none",
         collapsed ? "justify-center px-0" : "px-4",
         isActive
           ? "bg-apple-blue text-white shadow-lg shadow-blue-500/20 font-medium"

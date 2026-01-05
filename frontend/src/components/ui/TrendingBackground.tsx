@@ -15,8 +15,11 @@ export default function TrendingBackground() {
       .then(res => res.json())
       .then(data => {
         const results = data.results || [];
-        // Duplicate the list 4 times to ensure it covers the screen
-        setMovies([...results, ...results, ...results, ...results]);
+        // Duplicate to fill screen
+        const combined = [...results, ...results, ...results, ...results];
+        // Shuffle to avoid adjacent duplicates
+        const shuffled = combined.sort(() => Math.random() - 0.5);
+        setMovies(shuffled);
       })
       .catch(err => console.error('Failed to fetch movies', err));
   }, []);
