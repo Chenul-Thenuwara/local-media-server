@@ -198,9 +198,9 @@ export default function Home() {
   if (!featured) return <div className="h-full flex items-center justify-center text-gray-500">Preparing Custom Dashboard...</div>;
 
   return (
-    <div className="min-h-full pb-20">
+    <div className="min-h-full pb-20 relative">
       {/* Hero Section */}
-      <div className="relative h-[70vh] w-full overflow-hidden shrink-0">
+      <div className="relative h-[70vh] w-full overflow-hidden shrink-0 z-10">
         <div className="absolute inset-0">
           <img
             src={`https://image.tmdb.org/t/p/original${featured.backdrop_path}`}
@@ -212,7 +212,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
         </div>
 
-        <div className="absolute bottom-0 left-0 p-12 pb-32 max-w-2xl z-10">
+        <div className="absolute bottom-0 left-0 p-12 pb-32 max-w-2xl z-10 pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
