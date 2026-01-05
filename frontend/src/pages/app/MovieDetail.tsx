@@ -22,6 +22,14 @@ interface MediaDetail {
   };
   isTmdb?: boolean;
   seasons?: any[];
+  // Technical Info
+  mediaInfo?: {
+    resolution?: '4K' | '1080p' | '720p' | 'SD';
+    videoCodec?: string;
+    audioCodec?: string;
+    isHdr?: boolean;
+    audioChannels?: number;
+  };
 }
 
 import VideoPlayer from '../../components/player/VideoPlayer';
@@ -67,7 +75,12 @@ export default function MovieDetail() {
         if (isTmdbItem && mediaData.credits) {
           setCast(mediaData.credits.cast);
         } else if (mediaData.tmdbId) {
-          // ... cast fetching for local
+          try {
+            const castRes = await api.get(`/tmdb/credits/${mediaData.tmdbId}`);
+            setCast(castRes.data.cast || []);
+          } catch (e) {
+            console.error('Failed to load local cast', e);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch media', err);
@@ -165,6 +178,32 @@ export default function MovieDetail() {
                 <HardDrive size={16} />
                 {media.filename}
               </span>
+
+              {/* Technical Badges */}
+              {media.mediaInfo && (
+                <div className="flex items-center gap-2 border-l border-white/20 pl-6 ml-2">
+                  {media.mediaInfo.resolution && (
+                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
+                      {media.mediaInfo.resolution}
+                    </span>
+                  )}
+                  {media.mediaInfo.isHdr && (
+                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
+                      HDR
+                    </span>
+                  )}
+                  {media.mediaInfo.audioCodec && (
+                    <span className="px-1.5 py-0.5 border border-gray-500 rounded text-xs font-bold text-gray-300">
+                      {media.mediaInfo.audioCodec}
+                    </span>
+                  )}
+                  {media.mediaInfo.audioChannels && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-gray-400">
+                      <span className="bg-gray-800 px-1 rounded">{media.mediaInfo.audioChannels}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             <div className="flex items-center gap-4 mb-10">

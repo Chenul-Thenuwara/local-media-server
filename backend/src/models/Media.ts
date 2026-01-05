@@ -13,6 +13,14 @@ export interface IMedia extends Document {
   backdropPath?: string;
   releaseDate?: string;
   tmdbId?: number;
+  // Media Info
+  mediaInfo?: {
+    resolution?: '4K' | '1080p' | '720p' | 'SD';
+    videoCodec?: string;
+    audioCodec?: string;
+    isHdr?: boolean;
+    audioChannels?: number;
+  };
   createdAt: Date;
 }
 
@@ -29,6 +37,13 @@ const MediaSchema: Schema = new Schema({
   backdropPath: { type: String },
   releaseDate: { type: String },
   tmdbId: { type: Number },
+  mediaInfo: {
+    resolution: { type: String, enum: ['4K', '1080p', '720p', 'SD'] },
+    videoCodec: { type: String },
+    audioCodec: { type: String },
+    isHdr: { type: Boolean },
+    audioChannels: { type: Number },
+  }
 }, { timestamps: true });
 
 export default mongoose.model<IMedia>('Media', MediaSchema);

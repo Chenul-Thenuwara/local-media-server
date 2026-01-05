@@ -3,7 +3,53 @@ import path from 'path';
 import Media from '../models/Media';
 import { fetchMetadata } from './tmdbService';
 
+import ffmpeg from 'fluent-ffmpeg';
+// @ts-ignore
+import ffprobeStatic from 'ffprobe-static';
+
+// Set ffprobe path
+ffmpeg.setFfprobePath(ffprobeStatic.path);
+
 const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
+
+// Helper to extract technical metadata
+const getMediaInfo = (filePath: string): Promise<any> => {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        console.error(`Error probing ${filePath}:`, err);
+        return resolve(null);
+      }
+
+      const videoStream = metadata.streams.find(s => s.codec_type === 'video');
+      const audioStream = metadata.streams.find(s => s.codec_type === 'audio');
+
+      if (!videoStream) return resolve(null);
+
+      // Determine Resolution
+      let resolution = 'SD';
+      const height = videoStream.height || 0;
+      const width = videoStream.width || 0;
+
+      if (width >= 3800 || height >= 2100) resolution = '4K';
+      else if (width >= 1900 || height >= 1000) resolution = '1080p';
+      else if (width >= 1200 || height >= 700) resolution = '720p';
+
+      // Determine HDR
+      // Common HDR transfers: smpte2084 (PQ), arib-std-b67 (HLG)
+      const isHdr = ['smpte2084', 'arib-std-b67'].includes(videoStream.color_transfer || '') ||
+        (videoStream.color_space === 'bt2020nc');
+
+      resolve({
+        resolution,
+        videoCodec: videoStream.codec_name?.toUpperCase(),
+        audioCodec: audioStream?.codec_name?.toUpperCase(),
+        audioChannels: audioStream?.channels,
+        isHdr
+      });
+    });
+  });
+};
 
 export const scanLibrary = async (libraryId: string, folderPath: string, type: 'movies' | 'tv') => {
   console.log(`Scanning ${folderPath} for ${type}...`);
@@ -24,6 +70,9 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: '
         // Check if exists
         const exists = await Media.findOne({ path: file, libraryId });
 
+        // Always scan for tech details if we are updating or creating
+        const mediaInfo = await getMediaInfo(file);
+
         if (!exists) {
           const stats = fs.statSync(file);
           const mediaType = type === 'movies' ? 'movie' : 'tv';
@@ -37,18 +86,26 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: '
             libraryId,
             type: mediaType,
             size: stats.size,
-            ...metadata
+            ...metadata,
+            mediaInfo // Add real tech info
           });
-          console.log(`Indexed: ${filename} (TMDB: ${metadata ? 'Found' : 'Not Found'})`);
+          console.log(`Indexed: ${filename} [${mediaInfo?.resolution} ${mediaInfo?.isHdr ? 'HDR' : ''}]`);
         }
-        else if (!exists.tmdbId) {
-          // Exists but missing metadata (Backfill)
-          const mediaType = type === 'movies' ? 'movie' : 'tv';
-          const metadata = await fetchMetadata(filename, mediaType);
+        else {
+          // Check if we need to backfill mediaInfo or TMDB
+          let update: any = {};
+          if (!exists.mediaInfo && mediaInfo) {
+            update.mediaInfo = mediaInfo;
+          }
+          if (!exists.tmdbId) {
+            const mediaType = type === 'movies' ? 'movie' : 'tv';
+            const metadata = await fetchMetadata(filename, mediaType);
+            if (metadata) update = { ...update, ...metadata };
+          }
 
-          if (metadata) {
-            await Media.findByIdAndUpdate(exists._id, { ...metadata });
-            console.log(`Updated Metadata: ${filename}`);
+          if (Object.keys(update).length > 0) {
+            await Media.findByIdAndUpdate(exists._id, update);
+            console.log(`Updated Data for: ${filename}`);
           }
         }
       }
