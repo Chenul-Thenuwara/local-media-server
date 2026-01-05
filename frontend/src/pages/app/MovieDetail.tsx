@@ -188,10 +188,10 @@ export default function MovieDetail() {
                 <Button
                   size="lg"
                   onClick={() => setPlaying(true)}
-                  className="bg-apple-blue hover:bg-blue-600 border-none px-8 py-6 text-lg"
+                  className="bg-gradient-to-r from-blue-600/60 to-indigo-600/60 hover:from-blue-500/70 hover:to-indigo-500/70 backdrop-blur-md border border-white/20 text-white px-10 py-7 text-xl font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 active:scale-95 group"
                 >
-                  <Play fill="currentColor" className="mr-3" />
-                  Play Movie
+                  <Play fill="currentColor" className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Play Now
                 </Button>
               )}
 
