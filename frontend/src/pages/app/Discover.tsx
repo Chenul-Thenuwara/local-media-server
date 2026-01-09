@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Compass, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Compass } from 'lucide-react';
+import { MediaCard } from '../../components/media/MediaCard';
 
 interface Movie {
   id: number;
@@ -10,10 +10,7 @@ interface Movie {
   poster_path: string;
 }
 
-import { useNavigate } from 'react-router-dom';
-
 const Discover = () => {
-  const navigate = useNavigate();
   const [trending, setTrending] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,24 +48,18 @@ const Discover = () => {
         <h2 className="text-xl font-semibold text-gray-200 pl-1">Trending Now</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">
           {trending.map((movie) => (
-            <motion.div
+            <MediaCard
               key={movie.id}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate(`/media/${movie.id}`)}
-              className="flex-none w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800 cursor-pointer relative group"
-            >
-              <img
-                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                alt={movie.title}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                  <Plus size={24} />
-                </div>
-              </div>
-            </motion.div>
+              item={{
+                _id: movie.id.toString(),
+                tmdbId: movie.id,
+                title: movie.title,
+                filename: movie.title,
+                posterPath: movie.poster_path,
+                isTmdb: true,
+                mediaType: 'movie'
+              }}
+            />
           ))}
         </div>
         <div className="h-20" /> {/* Bottom spacer */}
