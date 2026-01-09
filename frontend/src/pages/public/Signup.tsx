@@ -5,6 +5,15 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
 
+interface AuthError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function Signup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -34,7 +43,8 @@ export default function Signup() {
       navigate('/home');
     } catch (err) {
       console.error(err);
-      setError((err as any).response?.data?.message || 'Failed to create account');
+      const authErr = err as AuthError;
+      setError(authErr.response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
     }

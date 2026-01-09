@@ -5,6 +5,15 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
 
+interface AuthError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -26,7 +35,8 @@ export default function Login() {
       navigate('/home');
     } catch (err) {
       console.error(err);
-      setError((err as any).response?.data?.message || 'Invalid email or password');
+      const authErr = err as AuthError;
+      setError(authErr.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

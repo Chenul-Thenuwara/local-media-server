@@ -26,7 +26,7 @@ export default function TVShows() {
       }
     } catch (err) {
       console.error('Failed to fetch TV shows', err);
-      setError((err as any).message || 'Failed to load TV shows');
+      setError(err instanceof Error ? err.message : 'Failed to load TV shows');
     } finally {
       setLoading(false);
     }

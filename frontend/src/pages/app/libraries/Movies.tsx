@@ -26,7 +26,7 @@ export default function Movies() {
       }
     } catch (err) {
       console.error('Failed to fetch movies', err);
-      setError((err as any).message || 'Failed to load movies');
+      setError(err instanceof Error ? err.message : 'Failed to load movies');
     } finally {
       setLoading(false);
     }
