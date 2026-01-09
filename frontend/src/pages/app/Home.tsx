@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Play, Info, Plus, FolderPlus, Film, Tv } from 'lucide-react';
+import { Play, Info, FolderPlus, Film, Tv } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -28,7 +28,7 @@ export default function Home() {
 
   // Dashboard Data
   const [featured, setFeatured] = useState<Movie | null>(null);
-  const [trending, setTrending] = useState<Movie[]>([]);
+  // const [trending, setTrending] = useState<Movie[]>([]);
   const [localMedia, setLocalMedia] = useState<any[]>([]);
 
   // Setup Form State
@@ -62,7 +62,7 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         const movies = data.results || [];
-        setTrending(movies);
+        // setTrending(movies); // Unused
         if (movies.length > 0) {
           setFeatured(movies[Math.floor(Math.random() * movies.length)]);
         }

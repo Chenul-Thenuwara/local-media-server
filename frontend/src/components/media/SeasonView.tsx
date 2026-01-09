@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Calendar, Clock, ChevronDown } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import api from '../../lib/api';
 
 interface Episode {

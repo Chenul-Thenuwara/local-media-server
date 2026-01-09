@@ -3,8 +3,8 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
-  Film, Tv, Music, Image, Video, Radio,
-  Shield, User, LogOut, Play, PanelLeftClose, PanelLeftOpen
+  Film, Tv, Music, Image, Video,
+  Shield, User, LogOut, Play, PanelLeftClose
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
