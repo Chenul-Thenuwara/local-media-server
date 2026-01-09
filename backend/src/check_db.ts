@@ -11,9 +11,9 @@ const checkDB = async () => {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log('Connected.');
 
-    const users = await User.find({}, 'username email _id');
+    const users = await User.find({}, 'name email _id');
     console.log('USERS:');
-    users.forEach(u => console.log(` - [${u._id}] ${u.username} (${u.email})`));
+    users.forEach(u => console.log(` - [${u._id}] ${u.name} (${u.email})`));
 
     const libraries = await Library.find({}, 'name path type userId');
     console.log('LIBRARIES:');
