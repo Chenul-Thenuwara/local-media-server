@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search as SearchIcon, Film, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +22,21 @@ interface SearchResult {
   filename: string; // Required by MediaCard
 }
 
+interface RawSearchItem {
+  _id?: string;
+  id?: number;
+  tmdbId?: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  posterPath?: string;
+  backdrop_path?: string;
+  backdropPath?: string;
+  mediaType?: string;
+  type?: string;
+  filename?: string;
+}
+
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
@@ -39,16 +54,16 @@ export default function Search() {
     } else {
       setSearchParams({}, { replace: true });
     }
+  }, [debouncedQuery, setSearchParams]);
 
-    if (debouncedQuery.trim()) {
-      handleSearch();
-    } else {
+  // Define handleSearch with useCallback to be used in useEffect
+  const handleSearch = useCallback(async () => {
+    if (!debouncedQuery.trim()) {
       setResults([]);
       setGlobalResults([]);
+      return;
     }
-  }, [debouncedQuery]);
 
-  const handleSearch = async () => {
     setLoading(true);
     try {
       // 1. Local Library Search
@@ -60,25 +75,31 @@ export default function Search() {
       const [localRes, globalRes] = await Promise.all([localReq, globalReq]);
 
       // Normalize Local
-      const localNormalized: SearchResult[] = localRes.data.map((item: any) => ({
+      const localNormalized: SearchResult[] = localRes.data.map((item: RawSearchItem) => ({
         ...item,
+        _id: item._id || '', // Ensure _id exists
         posterPath: item.poster_path || item.posterPath, // Handle both cases
         backdropPath: item.backdrop_path || item.backdropPath,
-        mediaType: item.type === 'movies' ? 'movie' : 'tv',
-        filename: item.filename || item.title // Ensure filename exists
+        mediaType: (item.type === 'movies' ? 'movie' : 'tv') as 'movie' | 'tv',
+        filename: item.filename || item.title || 'Unknown', // Ensure filename exists
+        type: (item.type === 'movies' ? 'movie' : 'tv') as 'movie' | 'tv',
+        title: item.title || item.name || ''
       }));
 
       // Normalize Global (exclude items already in library)
       const libraryTmdbIds = new Set(localNormalized.map((i) => i.tmdbId));
       const globalNormalized: SearchResult[] = globalRes.data
-        .filter((item: any) => !libraryTmdbIds.has(item.tmdbId)) // Dedup against library
-        .map((item: any) => ({
+        .filter((item: RawSearchItem) => !libraryTmdbIds.has(item.tmdbId))
+        .map((item: RawSearchItem) => ({
           ...item,
+          _id: (item.id || 0).toString(),
           posterPath: item.posterPath || item.poster_path, // Ensure camelCase
           backdropPath: item.backdropPath || item.backdrop_path,
-          mediaType: item.mediaType,
+          mediaType: (item.mediaType as 'movie' | 'tv') || 'movie',
           filename: 'TMDB Content', // Placeholder for global items
-          isTmdb: true
+          isTmdb: true,
+          type: (item.mediaType as 'movie' | 'tv') || 'movie',
+          title: item.title || item.name || ''
         }));
 
       setResults(localNormalized);
@@ -89,7 +110,17 @@ export default function Search() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedQuery]);
+
+  // Trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      handleSearch();
+    } else {
+      setResults([]);
+      setGlobalResults([]);
+    }
+  }, [debouncedQuery, handleSearch]);
 
   return (
     <div className="min-h-full relative">

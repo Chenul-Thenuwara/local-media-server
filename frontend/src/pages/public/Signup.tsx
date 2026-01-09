@@ -32,9 +32,9 @@ export default function Signup() {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
       navigate('/home');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to create account');
+      setError((err as any).response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
     }

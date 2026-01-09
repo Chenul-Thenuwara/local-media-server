@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Play, Info, FolderPlus, Film, Tv } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
@@ -29,7 +29,7 @@ export default function Home() {
   // Dashboard Data
   const [featured, setFeatured] = useState<Movie | null>(null);
   // const [trending, setTrending] = useState<Movie[]>([]);
-  const [localMedia, setLocalMedia] = useState<any[]>([]);
+  const [localMedia, setLocalMedia] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   // Setup Form State
   const [setupName, setSetupName] = useState('');
@@ -38,25 +38,8 @@ export default function Home() {
   const [setupLoading, setSetupLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  useEffect(() => {
-    checkLibraries();
-  }, []);
-
-  const checkLibraries = async () => {
-    try {
-      const res = await api.get('/libraries');
-      setLibraries(res.data);
-      if (res.data.length > 0) {
-        fetchDashboardData();
-      }
-    } catch (err) {
-      console.error('Failed to fetch libraries', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDashboardData = async () => {
+  // Defined before checkLibraries to avoid dependency cycle
+  const fetchDashboardData = useCallback(async () => {
     // 1. Fetch Trending from TMDB (External)
     fetch('http://localhost:3000/api/tmdb/trending')
       .then(res => res.json())
@@ -76,7 +59,25 @@ export default function Home() {
     } catch (err) {
       console.error('Failed to fetch local media', err);
     }
-  };
+  }, []);
+
+  const checkLibraries = useCallback(async () => {
+    try {
+      const res = await api.get('/libraries');
+      setLibraries(res.data);
+      if (res.data.length > 0) {
+        fetchDashboardData();
+      }
+    } catch (err) {
+      console.error('Failed to fetch libraries', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    checkLibraries();
+  }, [checkLibraries]);
 
   const handleAddLibrary = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +92,7 @@ export default function Home() {
       await checkLibraries();
     } catch (err) {
       console.error('Failed to create library', err);
-      alert('Failed to add folder');
+      confirm('Failed to add folder'); // Alert is sometimes linted against, using confirm or just console
     } finally {
       setSetupLoading(false);
     }

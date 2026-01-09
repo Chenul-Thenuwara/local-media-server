@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
   Film, Tv, Music, Image, Video,
-  Shield, User, LogOut, Play, PanelLeftClose
+  Shield, User, LogOut, Play, PanelLeftClose, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -158,7 +158,8 @@ export default function AppLayout() {
   );
 }
 
-function NavItem({ to, icon: Icon, children, collapsed }: { to: string; icon: any; children: React.ReactNode, collapsed: boolean }) {
+
+function NavItem({ to, icon: Icon, children, collapsed }: { to: string; icon: LucideIcon; children: React.ReactNode, collapsed: boolean }) {
   return (
     <NavLink
       to={to}

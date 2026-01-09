@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
-import { MediaCard } from '../../../components/media/MediaCard';
+import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Tv } from 'lucide-react';
 
 export default function TVShows() {
-  const [shows, setShows] = useState<any[]>([]);
+  const [shows, setShows] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,9 +24,9 @@ export default function TVShows() {
         console.error('API returned non-array:', res.data);
         setError('Invalid API response');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch TV shows', err);
-      setError(err.message || 'Failed to load TV shows');
+      setError((err as any).message || 'Failed to load TV shows');
     } finally {
       setLoading(false);
     }

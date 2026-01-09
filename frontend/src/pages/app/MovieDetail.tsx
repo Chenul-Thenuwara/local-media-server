@@ -5,6 +5,23 @@ import { Play, ArrowLeft, Calendar, FileVideo, HardDrive } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
 
+// Interfaces matching components
+interface CastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+interface Season {
+  id: number;
+  name: string;
+  season_number: number;
+  episode_count: number;
+  air_date: string;
+  poster_path: string;
+}
+
 interface MediaDetail {
   _id: string;
   filename: string;
@@ -18,10 +35,10 @@ interface MediaDetail {
   type: 'movie' | 'tv';
   tmdbId?: number;
   credits?: {
-    cast: any[];
+    cast: CastMember[];
   };
   isTmdb?: boolean;
-  seasons?: any[];
+  seasons?: Season[];
   // Technical Info
   mediaInfo?: {
     resolution?: '4K' | '1080p' | '720p' | 'SD';
@@ -40,7 +57,7 @@ export default function MovieDetail() {
   const { id, type } = useParams<{ id: string; type?: string }>();
   const navigate = useNavigate();
   const [media, setMedia] = useState<MediaDetail | null>(null);
-  const [cast, setCast] = useState<any[]>([]);
+  const [cast, setCast] = useState<CastMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [displayPoster, setDisplayPoster] = useState<string | undefined>(undefined);

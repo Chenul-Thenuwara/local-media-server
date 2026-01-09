@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Play, Film } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface MediaItem {
+export interface MediaItem {
   _id: string;
   title?: string;
   filename: string;

@@ -24,9 +24,9 @@ export default function Login() {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
       navigate('/home');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError((err as any).response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

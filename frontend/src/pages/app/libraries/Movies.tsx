@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
-import { MediaCard } from '../../../components/media/MediaCard';
+import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Film } from 'lucide-react';
 
 export default function Movies() {
-  const [movies, setMovies] = useState<any[]>([]);
+  const [movies, setMovies] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,9 +24,9 @@ export default function Movies() {
         console.error('API returned non-array:', res.data);
         setError('Invalid API response');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch movies', err);
-      setError(err.message || 'Failed to load movies');
+      setError((err as any).message || 'Failed to load movies');
     } finally {
       setLoading(false);
     }

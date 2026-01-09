@@ -49,14 +49,14 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
   const [showControls, setShowControls] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
 
-  const controlsTimeoutRef = useRef<any>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isVolAnimating, setIsVolAnimating] = useState(false);
-  const volAnimTimeoutRef = useRef<any>(null);
+  const volAnimTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Seek feedback state
   const [seekFeedback, setSeekFeedback] = useState<{ type: 'forward' | 'backward'; seconds: number } | null>(null);
   const seekAccumulatorRef = useRef(0);
-  const seekTimeoutRef = useRef<any>(null);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerVolAnim = useCallback(() => {
     setIsVolAnimating(true);
