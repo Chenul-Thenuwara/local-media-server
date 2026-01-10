@@ -4,10 +4,12 @@ import { Search as SearchIcon, Film, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '../../components/ui/Input';
 import { MediaCard } from '../../components/media/MediaCard';
-import { useDebounce } from '../../hooks/useDebounce';
 import TrendingBackground from '../../components/ui/TrendingBackground';
 import api from '../../lib/api';
+import { TMDB_GENRES, TMDB_TV_GENRES } from '../../lib/constants';
 import { Select } from '../../components/ui/Select';
+import { Button } from '../../components/ui/Button';
+import { cn } from '../../lib/utils';
 
 interface SearchResult {
   _id: string;
@@ -23,6 +25,7 @@ interface SearchResult {
   filename: string;
   releaseDate?: string;
   rating?: number;
+  genreIds?: number[];
 }
 
 interface RawSearchItem {
@@ -41,6 +44,7 @@ interface RawSearchItem {
   release_date?: string;
   first_air_date?: string;
   vote_average?: number;
+  genre_ids?: number[];
 }
 
 export default function Search() {
@@ -50,30 +54,45 @@ export default function Search() {
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const debouncedQuery = useDebounce(query, 300);
   const [globalResults, setGlobalResults] = useState<SearchResult[]>([]);
+  const [hasSearched, setHasSearched] = useState(!!initialQuery);
+  const [isError, setIsError] = useState(false);
 
   // Filters State
+  const [type, setType] = useState('All');
   const [genre, setGenre] = useState('All');
   const [rating, setRating] = useState('All');
   const [year, setYear] = useState('All');
   const [orderBy, setOrderBy] = useState('Latest');
 
   // Filter Options
-  // Note: Real genre filtering requires fetching genre list or mapping ids. 
-  // For now we'll stick to 'All' or basic types as placeholders or "Action", "Comedy" if we implement logic.
-  const genreOptions = [
+  const typeOptions = [
     { label: 'All', value: 'All' },
     { label: 'Movie', value: 'movie' },
     { label: 'TV Show', value: 'tv' },
   ];
 
+  // Combine unique genres for display
+  const allGenres = [...TMDB_GENRES, ...TMDB_TV_GENRES].reduce((acc, current) => {
+    const x = acc.find(item => item.id === current.id);
+    if (!x) {
+      return acc.concat([current]);
+    } else {
+      return acc;
+    }
+  }, [] as typeof TMDB_GENRES).sort((a, b) => a.name.localeCompare(b.name));
+
+  const genreOptions = [
+    { label: 'All', value: 'All' },
+    ...allGenres.map(g => ({ label: g.name, value: g.id.toString() }))
+  ];
+
   const ratingOptions = [
     { label: 'All', value: 'All' },
-    { label: 'IMDb 9+ ⭐', value: '9' },
-    { label: 'IMDb 8+ ⭐', value: '8' },
-    { label: 'IMDb 7+ ⭐', value: '7' },
-    { label: 'IMDb 6+ ⭐', value: '6' },
+    { label: 'IMDb 9+', value: '9' },
+    { label: 'IMDb 8+', value: '8' },
+    { label: 'IMDb 7+', value: '7' },
+    { label: 'IMDb 6+', value: '6' },
   ];
 
   const years = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i).toString());
@@ -86,27 +105,40 @@ export default function Search() {
     { label: 'Alphabetical', value: 'Alphabetical' },
   ];
 
-  useEffect(() => {
-    // ... (existing useEffect for sync URL)
-    if (debouncedQuery) {
-      setSearchParams({ q: debouncedQuery }, { replace: true });
-    } else {
-      setSearchParams({}, { replace: true });
-    }
-  }, [debouncedQuery, setSearchParams]);
+  const handleSearch = useCallback(async (searchQuery: string) => {
+    // Allow search if query exists OR if any filter is active
+    const isFilterActive = type !== 'All' || genre !== 'All' || year !== 'All';
 
-  const handleSearch = useCallback(async () => {
-    // ... (existing search logic)
-    if (!debouncedQuery.trim()) {
+    if (!searchQuery.trim() && !isFilterActive) {
       setResults([]);
       setGlobalResults([]);
       return;
     }
 
     setLoading(true);
+    setHasSearched(true);
+
+    // Update URL only if query exists, or manage filter params in URL (optional, skipping for now)
+    if (searchQuery.trim()) {
+      setSearchParams({ q: searchQuery }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+
     try {
-      const localReq = api.get(`/search?q=${encodeURIComponent(debouncedQuery)}`);
-      const globalReq = api.get(`/tmdb/search?q=${encodeURIComponent(debouncedQuery)}`);
+      // Build Query Params
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.append('q', searchQuery);
+      if (type !== 'All') params.append('type', type);
+      if (genre !== 'All') params.append('genre', genre);
+      if (year !== 'All') params.append('year', year);
+      if (rating !== 'All') params.append('rating', rating);
+      if (orderBy !== 'Latest') params.append('orderBy', orderBy);
+
+      const queryString = params.toString();
+
+      const localReq = api.get(`/search?${queryString}`);
+      const globalReq = api.get(`/tmdb/search?${queryString}`);
 
       const [localRes, globalRes] = await Promise.all([localReq, globalReq]);
 
@@ -120,7 +152,8 @@ export default function Search() {
         type: (item.type === 'movies' ? 'movie' : 'tv') as 'movie' | 'tv',
         title: item.title || item.name || '',
         releaseDate: item.release_date || item.first_air_date,
-        rating: item.vote_average
+        rating: item.vote_average,
+        genreIds: item.genre_ids || [] // Local items likely missing this
       }));
 
       const libraryTmdbIds = new Set(localNormalized.map((i) => i.tmdbId));
@@ -137,7 +170,8 @@ export default function Search() {
           type: (item.mediaType as 'movie' | 'tv') || 'movie',
           title: item.title || item.name || '',
           releaseDate: item.release_date || item.first_air_date,
-          rating: item.vote_average
+          rating: item.vote_average,
+          genreIds: item.genre_ids || []
         }));
 
       setResults(localNormalized);
@@ -148,27 +182,40 @@ export default function Search() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery]);
+  }, [setSearchParams, type, genre, year, rating, orderBy]);
 
-  // Trigger search
   useEffect(() => {
-    if (debouncedQuery.trim()) {
-      handleSearch();
-    } else {
-      setResults([]);
-      setGlobalResults([]);
+    // Initial search if query param exists
+    if (initialQuery && !hasSearched) {
+      handleSearch(initialQuery);
     }
-  }, [debouncedQuery, handleSearch]);
+  }, [initialQuery, hasSearched, handleSearch]);
+
+  const onSearchClick = () => {
+    handleSearch(query);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(query);
+    }
+  };
 
   // ---------------------------------------------
-  // Filter Logic
+  // Filter Logic (Client-side refinement)
   // ---------------------------------------------
   const filterAndSort = (items: SearchResult[]) => {
     let filtered = [...items];
 
-    // Filter by Genre (mapped to mediaType for simplicity or type)
+    // Filter by Type
+    if (type !== 'All') {
+      filtered = filtered.filter(item => item.mediaType === type);
+    }
+
+    // Filter by Genre (Real IDs)
     if (genre !== 'All') {
-      filtered = filtered.filter(item => item.mediaType === genre);
+      const genreId = parseInt(genre);
+      filtered = filtered.filter(item => item.genreIds && item.genreIds.includes(genreId));
     }
 
     // Filter by Rating
@@ -224,57 +271,76 @@ export default function Search() {
           <h1 className="text-3xl font-bold mb-6">Search Library & Global</h1>
 
           {/* Search Input */}
-          <div className="relative group mb-6">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-apple-blue transition-colors z-10" size={24} />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for movies, TV shows..."
-              className="pl-12 py-6 text-lg bg-white/5 border-white/10 focus:border-apple-blue/50 rounded-2xl"
-              autoFocus
-            />
-            {loading && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <Loader2 className="animate-spin text-apple-blue" size={20} />
-              </div>
-            )}
+          <div className="flex gap-4 mb-6">
+            <div className="relative group flex-1">
+              <SearchIcon className={cn("absolute left-4 top-1/2 -translate-y-1/2 transition-colors z-10", isError ? "text-red-500" : "text-gray-400 group-focus-within:text-apple-blue")} size={24} />
+              <Input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setHasSearched(false);
+                  setIsError(false);
+                }}
+                onKeyDown={onKeyDown}
+                placeholder={isError ? "Please enter a search term..." : "Search for movies, TV shows..."}
+                className={cn(
+                  "pl-12 py-6 text-lg bg-white/5 border-white/10 focus:border-apple-blue/50 rounded-2xl w-full transition-all",
+                  isError && "border-red-500/50 focus:border-red-500/50 placeholder:text-red-400/50"
+                )}
+                autoFocus
+              />
+            </div>
+            <Button
+              onClick={onSearchClick}
+              disabled={loading}
+              className="h-auto px-8 py-4 text-lg bg-apple-blue hover:bg-apple-blue/90 rounded-2xl font-medium min-w-[120px]"
+            >
+              {loading ? <Loader2 className="animate-spin mr-2" /> : 'Search'}
+            </Button>
           </div>
 
           {/* Filters Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Select
+              label="Type"
+              options={typeOptions}
+              value={type}
+              onChange={setType}
+            />
             <Select
               label="Genre"
               options={genreOptions}
               value={genre}
-              onChange={(e) => setGenre(e.target.value)}
+              onChange={setGenre}
             />
             <Select
               label="IMDb Rating"
               options={ratingOptions}
               value={rating}
-              onChange={(e) => setRating(e.target.value)}
+              onChange={setRating}
             />
             <Select
               label="Year"
               options={yearOptions}
               value={year}
-              onChange={(e) => setYear(e.target.value)}
+              onChange={setYear}
             />
             <Select
               label="Order By"
               options={orderByOptions}
               value={orderBy}
-              onChange={(e) => setOrderBy(e.target.value)}
+              onChange={setOrderBy}
             />
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {!query ? (
-            // ...
+          {!hasSearched && !loading ? (
             <div className="text-center text-gray-500 py-32 opacity-50">
               <Film size={64} className="mx-auto mb-6 opacity-20" />
-              <p className="text-xl">Start typing to search your collection and beyond</p>
+              <p className="text-xl">
+                {query ? 'Press Enter or click Search to find results' : 'Start typing to search your collection and beyond'}
+              </p>
             </div>
           ) : (
             <div className="space-y-12">
