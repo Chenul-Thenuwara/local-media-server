@@ -89,11 +89,11 @@ export function MediaCard({ item }: MediaCardProps) {
       localStorage.setItem('user', JSON.stringify(user));
       setInWatchlist(!inWatchlist);
 
-      // Dispatch storage event to sync other tabs/components if needed
-      window.dispatchEvent(new Event('storage'));
+      // Dispatch custom event for same-tab updates
+      window.dispatchEvent(new Event('watchlist-updated'));
+      window.dispatchEvent(new Event('storage')); // Keep this for multi-tab
     } catch (err) {
       console.error('Failed to toggle watchlist', err);
-      // alert('Failed to update watchlist'); 
     } finally {
       setLoading(false);
     }
