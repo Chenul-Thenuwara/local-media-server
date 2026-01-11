@@ -43,9 +43,17 @@ const Watchlist = () => {
   useEffect(() => {
     fetchWatchlist();
 
-    // Listen for background updates (e.g. from MediaCard toggle)
-    // Note: 'storage' event only fires for other tabs, so we might need a custom event or context for same-tab updates
-    // For now, re-fetching on focus or interval might be needed if state gets stale
+    const handleUpdate = () => {
+      fetchWatchlist();
+    };
+
+    window.addEventListener('watchlist-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate); // Cross-tab sync
+
+    return () => {
+      window.removeEventListener('watchlist-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   return (
