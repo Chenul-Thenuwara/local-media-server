@@ -6,6 +6,7 @@ import systemRoutes from './system';
 import streamRoutes from './stream';
 import searchRoutes from './search';
 import tmdbRoutes from './tmdb';
+import userRoutes from './userRoutes';
 import watchlistRoutes from './watchlist';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use('/stream', streamRoutes);
 router.use('/search', searchRoutes);
 router.use('/tmdb', tmdbRoutes);
 router.use('/watchlist', watchlistRoutes);
+router.use('/user', userRoutes);
 
 router.get('/', (req: Request, res: Response) => {
   res.send('API Root');
