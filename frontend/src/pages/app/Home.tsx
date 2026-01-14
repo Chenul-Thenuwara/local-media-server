@@ -368,12 +368,11 @@ export default function Home() {
               Play
             </Button> */}
             <Button
-              variant="glass"
               size="lg"
-              className="text-white hover:bg-white/20"
-              onClick={() => navigate(`/media/tmdb/movie/${featured.id}`)} // Navigate to details
+              className="bg-gray-500/30 hover:bg-gray-500/40 backdrop-blur-md border border-white/10 text-white px-8 py-7 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300"
+              onClick={() => navigate(`/media/tmdb/movie/${featured.id}`)}
             >
-              <Info size={20} className="mr-2" />
+              <Info className="mr-3 w-6 h-6 opacity-80" />
               More Info
             </Button>
           </motion.div>
