@@ -69,39 +69,55 @@ export default function Home() {
     }
 
     setIsSearching(true);
+    console.log(`Performing search for: "${query}"`);
+
     try {
-      const [localRes, globalRes] = await Promise.all([
+      // Run requests in parallel but handle errors individually
+      const [localRes, globalRes] = await Promise.allSettled([
         api.get(`/search?q=${query}`),
         api.get(`/tmdb/search?q=${query}`)
       ]);
 
-      // Normalize Local
-      const localItems: SearchResult[] = localRes.data.map((item: any) => ({
-        _id: item._id,
-        title: item.title || item.filename,
-        posterPath: item.posterPath || item.poster_path,
-        mediaType: item.type === 'movies' ? 'movie' : 'tv',
-        releaseDate: item.releaseDate || item.release_date,
-        isTmdb: false
-      }));
+      let combinedResults: SearchResult[] = [];
 
-      // Normalize Global
-      const globalItems: SearchResult[] = globalRes.data.results
-        .slice(0, 5) // Limit global results for dropdown
-        .map((item: any) => ({
-          _id: item.id.toString(),
-          title: item.title || item.name,
-          posterPath: item.poster_path,
-          mediaType: item.media_type || 'movie',
-          releaseDate: item.release_date || item.first_air_date,
-          isTmdb: true
+      // Process Local Results
+      if (localRes.status === 'fulfilled') {
+        const localItems: SearchResult[] = localRes.value.data.map((item: any) => ({
+          _id: item._id,
+          title: item.title || item.filename,
+          posterPath: item.posterPath || item.poster_path,
+          mediaType: (item.type === 'movie' || item.type === 'movies') ? 'movie' : 'tv',
+          releaseDate: item.releaseDate || item.release_date,
+          isTmdb: false
         }));
+        combinedResults = [...combinedResults, ...localItems];
+      } else {
+        console.error('Local search failed:', localRes.reason);
+      }
 
-      // Merge (Local first)
-      setSearchResults([...localItems, ...globalItems]);
-      setShowDropdown(true);
+      // Process Global Results
+      if (globalRes.status === 'fulfilled') {
+        const results = globalRes.value.data.results || [];
+        const globalItems: SearchResult[] = results
+          .slice(0, 5)
+          .map((item: any) => ({
+            _id: item.id.toString(),
+            title: item.title || item.name,
+            posterPath: item.poster_path,
+            mediaType: item.media_type || 'movie',
+            releaseDate: item.release_date || item.first_air_date,
+            isTmdb: true
+          }));
+        combinedResults = [...combinedResults, ...globalItems];
+      } else {
+        console.error('Global search failed:', globalRes.reason);
+      }
+
+      console.log(`Found ${combinedResults.length} combined results`);
+      setSearchResults(combinedResults);
+      setShowDropdown(combinedResults.length > 0);
     } catch (error) {
-      console.error('Instant search failed', error);
+      console.error('Critical instant search error', error);
     } finally {
       setIsSearching(false);
     }
