@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Info, FolderPlus, Film, Tv, Search, Loader2 } from 'lucide-react';
+import { Info, FolderPlus, Film, Tv, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -47,7 +47,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const searchTimeout = useRef<NodeJS.Timeout>();
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -80,14 +80,35 @@ export default function Home() {
 
       let combinedResults: SearchResult[] = [];
 
+      // Define interfaces for API responses
+      interface LocalSearchItem {
+        _id: string;
+        title?: string;
+        filename: string;
+        posterPath?: string;
+        type: 'movie' | 'tv' | 'movies'; // 'movies' handles legacy/singular mismatch
+        releaseDate?: string;
+      }
+
+      interface TmdbSearchItem {
+        id: number;
+        title?: string;
+        name?: string;
+        poster_path?: string;
+        media_type?: 'movie' | 'tv';
+        release_date?: string;
+        first_air_date?: string;
+      }
+
       // Process Local Results
       if (localRes.status === 'fulfilled') {
-        const localItems: SearchResult[] = localRes.value.data.map((item: any) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const localItems: SearchResult[] = (localRes.value.data as LocalSearchItem[]).map((item) => ({
           _id: item._id,
           title: item.title || item.filename,
-          posterPath: item.posterPath || item.poster_path,
+          posterPath: item.posterPath,
           mediaType: (item.type === 'movie' || item.type === 'movies') ? 'movie' : 'tv',
-          releaseDate: item.releaseDate || item.release_date,
+          releaseDate: item.releaseDate,
           isTmdb: false
         }));
         combinedResults = [...combinedResults, ...localItems];
@@ -97,12 +118,13 @@ export default function Home() {
 
       // Process Global Results
       if (globalRes.status === 'fulfilled') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const results = globalRes.value.data.results || [];
-        const globalItems: SearchResult[] = results
+        const globalItems: SearchResult[] = (results as TmdbSearchItem[])
           .slice(0, 5)
-          .map((item: any) => ({
+          .map((item) => ({
             _id: item.id.toString(),
-            title: item.title || item.name,
+            title: item.title || item.name || 'Unknown',
             posterPath: item.poster_path,
             mediaType: item.media_type || 'movie',
             releaseDate: item.release_date || item.first_air_date,

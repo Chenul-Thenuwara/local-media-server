@@ -23,6 +23,7 @@ const Discover = () => {
     try {
       const res = await fetch(`http://localhost:3000/api/tmdb/trending?page=${pageNum}`);
       const data = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newMovies = data.results || [];
 
       if (pageNum === 1) {
