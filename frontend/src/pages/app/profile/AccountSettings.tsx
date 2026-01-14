@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { User, Lock, Mail, Save, KeyRound, ShieldCheck, AlertCircle } from 'lucide-react';
 import api from '../../../lib/api';
@@ -31,11 +31,7 @@ const AccountSettings = () => {
   // UI States
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const res = await api.get('/user/profile');
       setProfile(res.data);
@@ -47,7 +43,11 @@ const AccountSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +71,9 @@ const AccountSettings = () => {
         window.dispatchEvent(new Event('storage'));
       }
 
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile' });
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setMessage({ type: 'error', text: (err as any).response?.data?.message || 'Failed to update profile' });
     } finally {
       setSaving(false);
     }
@@ -101,8 +102,9 @@ const AccountSettings = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to change password' });
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setMessage({ type: 'error', text: (err as any).response?.data?.message || 'Failed to change password' });
     } finally {
       setSaving(false);
     }

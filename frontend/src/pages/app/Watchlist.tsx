@@ -67,13 +67,13 @@ const Watchlist = () => {
 
     // Sort
     if (sort === 'title') {
-      result.sort((a, b) => a.title.localeCompare(b.title));
+      result.sort((a, b) => (a.title || a.filename || '').localeCompare(b.title || b.filename || ''));
     } else if (sort === 'release_date') {
       // Note: watchlist items currently don't store release date in the mapped object above
       // If we need true release date sorting, we should add it to the backend response or mapped object.
       // For now, fallback to title or keep original order.
       // Let's assume title for stability if date missing.
-      result.sort((a, b) => a.title.localeCompare(b.title));
+      result.sort((a, b) => (a.title || a.filename || '').localeCompare(b.title || b.filename || ''));
     } else {
       // date_added (assuming backend returns in insertion order or latest first?)
       // If backend returns latest first, default is fine.
