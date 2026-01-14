@@ -1,14 +1,15 @@
 import { motion } from 'framer-motion';
-import { Film, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Film } from 'lucide-react';
 import { MediaCard, type MediaItem } from '../../components/media/MediaCard';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../../lib/api';
-
-// MOCK_WATCHLIST removed
+import { Select } from '../../components/ui/Select';
 
 const Watchlist = () => {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('date_added');
 
   // Define the backend response shape locally
   interface WatchlistEntry {
@@ -56,6 +57,33 @@ const Watchlist = () => {
     };
   }, []);
 
+  const filteredItems = useMemo(() => {
+    let result = [...items];
+
+    // Filter
+    if (filter !== 'all') {
+      result = result.filter(item => item.mediaType === filter);
+    }
+
+    // Sort
+    if (sort === 'title') {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort === 'release_date') {
+      // Note: watchlist items currently don't store release date in the mapped object above
+      // If we need true release date sorting, we should add it to the backend response or mapped object.
+      // For now, fallback to title or keep original order.
+      // Let's assume title for stability if date missing.
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else {
+      // date_added (assuming backend returns in insertion order or latest first?)
+      // If backend returns latest first, default is fine.
+      // If we want to reverse default (oldest first?), we can.
+      // Generally 'Recent' is preferred. assuming items is already recents.
+    }
+
+    return result;
+  }, [items, filter, sort]);
+
   return (
     <div className="p-8 pb-20 overflow-y-auto h-full">
       {/* Header */}
@@ -67,15 +95,30 @@ const Watchlist = () => {
           <p className="text-gray-400 mt-1">Your planned movies and TV shows</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm font-medium text-gray-300">
-            <SlidersHorizontal size={16} />
-            <span>Filter</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm font-medium text-gray-300">
-            <ArrowUpDown size={16} />
-            <span>Sort</span>
-          </button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="w-32">
+            <Select
+              label="Type"
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { label: 'All', value: 'all' },
+                { label: 'Movies', value: 'movie' },
+                { label: 'TV Shows', value: 'tv' },
+              ]}
+            />
+          </div>
+          <div className="w-40">
+            <Select
+              label="Sort By"
+              value={sort}
+              onChange={setSort}
+              options={[
+                { label: 'Date Added', value: 'date_added' },
+                { label: 'Title (A-Z)', value: 'title' },
+              ]}
+            />
+          </div>
         </div>
       </div>
 
@@ -87,14 +130,15 @@ const Watchlist = () => {
       )}
 
       {/* Grid */}
-      {!loading && items.length > 0 ? (
+      {!loading && filteredItems.length > 0 ? (
         <motion.div
+          layout
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"
         >
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <MediaCard key={item._id} item={item} />
           ))}
         </motion.div>
@@ -103,8 +147,8 @@ const Watchlist = () => {
           <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <Film size={40} className="opacity-50" />
           </div>
-          <p className="text-xl font-medium text-gray-400">Your watchlist is empty</p>
-          <p className="text-sm mt-2">Add movies and shows to keep track of what to watch next.</p>
+          <p className="text-xl font-medium text-gray-400">No items found</p>
+          <p className="text-sm mt-2">Try adjusting your filters or add some content.</p>
         </div>
       )}
     </div>
