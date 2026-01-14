@@ -359,11 +359,20 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-4"
           >
-            <Button size="lg" className="bg-white text-black hover:bg-gray-200 border-none shadow-xl">
+            {/* 
+              TODO: Check if this trending item exists locally before showing Play.
+              For now, hiding Play to avoid confusion since these are external TMDB results.
+            */}
+            {/* <Button size="lg" className="bg-white text-black hover:bg-gray-200 border-none shadow-xl">
               <Play fill="currentColor" size={20} className="mr-2" />
               Play
-            </Button>
-            <Button variant="glass" size="lg" className="text-white hover:bg-white/20">
+            </Button> */}
+            <Button
+              variant="glass"
+              size="lg"
+              className="text-white hover:bg-white/20"
+              onClick={() => navigate(`/media/tmdb/movie/${featured.id}`)} // Navigate to details
+            >
               <Info size={20} className="mr-2" />
               More Info
             </Button>
