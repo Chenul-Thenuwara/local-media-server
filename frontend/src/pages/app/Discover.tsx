@@ -13,15 +13,39 @@ interface Movie {
 const Discover = () => {
   const [trending, setTrending] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const loadMovies = async (pageNum: number) => {
+    if (pageNum === 1) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/tmdb/trending?page=${pageNum}`);
+      const data = await res.json();
+      const newMovies = data.results || [];
+
+      if (pageNum === 1) {
+        setTrending(newMovies);
+      } else {
+        // Filter out duplicates just in case
+        setTrending(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNew = newMovies.filter((m: Movie) => !existingIds.has(m.id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+      setPage(pageNum);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/tmdb/trending')
-      .then(res => res.json())
-      .then(data => {
-        setTrending(data.results || []);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
+    loadMovies(1);
   }, []);
 
   if (loading) {
@@ -62,7 +86,24 @@ const Discover = () => {
             />
           ))}
         </div>
-        <div className="h-20" /> {/* Bottom spacer */}
+
+        {/* Load More Button */}
+        <div className="flex justify-center pt-8 pb-4">
+          <button
+            onClick={() => loadMovies(page + 1)}
+            disabled={loadingMore}
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {loadingMore ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Load More Movies'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
