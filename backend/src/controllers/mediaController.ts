@@ -3,13 +3,25 @@ import Media from '../models/Media';
 import Library from '../models/Library';
 
 // Get recent media (limit 20)
+// Get recent media (limit 20)
 export const getRecentMedia = async (req: Request, res: Response): Promise<void> => {
   try {
     // @ts-ignore
     const userId = req.user.id;
+    const { type } = req.query;
 
-    const libraries = await Library.find({ userId });
+    let libQuery: any = { userId };
+    if (type) {
+      libQuery.type = type;
+    }
+
+    const libraries = await Library.find(libQuery);
     const libraryIds = libraries.map(lib => lib._id);
+
+    if (libraryIds.length === 0) {
+      res.json([]);
+      return;
+    }
 
     const media = await Media.find({ libraryId: { $in: libraryIds } })
       .sort({ createdAt: -1 })

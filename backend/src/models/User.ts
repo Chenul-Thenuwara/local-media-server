@@ -6,7 +6,17 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   role: 'admin' | 'viewer' | 'guest';
+  watchlist: {
+    mediaId?: string;
+    tmdbId?: number;
+    mediaType: 'movie' | 'tv';
+    title: string;
+    posterPath?: string;
+    addedAt: Date;
+  }[];
   comparePassword(candidatePassword: string): Promise<boolean>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const UserSchema: Schema = new Schema({
@@ -14,6 +24,14 @@ const UserSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'viewer', 'guest'], default: 'viewer' },
+  watchlist: [{
+    mediaId: String,
+    tmdbId: Number,
+    mediaType: { type: String, enum: ['movie', 'tv'], required: true },
+    title: { type: String, required: true },
+    posterPath: String,
+    addedAt: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 // Hash password before saving

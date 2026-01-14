@@ -5,9 +5,8 @@ export const searchMedia = async (req: Request, res: Response) => {
   try {
     const { q, type } = req.query;
 
-    if (!q || typeof q !== 'string') {
-      res.status(400).json({ message: 'Search query is required' });
-      return;
+    if ((!q || typeof q !== 'string') && !type) {
+      // If absolutely nothing is provided, return recent 50
     }
 
     // @ts-ignore
@@ -20,15 +19,24 @@ export const searchMedia = async (req: Request, res: Response) => {
 
     // 2. Search within those libraries
     const query: any = {
-      libraryId: { $in: libraryIds },
-      $or: [
+      libraryId: { $in: libraryIds }
+    };
+
+    if (q && typeof q === 'string') {
+      query.$or = [
         { title: { $regex: q, $options: 'i' } },
         { original_title: { $regex: q, $options: 'i' } }
-      ]
-    };
+      ];
+    }
 
     if (type && type !== 'all') {
       query.type = type;
+    }
+
+    const { year } = req.query;
+    if (year && typeof year === 'string' && year !== 'All') {
+      // Local media stores releaseDate as string "YYYY-MM-DD"
+      query.releaseDate = { $regex: `^${year}` };
     }
 
     const results = await Media.find(query).limit(100).sort({ title: 1 });

@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Play, Info, FolderPlus, Film, Tv } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Info, FolderPlus, Film, Tv, Search, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { FolderPicker } from '../../components/ui/FolderPicker';
@@ -22,14 +23,139 @@ interface Library {
   type: 'movies' | 'tv';
 }
 
+interface SearchResult {
+  _id: string;
+  title: string;
+  posterPath?: string;
+  mediaType: 'movie' | 'tv';
+  releaseDate?: string;
+  isTmdb?: boolean;
+}
+
 export default function Home() {
+  const navigate = useNavigate();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Dashboard Data
   const [featured, setFeatured] = useState<Movie | null>(null);
-  // const [trending, setTrending] = useState<Movie[]>([]);
-  const [localMedia, setLocalMedia] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [recentMovies, setRecentMovies] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [recentTV, setRecentTV] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  // Instant Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    console.log(`Performing search for: "${query}"`);
+
+    try {
+      // Run requests in parallel but handle errors individually
+      const [localRes, globalRes] = await Promise.allSettled([
+        api.get(`/search?q=${query}`),
+        api.get(`/tmdb/search?q=${query}`)
+      ]);
+
+      let combinedResults: SearchResult[] = [];
+
+      // Define interfaces for API responses
+      interface LocalSearchItem {
+        _id: string;
+        title?: string;
+        filename: string;
+        posterPath?: string;
+        type: 'movie' | 'tv' | 'movies'; // 'movies' handles legacy/singular mismatch
+        releaseDate?: string;
+      }
+
+      interface TmdbSearchItem {
+        id: number;
+        title?: string;
+        name?: string;
+        poster_path?: string;
+        media_type?: 'movie' | 'tv';
+        release_date?: string;
+        first_air_date?: string;
+      }
+
+      // Process Local Results
+      if (localRes.status === 'fulfilled') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const localItems: SearchResult[] = (localRes.value.data as LocalSearchItem[]).map((item) => ({
+          _id: item._id,
+          title: item.title || item.filename,
+          posterPath: item.posterPath,
+          mediaType: (item.type === 'movie' || item.type === 'movies') ? 'movie' : 'tv',
+          releaseDate: item.releaseDate,
+          isTmdb: false
+        }));
+        combinedResults = [...combinedResults, ...localItems];
+      } else {
+        console.error('Local search failed:', localRes.reason);
+      }
+
+      // Process Global Results
+      if (globalRes.status === 'fulfilled') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const results = globalRes.value.data.results || [];
+        const globalItems: SearchResult[] = (results as TmdbSearchItem[])
+          .slice(0, 5)
+          .map((item) => ({
+            _id: item.id.toString(),
+            title: item.title || item.name || 'Unknown',
+            posterPath: item.poster_path,
+            mediaType: item.media_type || 'movie',
+            releaseDate: item.release_date || item.first_air_date,
+            isTmdb: true
+          }));
+        combinedResults = [...combinedResults, ...globalItems];
+      } else {
+        console.error('Global search failed:', globalRes.reason);
+      }
+
+      console.log(`Found ${combinedResults.length} combined results`);
+      setSearchResults(combinedResults);
+      setShowDropdown(combinedResults.length > 0);
+    } catch (error) {
+      console.error('Critical instant search error', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+
+    // Debounce 300ms
+    searchTimeout.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+  };
 
   // Setup Form State
   const [setupName, setSetupName] = useState('');
@@ -45,7 +171,6 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         const movies = data.results || [];
-        // setTrending(movies); // Unused
         if (movies.length > 0) {
           setFeatured(movies[Math.floor(Math.random() * movies.length)]);
         }
@@ -54,8 +179,12 @@ export default function Home() {
 
     // 2. Fetch Local Media (Internal)
     try {
-      const res = await api.get('/media/recent');
-      setLocalMedia(res.data);
+      const [moviesRes, tvRes] = await Promise.all([
+        api.get('/media/recent?type=movies'),
+        api.get('/media/recent?type=tv')
+      ]);
+      setRecentMovies(moviesRes.data);
+      setRecentTV(tvRes.data);
     } catch (err) {
       console.error('Failed to fetch local media', err);
     }
@@ -92,9 +221,25 @@ export default function Home() {
       await checkLibraries();
     } catch (err) {
       console.error('Failed to create library', err);
-      confirm('Failed to add folder'); // Alert is sometimes linted against, using confirm or just console
+      confirm('Failed to add folder');
     } finally {
       setSetupLoading(false);
+    }
+  };
+
+  const triggerRefresh = async (type: 'movies' | 'tv') => {
+    const targetLibs = libraries.filter(l => l.type === type);
+    if (targetLibs.length === 0) return;
+
+    // Refresh all libraries of this type
+    await Promise.all(targetLibs.map(lib => api.post(`/libraries/${lib._id}/refresh`)));
+    setTimeout(fetchDashboardData, 2000);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      navigate(`/search?q=${searchQuery}`);
+      setShowDropdown(false);
     }
   };
 
@@ -236,33 +381,112 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-4"
           >
-            <Button size="lg" className="bg-white text-black hover:bg-gray-200 border-none shadow-xl">
+            {/* 
+              TODO: Check if this trending item exists locally before showing Play.
+              For now, hiding Play to avoid confusion since these are external TMDB results.
+            */}
+            {/* <Button size="lg" className="bg-white text-black hover:bg-gray-200 border-none shadow-xl">
               <Play fill="currentColor" size={20} className="mr-2" />
               Play
-            </Button>
-            <Button variant="glass" size="lg" className="text-white hover:bg-white/20">
-              <Info size={20} className="mr-2" />
+            </Button> */}
+            <Button
+              size="lg"
+              className="bg-gray-500/30 hover:bg-gray-500/40 backdrop-blur-md border border-white/10 text-white px-8 py-7 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300"
+              onClick={() => navigate(`/media/tmdb/movie/${featured.id}`)}
+            >
+              <Info className="mr-3 w-6 h-6 opacity-80" />
               More Info
             </Button>
           </motion.div>
         </div>
       </div>
 
+      {/* Top Bar (Search) - Moved outside overflow-hidden hero */}
+      <div className="absolute top-0 right-0 p-8 z-50 w-full max-w-md flex justify-end pointer-events-auto" ref={dropdownRef}>
+        <div className="relative group w-64 focus-within:w-80 transition-all duration-300">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white transition-colors z-10 pointer-events-none" size={18} />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={handleSearchInput}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (searchResults.length > 0) setShowDropdown(true);
+            }}
+            className="w-full bg-black/20 backdrop-blur-md border border-white/10 rounded-full py-2.5 pl-10 pr-10 text-sm text-white placeholder-white/50 focus:outline-none focus:bg-black/40 focus:border-white/30 transition-all shadow-lg"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 animate-spin" size={16} />
+          )}
+
+          {/* Instant Search Dropdown */}
+          <AnimatePresence>
+            {showDropdown && searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full mt-2 w-full bg-[#1c1c1e]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[400px] overflow-y-auto scrollbar-hide"
+              >
+                <div className="p-2 space-y-1">
+                  {searchResults.map((item) => (
+                    <div
+                      key={`${item.isTmdb ? 'tmdb' : 'local'}-${item._id}`}
+                      onClick={() => {
+                        navigate(`/media/${item._id}`);
+                        setShowDropdown(false);
+                      }}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 cursor-pointer transition-colors group"
+                    >
+                      <div className="w-10 h-14 bg-gray-800 rounded-md overflow-hidden shrink-0">
+                        {item.posterPath ? (
+                          <img src={`https://image.tmdb.org/t/p/w92${item.posterPath}`} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500"><Film size={16} /></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-white truncate group-hover:text-apple-blue transition-colors">{item.title}</h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <span>{item.releaseDate ? new Date(item.releaseDate).getFullYear() : 'Unknown'}</span>
+                          <span>•</span>
+                          <span className="capitalize">{item.mediaType}</span>
+                          {item.isTmdb && <span className="text-[10px] bg-apple-blue/20 text-apple-blue px-1.5 py-0.5 rounded">TMDB</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  onClick={() => navigate(`/search?q=${searchQuery}`)}
+                  className="p-3 text-center text-xs font-medium text-apple-blue border-t border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
+                >
+                  View all results for "{searchQuery}"
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
       {/* Media Rows */}
       <div className="px-12 -mt-20 relative z-20 space-y-12">
-        {localMedia.length > 0 && (
+        {recentMovies.length > 0 && (
           <MediaRow
-            title="My Library"
-            items={localMedia}
-            onRefresh={async () => {
-              if (libraries.length > 0) {
-                await api.post(`/libraries/${libraries[0]._id}/refresh`);
-                setTimeout(fetchDashboardData, 2000);
-              }
-            }}
+            title="Recent Movies"
+            items={recentMovies}
+            onRefresh={() => triggerRefresh('movies')}
           />
         )}
 
+        {recentTV.length > 0 && (
+          <MediaRow
+            title="Recent TV Shows"
+            items={recentTV}
+            onRefresh={() => triggerRefresh('tv')}
+          />
+        )}
       </div>
     </div>
   );
