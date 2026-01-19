@@ -1,10 +1,15 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Play, Pause, Volume2, Volume1, VolumeX, Maximize, Minimize, FastForward, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import api from '../../lib/api';
 
 interface VideoPlayerProps {
   mediaId: string;
   onClose: () => void;
+  title: string;
+  posterPath?: string;
+  tmdbId?: number;
+  mediaType: 'movie' | 'tv';
 }
 
 const Volume3 = ({ size = 24, className }: { size?: number, className?: string }) => (
@@ -35,13 +40,32 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
+export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
   const streamUrl = `http://localhost:3000/api/stream/${mediaId}?token=${token}`;
 
   const [playing, setPlaying] = useState(false);
+
+  // Track History on Mount
+  useEffect(() => {
+    const trackHistory = async () => {
+      try {
+        await api.post('/history', {
+          mediaId: tmdbId ? undefined : mediaId, // Only send mediaId if local
+          tmdbId,
+          mediaType,
+          title,
+          posterPath
+        });
+        console.log('Added to history');
+      } catch (err) {
+        console.error('Failed to track history', err);
+      }
+    };
+    trackHistory();
+  }, [mediaId, tmdbId, mediaType, title, posterPath]);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
