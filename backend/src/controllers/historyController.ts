@@ -161,3 +161,130 @@ export const getHistory = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// @desc    Get next recommendation for a specific media
+// @route   GET /api/history/next/:tmdbId
+// @access  Private
+export const getNextRecommendation = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tmdbId } = req.params;
+    const { type = 'movie' } = req.query; // 'movie' or 'tv'
+    const apiKey = process.env.TMDB_API_KEY;
+
+    if (!apiKey) {
+      res.status(500).json({ message: 'TMDB API Key missing' });
+      return;
+    }
+
+    // 1. Get Details of Current Media
+    const detailsUrl = `https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${apiKey}&language=en-US`;
+    let currentGenres: number[] = [];
+    let collectionId = null;
+
+    try {
+      const { data: details } = await axios.get(detailsUrl);
+      currentGenres = details.genres.map((g: any) => g.id);
+      if (details.belongs_to_collection) {
+        collectionId = details.belongs_to_collection.id;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch media details', e);
+    }
+
+    let nextUp: any = null;
+
+    // 2. PRIORITY ONE: Check for Sequel (Collection)
+    if (collectionId && type === 'movie') {
+      try {
+        const collectionUrl = `https://api.themoviedb.org/3/collection/${collectionId}?api_key=${apiKey}&language=en-US`;
+        const { data: collection } = await axios.get(collectionUrl);
+
+        // Sort by release date
+        const parts = collection.parts.sort((a: any, b: any) => {
+          return new Date(a.release_date || '9999-12-31').getTime() - new Date(b.release_date || '9999-12-31').getTime();
+        });
+
+        // Find current index
+        const currentIndex = parts.findIndex((p: any) => p.id === parseInt(tmdbId));
+
+        // Get Next
+        if (currentIndex !== -1 && currentIndex < parts.length - 1) {
+          nextUp = parts[currentIndex + 1];
+          // Ensure it has images, if not maybe skip to next? 
+          if (!nextUp.backdrop_path) {
+            // try one more ahead if exists
+            if (currentIndex < parts.length - 2) {
+              nextUp = parts[currentIndex + 2];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch collection details', e);
+      }
+    }
+
+    // 3. PRIORITY TWO: Relatable (Similar + Genre Match)
+    if (!nextUp) {
+      // 'Similar' is better for "more like this" based on plot/themes
+      const similarUrl = `https://api.themoviedb.org/3/${type}/${tmdbId}/similar?api_key=${apiKey}&language=en-US&page=1`;
+      let results: any[] = [];
+
+      try {
+        const { data } = await axios.get(similarUrl);
+        results = data.results || [];
+      } catch (e) {
+        console.warn('Failed to fetch similar, falling back to empty array');
+      }
+
+      // Fallback to Recommendations
+      if (results.length === 0) {
+        const recUrl = `https://api.themoviedb.org/3/${type}/${tmdbId}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
+        try {
+          const { data } = await axios.get(recUrl);
+          results = data.results || [];
+        } catch (e) {
+          console.warn('Failed to fetch recommendations fallback', e);
+        }
+      }
+
+      // Filter candidates
+      let candidates = results.filter((item: any) => item.backdrop_path && item.poster_path);
+
+      // Genre Match
+      if (currentGenres.length > 0) {
+        const genreMatches = candidates.filter((item: any) =>
+          item.genre_ids && item.genre_ids.some((id: number) => currentGenres.includes(id))
+        );
+        if (genreMatches.length > 0) {
+          candidates = genreMatches;
+        }
+      }
+      nextUp = candidates[0];
+    }
+
+    if (!nextUp) {
+      res.status(404).json({ message: 'No recommendations found' });
+      return;
+    }
+
+    // Format for frontend
+    const formatted = {
+      _id: nextUp.id.toString(),
+      tmdbId: nextUp.id,
+      title: nextUp.title || nextUp.name,
+      original_title: nextUp.original_title || nextUp.original_name,
+      posterPath: nextUp.poster_path,
+      backdropPath: nextUp.backdrop_path,
+      overview: nextUp.overview,
+      mediaType: nextUp.media_type || type,
+      rating: nextUp.vote_average,
+      isTmdb: true
+    };
+
+    res.json(formatted);
+
+  } catch (error) {
+    console.error('Next Recommendation Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -47,6 +47,47 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
   const streamUrl = `http://localhost:3000/api/stream/${mediaId}?token=${token}`;
 
   const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isVolAnimating, setIsVolAnimating] = useState(false);
+  const volAnimTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Seek feedback state
+  const [seekFeedback, setSeekFeedback] = useState<{ type: 'forward' | 'backward'; seconds: number } | null>(null);
+  const seekAccumulatorRef = useRef(0);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [nextUpMedia, setNextUpMedia] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [showNextUp, setShowNextUp] = useState(false);
+  const [hasShownNextUp, setHasShownNextUp] = useState(false);
+
+  // Fetch Up Next
+  useEffect(() => {
+    if (!tmdbId) return;
+    api.get(`/history/next/${tmdbId}?type=${mediaType}`)
+      .then(res => setNextUpMedia(res.data))
+      .catch(console.error);
+  }, [tmdbId, mediaType]);
+
+  // Check for End of Video
+  useEffect(() => {
+    if (duration > 0 && currentTime > 0) {
+      const remaining = duration - currentTime;
+      // Show when credits likely start (approx 5 mins remaining or 95% done)
+      // This is a heuristic since we don't have exact credit markers
+      if (remaining < 300 && !hasShownNextUp && !showNextUp && nextUpMedia) {
+        console.log('Showing Up Next (Credits Helper)');
+        setShowNextUp(true);
+        setHasShownNextUp(true);
+      }
+    }
+  }, [currentTime, duration, hasShownNextUp, showNextUp, nextUpMedia]);
 
   // Track History on Mount
   useEffect(() => {
@@ -66,21 +107,7 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
     };
     trackHistory();
   }, [mediaId, tmdbId, mediaType, title, posterPath]);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
 
-  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isVolAnimating, setIsVolAnimating] = useState(false);
-  const volAnimTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Seek feedback state
-  const [seekFeedback, setSeekFeedback] = useState<{ type: 'forward' | 'backward'; seconds: number } | null>(null);
-  const seekAccumulatorRef = useRef(0);
-  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerVolAnim = useCallback(() => {
     setIsVolAnimating(true);
@@ -241,8 +268,55 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
       {/* Overlay Gradient */}
       <div className={cn(
         "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none transition-opacity duration-300",
-        showControls ? "opacity-100" : "opacity-0"
+        showControls && !showNextUp ? "opacity-100" : "opacity-0"
       )} />
+
+      {/* UP NEXT OVERLAY */}
+      {showNextUp && nextUpMedia && (
+        <div className="absolute inset-0 z-50 flex items-center justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-500">
+          {/* Background Image with Gradient */}
+          <div className="absolute inset-0 z-0 opacity-40">
+            <img
+              src={`https://image.tmdb.org/t/p/original${nextUpMedia.backdropPath}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-black via-black/80 to-transparent" />
+          </div>
+
+          <div className="relative z-10 p-12 max-w-2xl text-right flex flex-col items-end gap-6 mr-10">
+            <div className="space-y-2">
+              <span className="text-gray-400 font-medium uppercase tracking-widest text-sm">Up Next</span>
+              <h2 className="text-5xl font-bold text-white leading-tight drop-shadow-2xl">
+                {nextUpMedia.title}
+              </h2>
+              <p className="text-lg text-gray-300 line-clamp-2 max-w-xl text-right drop-shadow-md">
+                {nextUpMedia.overview}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 mt-4">
+              <button
+                onClick={onClose}
+                className="px-8 py-4 rounded-xl font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // This is a bit of a hack: reload the window with new ID or use callback
+                  // Ideally, we'd have a prop to switch media, but for now navigate/reload works
+                  window.location.href = `/media/tmdb/${nextUpMedia.mediaType}/${nextUpMedia.tmdbId}`;
+                }}
+                className="px-10 py-4 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition-transform active:scale-95 flex items-center gap-3 shadow-xl"
+              >
+                <Play fill="currentColor" size={24} />
+                Play Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Controls Container */}
       <div className={cn(
