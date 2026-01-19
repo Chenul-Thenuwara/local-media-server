@@ -41,7 +41,6 @@ export default function Home() {
   const [featured, setFeatured] = useState<Movie | null>(null);
   const [recentMovies, setRecentMovies] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [recentTV, setRecentTV] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
-  const [recommendations, setRecommendations] = useState<any[]>([]);
 
   // Instant Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -186,10 +185,6 @@ export default function Home() {
       ]);
       setRecentMovies(moviesRes.data);
       setRecentTV(tvRes.data);
-
-      // 3. Fetch Recommendations
-      const recsRes = await api.get('/history/recommendations');
-      setRecommendations(recsRes.data);
     } catch (err) {
       console.error('Failed to fetch local media', err);
     }
@@ -477,12 +472,6 @@ export default function Home() {
 
       {/* Media Rows */}
       <div className="px-12 -mt-20 relative z-20 space-y-12">
-        {recommendations.length > 0 && (
-          <MediaRow
-            title="Recommended for You"
-            items={recommendations}
-          />
-        )}
         {recentMovies.length > 0 && (
           <MediaRow
             title="Recent Movies"

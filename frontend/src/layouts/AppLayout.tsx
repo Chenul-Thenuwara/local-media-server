@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
   Film, Tv, Music, Image, Video,
-  Shield, User, LogOut, Play, PanelLeftClose, type LucideIcon
+  Shield, User, LogOut, Play, PanelLeftClose, History, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -75,6 +75,7 @@ export default function AppLayout() {
             <NavItem to="/discover" icon={Compass} collapsed={!sidebarOpen}>Discover</NavItem>
             <NavItem to="/search" icon={Search} collapsed={!sidebarOpen}>Search</NavItem>
             <NavItem to="/watchlist" icon={Bookmark} collapsed={!sidebarOpen}>Watchlist</NavItem>
+            <NavItem to="/history" icon={History} collapsed={!sidebarOpen}>History</NavItem>
           </div>
 
           <div className="space-y-1">
