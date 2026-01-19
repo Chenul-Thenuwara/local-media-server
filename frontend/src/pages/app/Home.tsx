@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { FolderPicker } from '../../components/ui/FolderPicker';
 import { MediaRow } from '../../components/media/MediaRow';
+import TrendingBackground from '../../components/ui/TrendingBackground';
 import api from '../../lib/api';
 
 interface Movie {
@@ -246,9 +247,16 @@ export default function Home() {
   if (loading) return <div className="h-full flex items-center justify-center text-gray-500">Loading...</div>;
 
   // EMPTY STATE: Show Setup Wizard
+  // EMPTY STATE: Show Setup Wizard
   if (libraries.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 bg-black relative">
+      <div className="h-full flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Animated Background */}
+        <TrendingBackground />
+
+        {/* Overlay Darkener */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-0" />
+
         {showPicker && (
           <FolderPicker
             onCancel={() => setShowPicker(false)}
@@ -259,83 +267,110 @@ export default function Home() {
           />
         )}
 
-        <div className="w-full max-w-md space-y-8 text-center">
-          <div className="mx-auto w-20 h-20 bg-apple-blue/10 rounded-[28px] flex items-center justify-center text-apple-blue mb-6">
-            <FolderPlus size={40} />
-          </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md space-y-6 text-center relative z-10"
+        >
+          <div className="space-y-3">
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-[20px] flex items-center justify-center text-white backdrop-blur-xl border border-white/10 shadow-2xl mb-4 ring-1 ring-white/20"
+            >
+              <FolderPlus size={32} className="drop-shadow-glow" />
+            </motion.div>
 
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Add Your Media</h1>
-            <p className="text-gray-400">
-              To get started, point LMS to a folder containing your movies or TV shows.
+            <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-xl">
+              Add Your Media
+            </h1>
+            <p className="text-base text-gray-300 max-w-sm mx-auto leading-relaxed">
+              Connect your local folder to build your personal library.
             </p>
           </div>
 
-          <form onSubmit={handleAddLibrary} className="bg-[#1c1c1e] p-6 rounded-[24px] border border-white/5 space-y-4 text-left shadow-2xl">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Library Name</label>
+          <form onSubmit={handleAddLibrary} className="bg-black/40 backdrop-blur-xl p-6 rounded-[24px] border border-white/10 space-y-5 text-left shadow-2xl ring-1 ring-white/5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300 ml-1 uppercase tracking-wider">Library Name</label>
               <Input
                 placeholder="e.g. My Movies"
                 value={setupName}
                 onChange={(e) => setSetupName(e.target.value)}
                 required
+                className="bg-white/5 border-white/10 focus:border-apple-blue/50 focus:ring-apple-blue/50 h-10 text-base"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Folder Path</label>
-              <div className="flex gap-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300 ml-1 uppercase tracking-wider">Folder Path</label>
+              <div className="flex gap-2.5">
                 <Input
                   placeholder="No folder selected"
                   value={setupPath}
                   readOnly
-                  className="cursor-default text-gray-400 bg-white/5 border-dashed"
+                  className="cursor-default text-gray-400 bg-white/5 border-white/10 border-dashed h-10"
                   required
                 />
                 <Button
                   type="button"
-                  variant="glass"
-                  className="shrink-0 px-4"
                   onClick={() => setShowPicker(true)}
+                  className="shrink-0 px-4 h-10 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-sm"
                 >
                   Browse
                 </Button>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3 ml-1">Content Type</label>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-gray-300 ml-1 uppercase tracking-wider">Content Type</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setSetupType('movies')}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'movies'
-                    ? 'bg-apple-blue text-white border-apple-blue'
-                    : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                  className={`relative group overflow-hidden flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 ${setupType === 'movies'
+                    ? 'bg-apple-blue border-apple-blue text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
                     }`}
                 >
-                  <Film size={24} />
-                  <span className="text-sm font-medium">Movies</span>
+                  <div className={`p-2 rounded-full ${setupType === 'movies' ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'} transition-colors`}>
+                    <Film size={20} />
+                  </div>
+                  <span className="font-semibold text-sm">Movies</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setSetupType('tv')}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${setupType === 'tv'
-                    ? 'bg-apple-blue text-white border-apple-blue'
-                    : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10'
+                  className={`relative group overflow-hidden flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 ${setupType === 'tv'
+                    ? 'bg-apple-blue border-apple-blue text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
                     }`}
                 >
-                  <Tv size={24} />
-                  <span className="text-sm font-medium">TV Shows</span>
+                  <div className={`p-2 rounded-full ${setupType === 'tv' ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'} transition-colors`}>
+                    <Tv size={20} />
+                  </div>
+                  <span className="font-semibold text-sm">TV Shows</span>
                 </button>
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full mt-4" disabled={setupLoading}>
-              {setupLoading ? 'Adding Library...' : 'Add Library'}
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full h-12 text-base font-bold mt-4 bg-gradient-to-r from-apple-blue to-blue-600 hover:from-blue-500 hover:to-blue-700 shadow-xl shadow-blue-500/20 border-none rounded-xl"
+              disabled={setupLoading}
+            >
+              {setupLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="animate-spin" size={18} />
+                  <span>Setting up...</span>
+                </div>
+              ) : 'Add Library'}
             </Button>
           </form>
-        </div>
+        </motion.div>
       </div>
     );
   }
