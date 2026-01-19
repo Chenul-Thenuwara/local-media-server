@@ -120,7 +120,14 @@ export default function MovieDetail() {
     <div className="relative min-h-screen text-white -ml-64 w-[calc(100%+16rem)]">
       {/* Video Player Overlay */}
       {playing && (
-        <VideoPlayer mediaId={id!} onClose={() => setPlaying(false)} />
+        <VideoPlayer
+          mediaId={id!}
+          onClose={() => setPlaying(false)}
+          title={media.title || media.filename}
+          posterPath={media.posterPath}
+          tmdbId={media.tmdbId}
+          mediaType={media.type}
+        />
       )}
 
       {/* Backdrop - Fixed & Full Screen */}

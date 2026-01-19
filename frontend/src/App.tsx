@@ -13,6 +13,7 @@ import MovieDetail from './pages/app/MovieDetail';
 import Discover from './pages/app/Discover';
 import Search from './pages/app/Search';
 import Watchlist from './pages/app/Watchlist';
+import History from './pages/app/History';
 import Notifications from './pages/app/Notifications';
 
 // Profile
@@ -56,6 +57,7 @@ function App() {
             <Route path="/discover" element={<Discover />} />
             <Route path="/search" element={<Search />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/history" element={<History />} />
             <Route path="/notifications" element={<Notifications />} />
 
             {/* Profile */}
