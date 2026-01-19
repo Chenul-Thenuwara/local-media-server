@@ -1,0 +1,16 @@
+﻿
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Github\local-media-server\frontend\src\pages\app\Discover.tsx
+  59:6  warning  React Hook useEffect has missing dependencies: 'loading', 'loadingMore', and 'page'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Github\local-media-server\frontend\src\pages\app\History.tsx
+  50:6  warning  React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Github\local-media-server\frontend\src\pages\app\Watchlist.tsx
+  58:6  warning  React Hook useEffect has a missing dependency: 'fetchWatchlist'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Γ£û 3 problems (0 errors, 3 warnings)
+

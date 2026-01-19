@@ -1,0 +1,35 @@
+﻿
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Github\local-media-server\frontend\src\components\player\VideoPlayer.tsx
+  66:50  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  86:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Github\local-media-server\frontend\src\components\player\VideoPlayer.tsx:86:9
+  84 |       if (remaining < 300 && !hasShownNextUp && !showNextUp && nextUpMedia) {
+  85 |         console.log('Showing Up Next (Credits Helper)');
+> 86 |         setShowNextUp(true);
+     |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  87 |         setHasShownNextUp(true);
+  88 |       }
+  89 |     }  react-hooks/set-state-in-effect
+
+C:\Github\local-media-server\frontend\src\pages\app\Discover.tsx
+  59:6  warning  React Hook useEffect has missing dependencies: 'loading', 'loadingMore', and 'page'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Github\local-media-server\frontend\src\pages\app\History.tsx
+  50:6  warning  React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Github\local-media-server\frontend\src\pages\app\Watchlist.tsx
+  58:6  warning  React Hook useEffect has a missing dependency: 'fetchWatchlist'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Γ£û 5 problems (2 errors, 3 warnings)
+

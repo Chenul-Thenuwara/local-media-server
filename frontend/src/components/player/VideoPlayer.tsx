@@ -63,7 +63,15 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
   const seekAccumulatorRef = useRef(0);
   const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [nextUpMedia, setNextUpMedia] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  interface NextUpMedia {
+    tmdbId: number;
+    mediaType: 'movie' | 'tv';
+    title: string;
+    overview: string;
+    backdropPath: string;
+  }
+
+  const [nextUpMedia, setNextUpMedia] = useState<NextUpMedia | null>(null);
   const [showNextUp, setShowNextUp] = useState(false);
   const [hasShownNextUp, setHasShownNextUp] = useState(false);
 
@@ -74,20 +82,6 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
       .then(res => setNextUpMedia(res.data))
       .catch(console.error);
   }, [tmdbId, mediaType]);
-
-  // Check for End of Video
-  useEffect(() => {
-    if (duration > 0 && currentTime > 0) {
-      const remaining = duration - currentTime;
-      // Show when credits likely start (approx 5 mins remaining or 95% done)
-      // This is a heuristic since we don't have exact credit markers
-      if (remaining < 300 && !hasShownNextUp && !showNextUp && nextUpMedia) {
-        console.log('Showing Up Next (Credits Helper)');
-        setShowNextUp(true);
-        setHasShownNextUp(true);
-      }
-    }
-  }, [currentTime, duration, hasShownNextUp, showNextUp, nextUpMedia]);
 
   // Track History on Mount
   useEffect(() => {
@@ -230,6 +224,21 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleActivity, togglePlay, toggleFullscreen, toggleMute, seek, adjustVolume, onClose]);
 
+  const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const time = e.currentTarget.currentTime;
+    setCurrentTime(time);
+
+    // Check for Up Next Trigger
+    if (duration > 0 && time > 0) {
+      const remaining = duration - time;
+      if (remaining < 300 && !hasShownNextUp && !showNextUp && nextUpMedia) {
+        console.log('Showing Up Next');
+        setShowNextUp(true);
+        setHasShownNextUp(true);
+      }
+    }
+  }, [duration, hasShownNextUp, showNextUp, nextUpMedia]);
+
   return (
     <div
       ref={playerRef}
@@ -241,7 +250,7 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
         ref={videoRef}
         src={streamUrl}
         className="w-full h-full object-contain"
-        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}

@@ -103,7 +103,7 @@ export default function Home() {
 
       // Process Local Results
       if (localRes.status === 'fulfilled') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const localItems: SearchResult[] = (localRes.value.data as LocalSearchItem[]).map((item) => ({
           _id: item._id,
           title: item.title || item.filename,
@@ -119,7 +119,7 @@ export default function Home() {
 
       // Process Global Results
       if (globalRes.status === 'fulfilled') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const results = globalRes.value.data.results || [];
         const globalItems: SearchResult[] = (results as TmdbSearchItem[])
           .slice(0, 5)
