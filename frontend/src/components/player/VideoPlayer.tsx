@@ -10,6 +10,8 @@ interface VideoPlayerProps {
   posterPath?: string;
   tmdbId?: number;
   mediaType: 'movie' | 'tv';
+  audioCodec?: string;
+  isHdr?: boolean;
 }
 
 const Volume3 = ({ size = 24, className }: { size?: number, className?: string }) => (
@@ -40,11 +42,15 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType }: VideoPlayerProps) {
+export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType, audioCodec, isHdr }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
-  const streamUrl = `http://localhost:3000/api/stream/${mediaId}?token=${token}`;
+
+  // Auto-enable transcoding for known problematic codecs (Dolby/DTS)
+  const transcodeMode = audioCodec ? /ac3|dts|truehd|eac3/i.test(audioCodec) : false;
+
+  const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}${transcodeMode ? '&transcode=true' : ''}`;
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -393,9 +399,16 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
             <span className="text-sm text-gray-300 font-medium">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
+
+            {isHdr && (
+              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-200 border border-purple-500/30 select-none shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                HDR
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
+
             <button
               onClick={toggleFullscreen}
               className="text-white hover:text-gray-200 focus:outline-none"

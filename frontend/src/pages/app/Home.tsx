@@ -103,7 +103,7 @@ export default function Home() {
 
       // Process Local Results
       if (localRes.status === 'fulfilled') {
-         
+
         const localItems: SearchResult[] = (localRes.value.data as LocalSearchItem[]).map((item) => ({
           _id: item._id,
           title: item.title || item.filename,
@@ -119,7 +119,7 @@ export default function Home() {
 
       // Process Global Results
       if (globalRes.status === 'fulfilled') {
-         
+
         const results = globalRes.value.data.results || [];
         const globalItems: SearchResult[] = (results as TmdbSearchItem[])
           .slice(0, 5)
@@ -168,15 +168,33 @@ export default function Home() {
   // Defined before checkLibraries to avoid dependency cycle
   const fetchDashboardData = useCallback(async () => {
     // 1. Fetch Trending from TMDB (External)
-    fetch('http://localhost:3000/api/tmdb/trending')
-      .then(res => res.json())
-      .then(data => {
-        const movies = data.results || [];
-        if (movies.length > 0) {
-          setFeatured(movies[Math.floor(Math.random() * movies.length)]);
-        }
-      })
-      .catch(err => console.error(err));
+    // 1. Fetch Trending from TMDB (External)
+    try {
+      const res = await api.get('/tmdb/trending');
+      const movies = res.data.results || [];
+      if (movies.length > 0) {
+        setFeatured(movies[Math.floor(Math.random() * movies.length)]);
+      } else {
+        // Fallback if no trending movies found
+        setFeatured({
+          id: 0,
+          title: "Welcome to Local Media Server",
+          overview: "Add content to your libraries to see it here.",
+          backdrop_path: "",
+          poster_path: ""
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch trending', err);
+      // Fallback on error to unblock UI
+      setFeatured({
+        id: 0,
+        title: "Welcome to Local Media Server",
+        overview: "Could not fetch trending movies. Check your internet connection or TMDB API key.",
+        backdrop_path: "",
+        poster_path: ""
+      });
+    }
 
     // 2. Fetch Local Media (Internal)
     try {

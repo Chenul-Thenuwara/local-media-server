@@ -127,6 +127,8 @@ export default function MovieDetail() {
           posterPath={media.posterPath}
           tmdbId={media.tmdbId}
           mediaType={media.type}
+          audioCodec={media.mediaInfo?.audioCodec}
+          isHdr={media.mediaInfo?.isHdr}
         />
       )}
 
