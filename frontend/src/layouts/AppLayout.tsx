@@ -13,12 +13,65 @@ export default function AppLayout() {
 
   return (
     <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative flex">
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-black/50 backdrop-blur-xl border-b border-white/10 flex items-center px-4 z-40 justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 text-gray-400 hover:text-white"
+          >
+            <PanelLeftClose size={24} className="rotate-180" />
+          </button>
+          <span className="font-semibold text-lg">LMS</span>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden fixed inset-0 bg-black/80 z-40 backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: sidebarOpen ? 256 : 96 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="absolute left-0 top-0 bottom-0 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-50 overflow-hidden"
+        animate={{
+          width: sidebarOpen ? 256 : 96,
+          x: 0
+        }}
+        variants={{
+          mobile: {
+            width: 256,
+            x: sidebarOpen ? 0 : -256
+          },
+          desktop: {
+            width: sidebarOpen ? 256 : 96,
+            x: 0
+          }
+        }}
+        // Use a media query hook or just CSS classes to switch behavior? 
+        // Framer motion makes mixing CSS/JS tricky. 
+        // Let's use standard classes for display toggling if possible, but we need animation.
+        // Better approach: Always render aside, but control position via variants based on screen size?
+        // Actually, easiest is: Mobile = fixed drawer. Desktop = relative/absolute layout.
+        className={cn(
+          "fixed inset-y-0 left-0 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-50 overflow-hidden transition-all duration-300",
+          "lg:translate-x-0", // Always visible on desktop (width controlled by animate)
+          !sidebarOpen && "translate-x-[-100%] lg:translate-x-0"
+          // On mobile: if !open, hide. On desktop: always show (collapsed or expanded)
+          // WAIT: The previous logic relied on `width` animation for collapse.
+          // On mobile, we want slide-in.
+        )}
+        style={{
+          width: sidebarOpen ? 256 : 96 // Default fallback
+        }}
       >
         <div className={cn("flex items-center mb-8 p-6", sidebarOpen ? "justify-between" : "justify-center flex-col gap-6")}>
           <div className="flex items-center gap-3">
@@ -41,6 +94,7 @@ export default function AppLayout() {
               )}
             </AnimatePresence>
           </div>
+          {/* Close button: On mobile checks if open to show 'X'. On desktop toggles collapse */}
           <motion.button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="text-gray-400 hover:text-white transition-colors"
@@ -149,9 +203,18 @@ export default function AppLayout() {
       {/* Main Content */}
       <motion.main
         initial={false}
-        animate={{ paddingLeft: sidebarOpen ? 256 : 96 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex-1 h-full relative overflow-y-auto w-full"
+        animate={{
+          // On desktop, add padding-left. On mobile, no padding-left (overlay sidebar).
+          // We can't easily rely on 'sidebarOpen' state alone because it means different things for mobile/desktop.
+          // However, for this simple iteration, let's keep it simple:
+          // If we use CSS for the layout, we don't need motion.main padding animation as much.
+          // Let's use a media query aware value if possible, or just standard CSS margin.
+          paddingLeft: 0
+        }}
+        className={cn(
+          "flex-1 h-full relative overflow-y-auto w-full pt-16 lg:pt-0 transition-all duration-300",
+          sidebarOpen ? "lg:pl-64" : "lg:pl-24" // Desktop padding
+        )}
       >
         <Outlet />
       </motion.main>
