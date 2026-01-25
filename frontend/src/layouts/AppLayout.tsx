@@ -9,7 +9,7 @@ import {
 import { cn } from '../lib/utils';
 
 export default function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
   return (
     <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative flex">
@@ -43,8 +43,7 @@ export default function AppLayout() {
       <motion.aside
         initial={false}
         animate={{
-          width: sidebarOpen ? 256 : 96,
-          x: 0
+          width: sidebarOpen ? 256 : 96
         }}
         variants={{
           mobile: {
@@ -203,14 +202,6 @@ export default function AppLayout() {
       {/* Main Content */}
       <motion.main
         initial={false}
-        animate={{
-          // On desktop, add padding-left. On mobile, no padding-left (overlay sidebar).
-          // We can't easily rely on 'sidebarOpen' state alone because it means different things for mobile/desktop.
-          // However, for this simple iteration, let's keep it simple:
-          // If we use CSS for the layout, we don't need motion.main padding animation as much.
-          // Let's use a media query aware value if possible, or just standard CSS margin.
-          paddingLeft: 0
-        }}
         className={cn(
           "flex-1 h-full relative overflow-y-auto w-full pt-16 lg:pt-0 transition-all duration-300",
           sidebarOpen ? "lg:pl-64" : "lg:pl-24" // Desktop padding

@@ -1,6 +1,7 @@
 // ... imports ...
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../../lib/api';
 
 interface Movie {
   id: number;
@@ -11,9 +12,9 @@ export default function TrendingBackground() {
   const [movies, setMovies] = useState<Movie[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/tmdb/trending')
-      .then(res => res.json())
-      .then(data => {
+    api.get('/tmdb/trending')
+      .then(res => {
+        const data = res.data;
         const results = data.results || [];
         // Generate pool by repeatedly adding shuffled sets of the source items
         // This guarantees local uniqueness (no duplicates within each chunk)
@@ -49,10 +50,10 @@ export default function TrendingBackground() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden bg-black">
       <div className="absolute inset-0 opacity-50">
-        <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 p-4 -rotate-6 scale-125 origin-center">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 p-4 -rotate-6 scale-125 origin-center">
           {movies.map((movie, index) => (
             <motion.div
-              key={movie.id}
+              key={`${movie.id}-${index}`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
