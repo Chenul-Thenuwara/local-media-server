@@ -67,7 +67,10 @@ export default function Welcome() {
                 Start Watching Now
               </Button>
             </Link>
-            <Button variant="glass" size="lg" className="w-full sm:w-auto group text-white hover:bg-white/20">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto group text-white bg-white/10 backdrop-blur-md hover:bg-white/20 border-none"
+            >
               <span className="mr-2">View Demo</span>
               <Play size={16} className="group-hover:translate-x-0.5 transition-transform" />
             </Button>
