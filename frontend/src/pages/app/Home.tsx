@@ -447,7 +447,7 @@ export default function Home() {
       </div>
 
       {/* Top Bar (Search) - Moved outside overflow-hidden hero */}
-      <div className="absolute top-0 right-0 p-4 md:p-8 z-50 w-full md:max-w-md flex justify-end pointer-events-auto" ref={dropdownRef}>
+      <div className="absolute top-16 lg:top-0 right-0 p-4 md:p-8 z-50 w-full md:max-w-md flex justify-end pointer-events-auto" ref={dropdownRef}>
         <div className="relative group w-full max-w-[200px] md:w-64 focus-within:max-w-[300px] md:focus-within:w-80 transition-all duration-300">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white transition-colors z-10 pointer-events-none" size={18} />
           <input
