@@ -66,7 +66,7 @@ export default function Login() {
           required
         />
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
           <label className="flex items-center gap-2 text-gray-300 cursor-pointer select-none">
             <input type="checkbox" className="rounded border-gray-600 bg-white/10 text-apple-blue focus:ring-apple-blue" />
             Remember me

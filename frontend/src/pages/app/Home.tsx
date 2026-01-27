@@ -399,7 +399,7 @@ export default function Home() {
   return (
     <div className="min-h-full pb-20 relative">
       {/* Hero Section */}
-      <div className="relative h-[70vh] w-full overflow-hidden shrink-0 z-10">
+      <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden shrink-0 z-10">
         <div className="absolute inset-0">
           <img
             src={`https://image.tmdb.org/t/p/original${featured.backdrop_path}`}
@@ -411,11 +411,11 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
         </div>
 
-        <div className="absolute bottom-0 left-0 p-12 pb-32 max-w-2xl z-10 pointer-events-auto">
+        <div className="absolute bottom-0 left-0 p-6 pb-24 md:p-12 md:pb-32 max-w-2xl z-10 pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl font-bold tracking-tight mb-4 drop-shadow-2xl"
+            className="text-3xl md:text-5xl font-bold tracking-tight mb-4 drop-shadow-2xl"
           >
             {featured.title}
           </motion.h1>
@@ -423,7 +423,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-gray-200 line-clamp-3 mb-8 drop-shadow-md"
+            className="text-base md:text-lg text-gray-200 line-clamp-3 mb-6 md:mb-8 drop-shadow-md"
           >
             {featured.overview}
           </motion.p>
@@ -434,20 +434,12 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-4"
           >
-            {/* 
-              TODO: Check if this trending item exists locally before showing Play.
-              For now, hiding Play to avoid confusion since these are external TMDB results.
-            */}
-            {/* <Button size="lg" className="bg-white text-black hover:bg-gray-200 border-none shadow-xl">
-              <Play fill="currentColor" size={20} className="mr-2" />
-              Play
-            </Button> */}
             <Button
               size="lg"
-              className="bg-gray-500/30 hover:bg-gray-500/40 backdrop-blur-md border border-white/10 text-white px-8 py-7 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300"
+              className="bg-gray-500/30 hover:bg-gray-500/40 backdrop-blur-md border border-white/10 text-white px-6 py-6 md:px-8 md:py-7 text-base md:text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300"
               onClick={() => navigate(`/media/tmdb/movie/${featured.id}`)}
             >
-              <Info className="mr-3 w-6 h-6 opacity-80" />
+              <Info className="mr-3 w-5 h-5 md:w-6 md:h-6 opacity-80" />
               More Info
             </Button>
           </motion.div>
@@ -455,8 +447,8 @@ export default function Home() {
       </div>
 
       {/* Top Bar (Search) - Moved outside overflow-hidden hero */}
-      <div className="absolute top-0 right-0 p-8 z-50 w-full max-w-md flex justify-end pointer-events-auto" ref={dropdownRef}>
-        <div className="relative group w-64 focus-within:w-80 transition-all duration-300">
+      <div className="absolute top-16 lg:top-0 right-0 p-4 md:p-8 z-50 w-full md:max-w-md flex justify-end pointer-events-auto" ref={dropdownRef}>
+        <div className="relative group w-full max-w-[200px] md:w-64 focus-within:max-w-[300px] md:focus-within:w-80 transition-all duration-300">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white transition-colors z-10 pointer-events-none" size={18} />
           <input
             type="text"
@@ -524,7 +516,7 @@ export default function Home() {
       </div>
 
       {/* Media Rows */}
-      <div className="px-12 -mt-20 relative z-20 space-y-12">
+      <div className="px-4 -mt-16 md:px-12 md:-mt-20 relative z-20 space-y-8 md:space-y-12">
         {recentMovies.length > 0 && (
           <MediaRow
             title="Recent Movies"

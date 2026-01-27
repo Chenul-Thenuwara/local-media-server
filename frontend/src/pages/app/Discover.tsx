@@ -24,7 +24,7 @@ const Discover = () => {
     try {
       const res = await fetch(`http://localhost:3000/api/tmdb/trending?page=${pageNum}`);
       const data = await res.json();
-       
+
       const newMovies = data.results || [];
 
       if (pageNum === 1) {
@@ -71,7 +71,7 @@ const Discover = () => {
   }
 
   return (
-    <div className="p-8 pb-20 overflow-y-auto h-full header-scroll-mask">
+    <div className="p-4 md:p-8 pb-20 overflow-y-auto h-full header-scroll-mask">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-gray-800 rounded-2xl flex items-center justify-center text-apple-blue shadow-lg">
           <Compass size={24} />
@@ -86,7 +86,7 @@ const Discover = () => {
         <h2 className="text-xl font-semibold text-gray-200 pl-1">Trending Now</h2>
 
         {/* fluid grid to fill gaps */}
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4 md:gap-6">
           {trending.map((movie) => (
             <MediaCard
               key={movie.id}
