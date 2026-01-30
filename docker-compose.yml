@@ -22,7 +22,7 @@ services:
       - /app/node_modules
       - ./media:/media
       - C:/:/media/c
-      - G:/:/media/g
+
     command: npm run dev
     depends_on:
       - mongodb
@@ -36,7 +36,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:5000/api
+      - VITE_API_URL=http://10.16.129.231:5000/api
     command: sh -c "npm install && npm run dev -- --host"
     depends_on:
       - backend
