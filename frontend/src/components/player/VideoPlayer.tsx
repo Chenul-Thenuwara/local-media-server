@@ -47,10 +47,7 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
   const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
 
-  // Auto-enable transcoding for known problematic codecs (Dolby/DTS)
-  const transcodeMode = audioCodec ? /ac3|dts|truehd|eac3/i.test(audioCodec) : false;
-
-  const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}${transcodeMode ? '&transcode=true' : ''}`;
+  const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}`;
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -405,10 +402,11 @@ export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbI
                 HDR
               </span>
             )}
+
+
           </div>
 
           <div className="flex items-center gap-4">
-
             <button
               onClick={toggleFullscreen}
               className="text-white hover:text-gray-200 focus:outline-none"

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { History as HistoryIcon } from 'lucide-react';
 import { MediaCard, type MediaItem } from '../../components/media/MediaCard';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
 
 const History = () => {
@@ -18,7 +18,7 @@ const History = () => {
     progress?: number;
   }
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const res = await api.get('/history');
       const mapped: MediaItem[] = res.data.map((item: HistoryEntry) => ({
@@ -36,7 +36,7 @@ const History = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Deduplicate items for display (Safety net for existing dupes)
   const uniqueItems = items.filter((item, index, self) =>
@@ -47,7 +47,7 @@ const History = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [fetchHistory]);
 
   return (
     <div className="p-8 pb-20 overflow-y-auto h-full">

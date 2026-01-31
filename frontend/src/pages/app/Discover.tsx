@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Compass, Loader2 } from 'lucide-react';
 import { MediaCard } from '../../components/media/MediaCard';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
@@ -17,12 +17,12 @@ const Discover = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
 
-  const loadMovies = async (pageNum: number) => {
+  const loadMovies = useCallback(async (pageNum: number) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tmdb/trending?page=${pageNum}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/tmdb/trending?page=${pageNum}`);
       const data = await res.json();
 
       const newMovies = data.results || [];
@@ -44,7 +44,7 @@ const Discover = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, []);
 
   // Infinite Scroll Hook
   const { ref: loadMoreRef, isIntersecting } = useIntersectionObserver({
@@ -56,11 +56,11 @@ const Discover = () => {
     if (isIntersecting && !loading && !loadingMore) {
       loadMovies(page + 1);
     }
-  }, [isIntersecting]);
+  }, [isIntersecting, loading, loadingMore, page, loadMovies]);
 
   useEffect(() => {
     loadMovies(1);
-  }, []);
+  }, [loadMovies]);
 
   if (loading) {
     return (
