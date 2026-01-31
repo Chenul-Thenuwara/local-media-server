@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Film } from 'lucide-react';
 import { MediaCard, type MediaItem } from '../../components/media/MediaCard';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../../lib/api';
 import { Select } from '../../components/ui/Select';
 
@@ -20,7 +20,7 @@ const Watchlist = () => {
     mediaType: 'movie' | 'tv';
   }
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlist = useCallback(async () => {
     try {
       const res = await api.get('/watchlist');
       // Map watchlist items to MediaCard format
@@ -39,7 +39,7 @@ const Watchlist = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchWatchlist();

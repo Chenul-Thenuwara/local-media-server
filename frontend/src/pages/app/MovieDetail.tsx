@@ -234,6 +234,7 @@ export default function MovieDetail() {
                       HDR
                     </span>
                   )}
+
                   {media.mediaInfo.audioCodec && (
                     <span title="Audio Codec" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
                       {media.mediaInfo.audioCodec}
