@@ -42,10 +42,11 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType, audioCodec, isHdr }: VideoPlayerProps) {
+export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType, isHdr }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
+
 
   const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}`;
 
