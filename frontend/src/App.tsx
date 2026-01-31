@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/app/Home';
 import MovieDetail from './pages/app/MovieDetail';
+import PersonDetail from './pages/app/PersonDetail';
 
 // Core
 import Discover from './pages/app/Discover';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/media/:id" element={<MovieDetail />} />
             <Route path="/media/tmdb/:type/:id" element={<MovieDetail />} />
+            <Route path="/person/:id" element={<PersonDetail />} />
 
             {/* Core */}
             <Route path="/discover" element={<Discover />} />
