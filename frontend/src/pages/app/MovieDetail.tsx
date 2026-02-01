@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, ArrowLeft, Calendar, FileVideo, HardDrive } from 'lucide-react';
+import { Play, ArrowLeft, Calendar, FileVideo, HardDrive, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
 
@@ -10,6 +10,14 @@ interface CastMember {
   id: number;
   name: string;
   character: string;
+  profile_path: string | null;
+}
+
+interface CrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
   profile_path: string | null;
 }
 
@@ -36,6 +44,7 @@ interface MediaDetail {
   tmdbId?: number;
   credits?: {
     cast: CastMember[];
+    crew: CrewMember[];
   };
   isTmdb?: boolean;
   seasons?: Season[];
@@ -271,6 +280,42 @@ export default function MovieDetail() {
         <div className="mt-12">
           <CastCarousel cast={cast} />
         </div>
+
+        {/* Director Section */}
+        {media.credits?.crew && media.credits.crew.filter(c => c.job === 'Director').length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold text-gray-200 mb-4">Director</h3>
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {media.credits.crew
+                .filter(c => c.job === 'Director')
+                .map(director => (
+                  <Link
+                    to={`/person/${director.id}`}
+                    key={director.id}
+                    className="flex items-center gap-4 bg-gray-800/50 rounded-xl p-3 pr-6 border border-white/5 hover:border-apple-blue transition-colors group min-w-[200px]"
+                  >
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 shrink-0">
+                      {director.profile_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w185${director.profile_path}`}
+                          alt={director.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <User size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white group-hover:text-apple-blue transition-colors">{director.name}</p>
+                      <p className="text-xs text-gray-400">Director</p>
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Season View (TV Shows Only) */}
         {media.type === 'tv' && media.seasons && media.tmdbId && (
