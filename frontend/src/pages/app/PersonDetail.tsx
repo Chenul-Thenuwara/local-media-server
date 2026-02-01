@@ -17,6 +17,7 @@ interface PersonCredit {
   release_date?: string;
   first_air_date?: string;
   overview?: string;
+  popularity?: number;
 }
 
 interface PersonDetail {
@@ -52,8 +53,8 @@ export default function PersonDetail() {
         if (creditsRes.data.cast) {
           // Sort by popularity (descending)
           const sorted = creditsRes.data.cast
-            .filter((c: any) => c.poster_path) // Only show items with posters for better UI
-            .sort((a: any, b: any) => b.popularity - a.popularity);
+            .filter((c: PersonCredit) => c.poster_path) // Only show items with posters for better UI
+            .sort((a: PersonCredit, b: PersonCredit) => (b.popularity || 0) - (a.popularity || 0));
           setCredits(sorted);
         }
       } catch (err) {

@@ -55,7 +55,7 @@ const Watchlist = () => {
       window.removeEventListener('watchlist-updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
-  }, []);
+  }, [fetchWatchlist]);
 
   const filteredItems = useMemo(() => {
     let result = [...items];
