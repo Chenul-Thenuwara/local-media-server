@@ -252,7 +252,6 @@ router.get('/search', async (req, res) => {
     console.error('TMDB Search/Discover Error:', error);
     res.status(500).json({ error: 'Failed to search/discover TMDB' });
   }
-}
 });
 
 // ---------------------------------------------------------
