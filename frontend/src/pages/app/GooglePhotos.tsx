@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Loader2, Image as ImageIcon, Lock } from 'lucide-react';
 import api from '../../lib/api';
@@ -17,36 +17,35 @@ const GooglePhotos = () => {
   const [photos, setPhotos] = useState<GoogleMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkConnection();
-  }, []);
-
-  const checkConnection = async () => {
-    try {
-      setLoading(true);
-      // Try to fetch albums or media to check valid token
-      // If 401/403, we are not connected.
-      // For now, let's just fetch media.
-      const res = await api.get('/google-photos/media');
-      setPhotos(res.data);
-      setIsConnected(true);
-    } catch (err) {
-      // Not connected or token expired
-      setIsConnected(false);
-      fetchAuthUrl();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAuthUrl = async () => {
+  const fetchAuthUrl = useCallback(async () => {
     try {
       const res = await api.get('/google-photos/auth/url');
       setAuthUrl(res.data.url);
     } catch (error) {
       console.error('Failed to link account', error);
     }
-  };
+  }, []);
+
+  const checkConnection = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/google-photos/media');
+      setPhotos(res.data);
+      setIsConnected(true);
+    } catch {
+      setIsConnected(false);
+      fetchAuthUrl();
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAuthUrl]);
+
+  useEffect(() => {
+    const init = async () => {
+      await checkConnection();
+    };
+    init();
+  }, [checkConnection]);
 
   const handleConnect = () => {
     if (authUrl) {

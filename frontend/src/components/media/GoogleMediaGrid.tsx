@@ -38,7 +38,8 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
       setMedia(res.data);
       setIsConnected(true);
       setErrorMsg('');
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as any;
       setIsConnected(false);
       setErrorMsg(error.response?.data?.error || error.message || 'Unknown error');
       fetchAuthUrl();

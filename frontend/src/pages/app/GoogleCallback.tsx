@@ -17,23 +17,23 @@ const GoogleCallback = () => {
   const [error, setError] = useState('');
   const processedRef = useRef(false);
 
+  const code = searchParams.get('code');
+  const userStr = localStorage.getItem('user');
+
   useEffect(() => {
     if (processedRef.current) return;
+
+    if (!code || !userStr) {
+      if (!userStr) {
+        setError('User not logged in');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Missing authentication code from Google.');
+      }
+      return;
+    }
+
     processedRef.current = true;
-
-    const code = searchParams.get('code');
-    const userStr = localStorage.getItem('user');
-
-    if (!code) {
-      setError('No authorization code found');
-      return;
-    }
-
-    if (!userStr) {
-      setError('User not logged in');
-      setTimeout(() => navigate('/login'), 2000);
-      return;
-    }
 
     try {
       const userData = JSON.parse(userStr) as User;
@@ -61,6 +61,26 @@ const GoogleCallback = () => {
         <button onClick={() => navigate('/libraries/photos')} className="text-gray-400 hover:text-white underline">
           Return to Library
         </button>
+      </div>
+    );
+  }
+
+
+  if (!code) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-white bg-black">
+        <p className="text-red-500 mb-4">No authorization code found</p>
+        <button onClick={() => navigate('/libraries/photos')} className="text-gray-400 hover:text-white underline">
+          Return to Library
+        </button>
+      </div>
+    );
+  }
+
+  if (!localStorage.getItem('user')) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-white bg-black">
+        <p className="text-red-500 mb-4">User not logged in</p>
       </div>
     );
   }
