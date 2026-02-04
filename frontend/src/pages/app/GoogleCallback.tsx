@@ -22,16 +22,7 @@ const GoogleCallback = () => {
 
   useEffect(() => {
     if (processedRef.current) return;
-
-    if (!code || !userStr) {
-      if (!userStr) {
-        setError('User not logged in');
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        setError('Missing authentication code from Google.');
-      }
-      return;
-    }
+    if (!code || !userStr) return;
 
     processedRef.current = true;
 
@@ -41,7 +32,6 @@ const GoogleCallback = () => {
 
       api.post('/google-photos/auth/callback', { code, userId })
         .then(() => {
-          // Redirect back to photos library with google tab active
           navigate('/libraries/photos?tab=google');
         })
         .catch(err => {
@@ -50,9 +40,21 @@ const GoogleCallback = () => {
         });
     } catch (e) {
       console.error('Error parsing user data', e);
-      setError('Invalid user session');
+      setTimeout(() => setError('Invalid user session'), 0);
     }
-  }, [searchParams, navigate]);
+  }, [code, userStr, navigate]); // Use primitives in dependency array
+
+  // Handle redirects for missing auth
+  useEffect(() => {
+    if (!code && userStr) {
+      // Just show UI, no auto redirect? Or redirect back?
+      // User provided UI says "Return to Library", so no auto redirect needed for !code.
+    }
+    if (!userStr) {
+      const t = setTimeout(() => navigate('/login'), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [code, userStr, navigate]);
 
   if (error) {
     return (

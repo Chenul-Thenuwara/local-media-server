@@ -39,6 +39,7 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
       setIsConnected(true);
       setErrorMsg('');
     } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const error = err as any;
       setIsConnected(false);
       setErrorMsg(error.response?.data?.error || error.message || 'Unknown error');

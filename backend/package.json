@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "node --expose-gc ./node_modules/.bin/jest --runInBand --logHeapUsage"
+    "test": "node --max-old-space-size=4096 --expose-gc ./node_modules/.bin/jest --runInBand --logHeapUsage"
   },
   "keywords": [],
   "author": "",
