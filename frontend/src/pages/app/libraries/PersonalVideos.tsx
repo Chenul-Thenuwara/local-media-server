@@ -1,22 +1,14 @@
 
-import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MediaTabs } from '../../../components/media/MediaTabs';
 import { GoogleMediaGrid } from '../../../components/media/GoogleMediaGrid';
 
 const PersonalVideos = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'local' | 'google'>('local');
-
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'google' || tab === 'local') {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
+  const activeTabRaw = searchParams.get('tab');
+  const activeTab = (activeTabRaw === 'google' || activeTabRaw === 'local') ? activeTabRaw : 'local';
 
   const handleTabChange = (tab: 'local' | 'google') => {
-    setActiveTab(tab);
     setSearchParams({ tab });
   };
 

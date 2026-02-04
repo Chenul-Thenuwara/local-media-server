@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Lock, Image } from 'lucide-react';
 import { Button } from '../ui/Button';
 import api from '../../lib/api';
@@ -22,34 +22,34 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    checkConnection();
-  }, [filter]);
+  const fetchAuthUrl = useCallback(async () => {
+    try {
+      const res = await api.get('/google-photos/auth/url');
+      setAuthUrl(res.data.url);
+    } catch (error) {
+      console.error('Failed to get auth url', error);
+    }
+  }, []);
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get(`/google-photos/media${filter ? `?filter=${filter}` : ''}`);
       setMedia(res.data);
       setIsConnected(true);
       setErrorMsg('');
-    } catch (err: any) {
+    } catch (error: any) {
       setIsConnected(false);
-      setErrorMsg(err.response?.data?.error || err.message || 'Unknown error');
+      setErrorMsg(error.response?.data?.error || error.message || 'Unknown error');
       fetchAuthUrl();
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, fetchAuthUrl]);
 
-  const fetchAuthUrl = async () => {
-    try {
-      const res = await api.get('/google-photos/auth/url');
-      setAuthUrl(res.data.url);
-    } catch (err) {
-      console.error('Failed to get auth url', err);
-    }
-  };
+  useEffect(() => {
+    checkConnection();
+  }, [checkConnection]);
 
   if (loading) {
     return (

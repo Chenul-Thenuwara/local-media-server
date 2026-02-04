@@ -52,7 +52,7 @@ const GoogleCallback = () => {
       console.error('Error parsing user data', e);
       setError('Invalid user session');
     }
-  }, []);
+  }, [searchParams, navigate]);
 
   if (error) {
     return (

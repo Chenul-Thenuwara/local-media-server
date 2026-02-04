@@ -43,8 +43,8 @@ const GooglePhotos = () => {
     try {
       const res = await api.get('/google-photos/auth/url');
       setAuthUrl(res.data.url);
-    } catch (err) {
-      console.error('Failed to get auth url', err);
+    } catch (error) {
+      console.error('Failed to link account', error);
     }
   };
 
