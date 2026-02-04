@@ -9,6 +9,7 @@ import tmdbRoutes from './tmdb';
 import userRoutes from './userRoutes';
 import watchlistRoutes from './watchlist';
 import historyRoutes from './history';
+import googlePhotosRoutes from './googlePhotos';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/tmdb', tmdbRoutes);
 router.use('/watchlist', watchlistRoutes);
 router.use('/user', userRoutes);
 router.use('/history', historyRoutes);
+router.use('/google-photos', googlePhotosRoutes);
 
 router.get('/', (req: Request, res: Response) => {
   res.send('API Root');
