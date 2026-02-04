@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Compass, Loader2 } from 'lucide-react';
 import { MediaCard } from '../../components/media/MediaCard';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import api from '../../lib/api';
 
 interface Movie {
   id: number;
@@ -22,8 +23,8 @@ const Discover = () => {
     else setLoadingMore(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/tmdb/trending?page=${pageNum}`);
-      const data = await res.json();
+      const res = await api.get(`/tmdb/trending?page=${pageNum}`);
+      const data = res.data;
 
       const newMovies = data.results || [];
 

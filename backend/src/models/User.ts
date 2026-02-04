@@ -15,6 +15,7 @@ export interface IUser extends Document {
     addedAt: Date;
   }[];
   comparePassword(candidatePassword: string): Promise<boolean>;
+  googleRefreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,7 +32,8 @@ const UserSchema: Schema = new Schema({
     title: { type: String, required: true },
     posterPath: String,
     addedAt: { type: Date, default: Date.now }
-  }]
+  }],
+  googleRefreshToken: String
 }, { timestamps: true });
 
 // Hash password before saving
