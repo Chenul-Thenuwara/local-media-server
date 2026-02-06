@@ -10,9 +10,11 @@ import userRoutes from './userRoutes';
 import watchlistRoutes from './watchlist';
 import historyRoutes from './history';
 import googlePhotosRoutes from './googlePhotos';
+import adminRoutes from './admin';
 
 const router = Router();
 
+router.use('/admin', adminRoutes);
 router.use('/auth', authRoutes);
 router.use('/libraries', libraryRoutes);
 router.use('/media', mediaRoutes);
