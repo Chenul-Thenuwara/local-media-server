@@ -1,25 +1,45 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
-  return { headers: { Authorization: `Bearer ${token}` } };
-};
+import api from '../lib/api';
 
 export const adminService = {
   getStats: async () => {
-    const response = await axios.get(`${API_URL}/admin/stats`, getAuthHeader());
+    const response = await api.get('/admin/stats');
     return response.data;
   },
 
   getUsers: async () => {
-    const response = await axios.get(`${API_URL}/admin/users`, getAuthHeader());
+    const response = await api.get('/admin/users');
     return response.data;
   },
 
   createUser: async (userData: any) => {
-    const response = await axios.post(`${API_URL}/admin/users`, userData, getAuthHeader());
+    const response = await api.post('/admin/users', userData);
+    return response.data;
+  },
+
+  // Library Management
+  getLibraries: async () => {
+    const response = await api.get('/libraries');
+    return response.data;
+  },
+
+  createLibrary: async (libraryData: { name: string; path: string; type: string }) => {
+    const response = await api.post('/libraries', libraryData);
+    return response.data;
+  },
+
+  refreshLibrary: async (id: string) => {
+    const response = await api.post(`/libraries/${id}/refresh`);
+    return response.data;
+  },
+
+  // System Settings
+  getSettings: async () => {
+    const response = await api.get('/settings');
+    return response.data;
+  },
+
+  updateSettings: async (settings: any) => {
+    const response = await api.put('/settings', settings);
     return response.data;
   }
 };
