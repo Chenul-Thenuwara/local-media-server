@@ -27,6 +27,10 @@ const AdminDashboard = () => {
       }
     };
     fetchStats();
+
+    // Poll for real-time updates every 5 seconds
+    const interval = setInterval(fetchStats, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -50,7 +54,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard
           title="Total Users"
           value={stats?.users || 0}
@@ -64,6 +68,13 @@ const AdminDashboard = () => {
           trend="Total"
           icon={HardDrive}
           color="purple"
+        />
+        <StatCard
+          title="RAM Usage"
+          value={`${stats?.ramUsage || 0} GB`}
+          trend={`of ${stats?.ramTotal || 0} GB`}
+          icon={Activity}
+          color="orange"
         />
         <StatCard
           title="Media Items"

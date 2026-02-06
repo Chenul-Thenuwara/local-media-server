@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import os from 'os';
 import User from '../models/User';
 import Library from '../models/Library';
 import Media from '../models/Media';
@@ -64,6 +65,13 @@ export const getSystemStats = async (req: Request, res: Response) => {
       }))
     ].slice(0, 10);
 
+    // Calculate RAM Usage
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const usedMemGB = (usedMem / (1024 * 1024 * 1024)).toFixed(2);
+    const totalMemGB = (totalMem / (1024 * 1024 * 1024)).toFixed(2);
+
     res.json({
       users: userCount,
       libraries: libraryCount,
@@ -71,6 +79,8 @@ export const getSystemStats = async (req: Request, res: Response) => {
       movies: stats.moviesCount,
       tvShows: stats.tvCount,
       storage: storageUsed,
+      ramUsage: usedMemGB,
+      ramTotal: totalMemGB,
       activeStreams: 0,
       systemHealth: 'Good',
       recentActivity: activityList
