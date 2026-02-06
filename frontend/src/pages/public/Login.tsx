@@ -32,7 +32,7 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/home');
+      navigate('/profiles');
     } catch (err) {
       console.error(err);
       const authErr = err as AuthError;

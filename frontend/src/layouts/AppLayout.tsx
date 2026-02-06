@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
   Film, Tv, Music, Image, Video,
-  Shield, User, LogOut, Play, PanelLeftClose, History, type LucideIcon
+  Shield, User, LogOut, Play, PanelLeftClose, History, Users, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -171,6 +171,28 @@ export default function AppLayout() {
 
         <div className="p-4 mt-2 border-t border-white/10 space-y-2">
           <NavItem to="/profile/account" icon={User} collapsed={!sidebarOpen}>My Profile</NavItem>
+          <button
+            onClick={() => window.location.href = '/profiles'}
+            className={cn(
+              "w-full flex items-center gap-3 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 group overflow-hidden",
+              !sidebarOpen ? "justify-center px-0" : "px-4"
+            )}
+            title={!sidebarOpen ? "Switch User" : undefined}
+          >
+            <Users size={20} className="shrink-0" />
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="font-medium text-[15px] whitespace-nowrap"
+                >
+                  Switch User
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
           <button
             onClick={() => {
               localStorage.clear();

@@ -93,9 +93,50 @@ export const getSystemStats = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({}, '-password').sort({ createdAt: -1 });
+    const users = await User.find({}, '-password -pin').sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error });
+  }
+};
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, managed, pin, permissions } = req.body;
+
+    // Check if user exists (only if email is provided)
+    if (email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        // @ts-ignore
+        return res.status(400).json({ message: 'User already exists' });
+      }
+    }
+
+    const newUser = new User({
+      name,
+      email: email || undefined,
+      password,
+      managedBy: managed ? (req as any).user._id : undefined,
+      pin: managed ? pin : undefined,
+      role: managed ? 'viewer' : 'admin', // Default role logic
+      permissions: managed ? permissions : undefined
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        managedBy: newUser.managedBy
+      }
+    });
+  } catch (error) {
+    console.error('Create User Error:', error);
+    res.status(500).json({ message: 'Error creating user', error });
   }
 };

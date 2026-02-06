@@ -16,5 +16,10 @@ export const adminService = {
   getUsers: async () => {
     const response = await axios.get(`${API_URL}/admin/users`, getAuthHeader());
     return response.data;
+  },
+
+  createUser: async (userData: any) => {
+    const response = await axios.post(`${API_URL}/admin/users`, userData, getAuthHeader());
+    return response.data;
   }
 };
