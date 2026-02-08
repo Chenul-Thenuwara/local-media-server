@@ -10,9 +10,7 @@ export const getSystemStats = async (req: Request, res: Response) => {
   try {
     console.log('Using DB:', mongoose.connection.db?.databaseName);
 
-    const userCount = await User.countDocuments({
-      $or: [{ managedBy: { $exists: false } }, { managedBy: null }]
-    });
+    const userCount = await User.countDocuments({ role: 'admin' });
     console.log('User Count:', userCount);
 
     const libraryCount = await Library.countDocuments();

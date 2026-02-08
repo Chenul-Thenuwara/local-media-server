@@ -13,10 +13,9 @@ const run = async () => {
   console.log(`Found ${users.length} users.`);
   users.forEach(u => {
     console.log(`User: ${u.email} (${u._id})`);
-    console.log(`  - Has Refresh Token: ${!!u.googleRefreshToken}`);
-    if (u.googleRefreshToken) {
-      console.log(`  - Token start: ${u.googleRefreshToken.substring(0, 10)}...`);
-    }
+    console.log(`  - Role: ${u.role}`);
+    console.log(`  - Managed By: ${u.managedBy}`);
+    // console.log(`  - Has Refresh Token: ${!!u.googleRefreshToken}`);
   });
 
   await mongoose.disconnect();
