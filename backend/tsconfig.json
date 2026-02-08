@@ -18,6 +18,8 @@
     "test_profile.ts",
     "verify_token.ts",
     "clear_tokens.ts",
-    "check_users.ts"
+    "check_users.ts",
+    "debug_stats.ts",
+    "make_admin.ts"
   ]
 }

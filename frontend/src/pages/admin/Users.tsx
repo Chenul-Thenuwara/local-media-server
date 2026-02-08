@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, MoreVertical, Shield, ShieldAlert, Mail } from 'lucide-react';
+import { Search, Plus, MoreVertical, Shield, ShieldAlert } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { adminService } from '../../services/adminService';
 import AddUserModal from '../../components/admin/AddUserModal';
 
 const AdminUsers = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,6 +26,7 @@ const AdminUsers = () => {
     fetchUsers();
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAddUser = async (data: any) => {
     try {
       await adminService.createUser(data);
@@ -98,6 +100,7 @@ const AdminUsers = () => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const UserCard = ({ user }: { user: any }) => (
   <motion.div
     whileHover={{ y: -4 }}

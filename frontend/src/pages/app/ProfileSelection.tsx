@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User as UserIcon, Shield, ShieldAlert, ChevronRight } from 'lucide-react';
+import { Lock, ShieldAlert, KeyRound } from 'lucide-react';
 import api from '../../lib/api';
 
 interface Profile {
@@ -17,60 +17,106 @@ const ProfileSelection = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Auth State
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [pin, setPin] = useState('');
+  const [authMode, setAuthMode] = useState<'pin' | 'password'>('pin');
+  const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
   const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const res = await api.get('/auth/profiles');
+        setProfiles(res.data);
+
+        // Auto-redirect if only one profile (Admin) and no PIN
+        // But SKIP if the user explicitly clicked "Switch User" (force=true)
+        const searchParams = new URLSearchParams(window.location.search);
+        const isForce = searchParams.get('force') === 'true';
+
+        if (!isForce && res.data.length === 1) {
+          const singleProfile = res.data[0];
+          if (!singleProfile.hasPin) {
+            performSwitch(singleProfile.id);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchProfiles = async () => {
-    try {
-      const res = await api.get('/auth/profiles');
-      setProfiles(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleProfileClick = (profile: Profile) => {
+    // Current User Check (If I am already this user, just go home)
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser.id === profile.id) {
+        navigate('/home');
+        return;
+      }
+    } catch {
+      // Ignore error
+    }
+
+    // Determine Logic
     if (profile.hasPin) {
       setSelectedProfile(profile);
-      setPin('');
+      setAuthMode('pin');
+      setInputValue('');
+      setError('');
+    } else if (profile.role === 'admin' && profiles.length > 1) {
+      // Admin with NO PIN, but other users exist -> Force Password
+      setSelectedProfile(profile);
+      setAuthMode('password');
+      setInputValue('');
       setError('');
     } else {
       performSwitch(profile.id);
     }
   };
 
-  const performSwitch = async (profileId: string, pinCode?: string) => {
+  const performSwitch = async (profileId: string, secret?: string) => {
     setSwitching(true);
     setError('');
-    try {
-      const res = await api.post('/auth/switch-profile', { profileId, pin: pinCode });
 
-      // Update Auth Data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = { profileId };
+    if (authMode === 'pin') payload.pin = secret;
+    if (authMode === 'password') payload.password = secret;
+
+    try {
+      const res = await api.post('/auth/switch-profile', payload);
+
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
 
-      // Force reload or redirect to clear state/cache if needed, but navigate is faster
-      // Navigate to Home
       navigate('/home');
-      window.location.reload(); // Ensure global state/headers update
+      window.location.reload();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to switch profile');
+      const msg = err.response?.data?.message || 'Failed to switch profile';
+      setError(msg);
+
+      // Handle backend demands
+      if (err.response?.data?.requirePassword) {
+        setAuthMode('password');
+        setInputValue('');
+      }
+
       setSwitching(false);
     }
   };
 
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProfile) return;
-    performSwitch(selectedProfile.id, pin);
+    performSwitch(selectedProfile.id, inputValue);
   };
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading profiles...</div>;
@@ -131,7 +177,7 @@ const ProfileSelection = () => {
         </div>
       </motion.div>
 
-      {/* PIN Modal */}
+      {/* Auth Modal (PIN or Password) */}
       <AnimatePresence>
         {selectedProfile && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -151,21 +197,44 @@ const ProfileSelection = () => {
                 )}
               </div>
 
-              <h3 className="text-xl font-bold text-white mb-2">Enter PIN</h3>
-              <p className="text-gray-400 text-sm mb-6">Enter the 4-digit PIN for {selectedProfile.name}</p>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {authMode === 'pin' ? 'Enter PIN' : 'Enter Password'}
+              </h3>
+              <p className="text-gray-400 text-sm mb-6">
+                {authMode === 'pin'
+                  ? `Enter the 4-digit PIN for ${selectedProfile.name}`
+                  : `Please enter the password for ${selectedProfile.name} to continue.`}
+              </p>
 
-              <form onSubmit={handlePinSubmit} className="space-y-6">
-                <input
-                  type="password"
-                  autoFocus
-                  maxLength={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 text-center text-3xl tracking-[1em] text-white focus:outline-none focus:border-apple-blue/50 transition-colors"
-                  value={pin}
-                  onChange={(e) => {
-                    setPin(e.target.value.replace(/\D/g, ''));
-                    setError('');
-                  }}
-                />
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {authMode === 'pin' ? (
+                  <input
+                    type="password"
+                    autoFocus
+                    maxLength={4}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 text-center text-3xl tracking-[1em] text-white focus:outline-none focus:border-apple-blue/50 transition-colors"
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value.replace(/\D/g, ''));
+                      setError('');
+                    }}
+                  />
+                ) : (
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <input
+                      type="password"
+                      autoFocus
+                      className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-apple-blue/50 transition-colors"
+                      placeholder="Account Password"
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        setError('');
+                      }}
+                    />
+                  </div>
+                )}
 
                 {error && (
                   <p className="text-red-500 text-sm">{error}</p>
@@ -174,14 +243,14 @@ const ProfileSelection = () => {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => { setSelectedProfile(null); setPin(''); }}
+                    onClick={() => { setSelectedProfile(null); setInputValue(''); }}
                     className="flex-1 py-3 px-4 rounded-xl text-gray-400 hover:bg-white/5 transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={switching || pin.length < 4}
+                    disabled={switching || (authMode === 'pin' && inputValue.length < 4) || (authMode === 'password' && inputValue.length < 1)}
                     className="flex-1 py-3 px-4 rounded-xl bg-apple-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors"
                   >
                     {switching ? '...' : 'Enter'}

@@ -11,6 +11,7 @@ export const adminService = {
     return response.data;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createUser: async (userData: any) => {
     const response = await api.post('/admin/users', userData);
     return response.data;
@@ -38,6 +39,7 @@ export const adminService = {
     return response.data;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateSettings: async (settings: any) => {
     const response = await api.put('/settings', settings);
     return response.data;

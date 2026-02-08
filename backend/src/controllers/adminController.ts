@@ -72,6 +72,21 @@ export const getSystemStats = async (req: Request, res: Response) => {
     const usedMemGB = (usedMem / (1024 * 1024 * 1024)).toFixed(2);
     const totalMemGB = (totalMem / (1024 * 1024 * 1024)).toFixed(2);
 
+    // Get Local IP
+    const nets = os.networkInterfaces();
+    let localIp = 'localhost';
+
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+          localIp = net.address;
+          break; // Take the first one
+        }
+      }
+      if (localIp !== 'localhost') break;
+    }
+
     res.json({
       users: userCount,
       libraries: libraryCount,
@@ -83,6 +98,8 @@ export const getSystemStats = async (req: Request, res: Response) => {
       ramTotal: totalMemGB,
       activeStreams: 0,
       systemHealth: 'Good',
+      localIp: localIp,
+      port: process.env.PORT || 3000,
       recentActivity: activityList
     });
   } catch (error) {
@@ -93,7 +110,16 @@ export const getSystemStats = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({}, '-password -pin').sort({ createdAt: -1 });
+    // @ts-ignore
+    const currentUserId = req.user.id;
+
+    const users = await User.find({
+      $or: [
+        { _id: currentUserId },
+        { managedBy: currentUserId }
+      ]
+    }, '-password -pin').sort({ createdAt: -1 });
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error });

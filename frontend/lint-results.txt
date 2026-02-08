@@ -1,0 +1,42 @@
+[0m[0m
+[0m[4mC:\Github\local-media-server\frontend\src\components\admin\AddUserModal.tsx[24m[0m
+[0m   [2m2:18[22m  [31merror[39m  'AnimatePresence' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m9:20[22m  [31merror[39m  Unexpected any. Specify a different type     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m22:46[22m  [31merror[39m  Unexpected any. Specify a different type     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m36:41[22m  [31merror[39m  Unexpected any. Specify a different type     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Github\local-media-server\frontend\src\pages\admin\Dashboard.tsx[24m[0m
+[0m    [2m4:31[22m  [31merror[39m  'Shield' is defined but never used                                                                                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:3[22m   [31merror[39m  'TrendingUp' is defined but never used                                                                               [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:15[22m  [31merror[39m  'AlertCircle' is defined but never used                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:28[22m  [31merror[39m  'CheckCircle' is defined but never used                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m9:10[22m  [31merror[39m  'cn' is defined but never used                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:38[22m  [31merror[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m23:9[22m   [31merror[39m  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  [2m@typescript-eslint/ban-ts-comment[22m[0m
+[0m  [2m135:52[22m  [31merror[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m154:63[22m  [31merror[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m175:71[22m  [31merror[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m196:59[22m  [31merror[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Github\local-media-server\frontend\src\pages\admin\Users.tsx[24m[0m
+[0m    [2m3:59[22m  [31merror[39m  'Mail' is defined but never used          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m9:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m28:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m101:37[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Github\local-media-server\frontend\src\pages\app\ProfileSelection.tsx[24m[0m
+[0m   [2m4:24[22m  [31merror[39m    'UserIcon' is defined but never used                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m4:34[22m  [31merror[39m    'Shield' is defined but never used                                                                                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m4:55[22m  [31merror[39m    'ChevronRight' is defined but never used                                                                          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m30:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'fetchProfiles'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m63:14[22m  [31merror[39m    'e' is defined but never used                                                                                     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m63:17[22m  [31merror[39m    Empty block statement                                                                                             [2mno-empty[22m[0m
+[0m  [2m86:20[22m  [31merror[39m    Unexpected any. Specify a different type                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m98:19[22m  [31merror[39m    Unexpected any. Specify a different type                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Github\local-media-server\frontend\src\services\adminService.ts[24m[0m
+[0m  [2m14:32[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m41:36[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 29 problems (28 errors, 1 warning)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

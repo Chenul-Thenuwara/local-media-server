@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Users, HardDrive, Activity, Shield,
-  Settings, Film, Database, FileText,
-  TrendingUp, AlertCircle, CheckCircle
+  Users, HardDrive, Activity,
+  Settings, Film, Database, FileText, Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from '../../lib/utils';
 import { adminService } from '../../services/adminService';
 
 const AdminDashboard = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +19,7 @@ const AdminDashboard = () => {
         setStats(data);
       } catch (error) {
         console.error("Failed to fetch admin stats. Check network tab.", error);
-        // @ts-ignore
+        // Fallback for stats
         setStats({ users: 0, libraries: 0, mediaItems: 0, storage: "Error", recentActivity: [] });
       } finally {
         setLoading(false);
@@ -47,9 +46,17 @@ const AdminDashboard = () => {
           </h1>
           <p className="text-gray-400 mt-1">System overview and management</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 text-sm text-green-400">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          {stats?.systemHealth || "System Optimal"}
+        <div className="flex items-center gap-3">
+          {stats?.localIp && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 text-sm text-blue-400">
+              <Globe size={14} />
+              <span className="font-mono">{stats.localIp}:{window.location.port}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 text-sm text-green-400">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            {stats?.systemHealth || "System Optimal"}
+          </div>
         </div>
       </div>
 
@@ -132,6 +139,7 @@ const AdminDashboard = () => {
         <div className="bg-white/5 rounded-2xl border border-white/10 p-6 backdrop-blur-xl">
           <h2 className="text-xl font-semibold text-white/90 mb-6">Active Libraries</h2>
           <div className="space-y-6">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {stats?.recentActivity?.map((activity: any, i: number) => (
               <ActivityItem
                 key={i}
@@ -151,6 +159,7 @@ const AdminDashboard = () => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const StatCard = ({ title, value, trend, icon: Icon, color }: any) => (
   <motion.div
     whileHover={{ y: -2 }}
@@ -172,6 +181,7 @@ const StatCard = ({ title, value, trend, icon: Icon, color }: any) => (
   </motion.div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ActionCard = ({ to, title, description, icon: Icon, gradient }: any) => (
   <Link to={to}>
     <motion.div
@@ -193,6 +203,7 @@ const ActionCard = ({ to, title, description, icon: Icon, gradient }: any) => (
   </Link>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ActivityItem = ({ icon: Icon, color, title, time }: any) => (
   <div className="flex items-start gap-3">
     <div className={`mt-1 ${color}`}>

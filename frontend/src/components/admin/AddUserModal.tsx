@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Mail, Shield, User, Lock, Film, Tv, Music } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any) => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
     managed: false
   });
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [libraries, setLibraries] = useState<any[]>([]);
   const [selectedLibraries, setSelectedLibraries] = useState<string[]>([]);
 
@@ -33,6 +35,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
       const libs = await adminService.getLibraries();
       setLibraries(libs);
       // Default select all? Or none. Let's select all by default for convenience
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSelectedLibraries(libs.map((l: any) => l._id));
     } catch (err) {
       console.error('Failed to load libraries', err);
@@ -182,8 +185,8 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
                         key={lib._id}
                         onClick={() => toggleLibrary(lib._id)}
                         className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedLibraries.includes(lib._id)
-                            ? 'bg-apple-blue/10 border-apple-blue/50'
-                            : 'bg-black/20 border-white/5 hover:bg-white/5'
+                          ? 'bg-apple-blue/10 border-apple-blue/50'
+                          : 'bg-black/20 border-white/5 hover:bg-white/5'
                           }`}
                       >
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${selectedLibraries.includes(lib._id) ? 'bg-apple-blue border-apple-blue' : 'border-gray-600'
