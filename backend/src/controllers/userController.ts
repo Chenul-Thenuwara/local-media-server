@@ -89,3 +89,33 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// @desc    Set/Update Profile PIN
+// @route   PUT /api/user/profile/pin
+// @access  Private
+export const setPin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { pin } = req.body;
+    // @ts-ignore
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // Validate PIN (numeric, 4 digits)
+    if (pin && (!/^\d{4}$/.test(pin))) {
+      res.status(400).json({ message: 'PIN must be exactly 4 digits' });
+      return;
+    }
+
+    user.pin = pin || undefined; // If empty string, remove PIN
+    await user.save();
+
+    res.json({ message: `PIN ${pin ? 'updated' : 'removed'} successfully` });
+  } catch (error) {
+    console.error('Set PIN Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

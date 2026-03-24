@@ -1,0 +1,10 @@
+﻿src/components/admin/AddUserModal.tsx(2,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/admin/Dashboard.tsx(4,31): error TS6133: 'Shield' is declared but its value is never read.
+src/pages/admin/Dashboard.tsx(6,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/admin/Dashboard.tsx(6,15): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/pages/admin/Dashboard.tsx(6,28): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/admin/Dashboard.tsx(9,1): error TS6133: 'cn' is declared but its value is never read.
+src/pages/admin/Users.tsx(3,59): error TS6133: 'Mail' is declared but its value is never read.
+src/pages/app/ProfileSelection.tsx(4,24): error TS6133: 'UserIcon' is declared but its value is never read.
+src/pages/app/ProfileSelection.tsx(4,34): error TS6133: 'Shield' is declared but its value is never read.
+src/pages/app/ProfileSelection.tsx(4,55): error TS6133: 'ChevronRight' is declared but its value is never read.

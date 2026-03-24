@@ -4,9 +4,27 @@ import { scanLibrary } from '../services/scannerService';
 
 export const getLibraries = async (req: Request, res: Response): Promise<void> => {
   try {
-    // @ts-ignore - user is attached by auth middleware
-    const libraries = await Library.find({ userId: req.user.id });
-    res.json(libraries);
+    // @ts-ignore
+    const user = req.user;
+
+    // Determine who owns the server
+    const ownerId = user.managedBy || user.id;
+
+    // Fetch all libraries belonging to the owner
+    const allLibraries = await Library.find({ userId: ownerId });
+
+    // If Admin/Owner, return all
+    if (user.role === 'admin' || !user.managedBy) {
+      res.json(allLibraries);
+      return;
+    }
+
+    // If Managed User, Filter by Permissions
+    const allowedLibraryIds = user.permissions?.libraries?.map((id: any) => id.toString()) || [];
+
+    const visibleLibraries = allLibraries.filter(lib => allowedLibraryIds.includes(lib._id.toString()));
+
+    res.json(visibleLibraries);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching libraries' });
   }
