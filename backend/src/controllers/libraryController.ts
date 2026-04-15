@@ -10,8 +10,10 @@ export const getLibraries = async (req: Request, res: Response): Promise<void> =
     // Determine who owns the server
     const ownerId = user.managedBy || user.id;
 
-    // Fetch all libraries belonging to the owner
-    const allLibraries = await Library.find({ userId: ownerId });
+    const deviceQuery = process.env.DEVICE_ID ? { deviceId: process.env.DEVICE_ID } : {};
+
+    // Fetch all libraries belonging to the owner on this specific device
+    const allLibraries = await Library.find({ userId: ownerId, ...deviceQuery });
 
     // If Admin/Owner, return all
     if (user.role === 'admin' || !user.managedBy) {
@@ -47,7 +49,8 @@ export const createLibrary = async (req: Request, res: Response): Promise<void> 
       name,
       path,
       type,
-      userId
+      userId,
+      deviceId: process.env.DEVICE_ID
     });
 
     await newLibrary.save();
@@ -67,7 +70,8 @@ export const refreshLibrary = async (req: Request, res: Response): Promise<void>
     // @ts-ignore
     const userId = req.user.id;
 
-    const library = await Library.findOne({ _id: id, userId });
+    const deviceQuery = process.env.DEVICE_ID ? { deviceId: process.env.DEVICE_ID } : {};
+    const library = await Library.findOne({ _id: id, userId, ...deviceQuery });
     if (!library) {
       res.status(404).json({ message: 'Library not found' });
       return;

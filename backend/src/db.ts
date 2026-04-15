@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const connectDB = async (retries = 5, delay = 5000) => {
-  const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/local-media-server';
+  const mongoURI = process.env.MONGO_URI || 'mongodb+srv://chenul:Helsinki@lms-cluster.cwkzgk5.mongodb.net/?appName=lms-cluster';
 
   while (retries > 0) {
     try {

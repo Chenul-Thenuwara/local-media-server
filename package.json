@@ -1,0 +1,55 @@
+{
+  "name": "local-media-server",
+  "version": "1.0.0",
+  "description": "Local Media Server Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "concurrently \"npm run dev:frontend\" \"wait-on tcp:5173 && electron .\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build": "npm run build:frontend && npm run build:backend",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "express": "^5.0.0",
+    "localtunnel": "^2.0.2",
+    "mongoose": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.localmediaserver.app",
+    "productName": "Local Media Server",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "backend/dist/**/*",
+      "backend/package.json",
+      "backend/node_modules/**/*",
+      "frontend/dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/.env",
+        "to": ".env",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  }
+}
