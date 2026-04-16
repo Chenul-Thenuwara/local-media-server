@@ -19,6 +19,19 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
+interface IDevice extends mongoose.Document {
+  deviceId: string;
+  tunnelUrl: string;
+  ownerId?: mongoose.Types.ObjectId;
+}
+
+const DeviceSchema = new mongoose.Schema({
+  deviceId: { type: String, required: true, unique: true },
+  tunnelUrl: { type: String, required: true },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+});
+const Device = mongoose.models.Device || mongoose.model<IDevice>('Device', DeviceSchema);
+
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) return;
   const mongoURI = process.env.MONGO_URI || 'mongodb+srv://chenul:Helsinki@lms-cluster.cwkzgk5.mongodb.net/?appName=lms-cluster';
@@ -55,8 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 
+    let device = await Device.findOne().sort({ lastSeen: -1 });
+
     res.status(201).json({
       token,
+      tunnelUrl: device ? device.tunnelUrl : '',
       user: { id: user.id, email: user.email, name: user.name }
     });
 
