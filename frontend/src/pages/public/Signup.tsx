@@ -7,6 +7,7 @@ import api from '../../lib/api';
 
 interface AuthError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
@@ -49,7 +50,10 @@ export default function Signup() {
     } catch (err) {
       console.error(err);
       const authErr = err as AuthError;
-      setError(authErr.response?.data?.message || 'Failed to create account');
+      setError(
+        authErr.response?.data?.message ||
+        `Error: ${authErr.message || 'Failed to create account'} (Code: ${authErr.response?.status || 'Network'})`
+      );
     } finally {
       setLoading(false);
     }
