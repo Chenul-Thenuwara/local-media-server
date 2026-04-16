@@ -39,7 +39,12 @@ export default function Signup() {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data));
+      localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
+      
+      if (res.data.tunnelUrl) {
+        localStorage.setItem('tunnelUrl', res.data.tunnelUrl);
+      }
+      
       navigate('/home');
     } catch (err) {
       console.error(err);

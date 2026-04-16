@@ -5,12 +5,16 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 interface IUser extends mongoose.Document {
   email: string;
+  name: string;
   password?: string;
+  role: string;
 }
 
 const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true },
+  name: { type: String, required: true },
   password: { type: String },
+  role: { type: String, default: 'admin' },
 });
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
