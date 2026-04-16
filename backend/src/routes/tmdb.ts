@@ -254,4 +254,41 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------
+// Person / Actor Routes
+// ---------------------------------------------------------
+router.get('/person/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'TMDB API Key missing' });
+
+    const response = await axios.get(`https://api.themoviedb.org/3/person/${id}?api_key=${apiKey}`);
+    res.json(response.data);
+  } catch (error) {
+    console.error('TMDB Person Detail Error:', error);
+    res.status(404).json({ message: 'Person not found' });
+  }
+});
+
+router.get('/person/:id/combined_credits', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'TMDB API Key missing' });
+
+    const response = await axios.get(`https://api.themoviedb.org/3/person/${id}/combined_credits?api_key=${apiKey}`);
+
+    // Sort by popularity or release date
+    if (response.data.cast) {
+      response.data.cast.sort((a: any, b: any) => b.popularity - a.popularity);
+    }
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('TMDB Person Credits Error:', error);
+    res.status(500).json({ error: 'Failed to fetch person credits' });
+  }
+});
+
 export default router;

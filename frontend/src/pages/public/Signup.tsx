@@ -7,6 +7,7 @@ import api from '../../lib/api';
 
 interface AuthError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
@@ -39,12 +40,20 @@ export default function Signup() {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data));
+      localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
+      
+      if (res.data.tunnelUrl) {
+        localStorage.setItem('tunnelUrl', res.data.tunnelUrl);
+      }
+      
       navigate('/home');
     } catch (err) {
       console.error(err);
       const authErr = err as AuthError;
-      setError(authErr.response?.data?.message || 'Failed to create account');
+      setError(
+        authErr.response?.data?.message ||
+        `Error: ${authErr.message || 'Failed to create account'} (Code: ${authErr.response?.status || 'Network'})`
+      );
     } finally {
       setLoading(false);
     }

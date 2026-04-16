@@ -8,6 +8,8 @@ export const streamMedia = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     const { range } = req.headers;
 
+    // console.log(`Stream Request: ${id}, Range: ${range}`);
+
     const media = await Media.findById(id);
     if (!media) {
       res.status(404).json({ message: 'Media not found' });
@@ -15,6 +17,7 @@ export const streamMedia = async (req: Request, res: Response): Promise<void> =>
     }
 
     const videoPath = media.path;
+
     const videoSize = fs.statSync(videoPath).size;
 
     // Determine MIME type

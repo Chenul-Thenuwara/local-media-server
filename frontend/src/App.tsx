@@ -8,12 +8,16 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/app/Home';
 import MovieDetail from './pages/app/MovieDetail';
+import PersonDetail from './pages/app/PersonDetail';
 
 // Core
 import Discover from './pages/app/Discover';
+import GoogleCallback from './pages/app/GoogleCallback';
 import Search from './pages/app/Search';
 import Watchlist from './pages/app/Watchlist';
+import History from './pages/app/History';
 import Notifications from './pages/app/Notifications';
+import ProfileSelection from './pages/app/ProfileSelection';
 
 // Profile
 import AccountSettings from './pages/app/profile/AccountSettings';
@@ -47,15 +51,19 @@ function App() {
         {/* Protected App Routes */}
         {/* Protected App Routes */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/profiles" element={<ProfileSelection />} />
           <Route element={<AppLayout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/media/:id" element={<MovieDetail />} />
             <Route path="/media/tmdb/:type/:id" element={<MovieDetail />} />
+            <Route path="/person/:id" element={<PersonDetail />} />
 
             {/* Core */}
             <Route path="/discover" element={<Discover />} />
+            <Route path="/google-callback" element={<GoogleCallback />} />
             <Route path="/search" element={<Search />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/history" element={<History />} />
             <Route path="/notifications" element={<Notifications />} />
 
             {/* Profile */}

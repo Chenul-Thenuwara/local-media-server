@@ -1,10 +1,17 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Play, Pause, Volume2, Volume1, VolumeX, Maximize, Minimize, FastForward, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import api from '../../lib/api';
 
 interface VideoPlayerProps {
   mediaId: string;
   onClose: () => void;
+  title: string;
+  posterPath?: string;
+  tmdbId?: number;
+  mediaType: 'movie' | 'tv';
+  audioCodec?: string;
+  isHdr?: boolean;
 }
 
 const Volume3 = ({ size = 24, className }: { size?: number, className?: string }) => (
@@ -35,11 +42,13 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
+export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType, isHdr }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('token');
-  const streamUrl = `http://localhost:3000/api/stream/${mediaId}?token=${token}`;
+
+
+  const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}`;
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -57,6 +66,46 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
   const [seekFeedback, setSeekFeedback] = useState<{ type: 'forward' | 'backward'; seconds: number } | null>(null);
   const seekAccumulatorRef = useRef(0);
   const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  interface NextUpMedia {
+    tmdbId: number;
+    mediaType: 'movie' | 'tv';
+    title: string;
+    overview: string;
+    backdropPath: string;
+  }
+
+  const [nextUpMedia, setNextUpMedia] = useState<NextUpMedia | null>(null);
+  const [showNextUp, setShowNextUp] = useState(false);
+  const [hasShownNextUp, setHasShownNextUp] = useState(false);
+
+  // Fetch Up Next
+  useEffect(() => {
+    if (!tmdbId) return;
+    api.get(`/history/next/${tmdbId}?type=${mediaType}`)
+      .then(res => setNextUpMedia(res.data))
+      .catch(console.error);
+  }, [tmdbId, mediaType]);
+
+  // Track History on Mount
+  useEffect(() => {
+    const trackHistory = async () => {
+      try {
+        await api.post('/history', {
+          mediaId: tmdbId ? undefined : mediaId, // Only send mediaId if local
+          tmdbId,
+          mediaType,
+          title,
+          posterPath
+        });
+        console.log('Added to history');
+      } catch (err) {
+        console.error('Failed to track history', err);
+      }
+    };
+    trackHistory();
+  }, [mediaId, tmdbId, mediaType, title, posterPath]);
+
 
   const triggerVolAnim = useCallback(() => {
     setIsVolAnimating(true);
@@ -179,6 +228,21 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleActivity, togglePlay, toggleFullscreen, toggleMute, seek, adjustVolume, onClose]);
 
+  const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const time = e.currentTarget.currentTime;
+    setCurrentTime(time);
+
+    // Check for Up Next Trigger
+    if (duration > 0 && time > 0) {
+      const remaining = duration - time;
+      if (remaining < 300 && !hasShownNextUp && !showNextUp && nextUpMedia) {
+        console.log('Showing Up Next');
+        setShowNextUp(true);
+        setHasShownNextUp(true);
+      }
+    }
+  }, [duration, hasShownNextUp, showNextUp, nextUpMedia]);
+
   return (
     <div
       ref={playerRef}
@@ -190,7 +254,7 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
         ref={videoRef}
         src={streamUrl}
         className="w-full h-full object-contain"
-        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
@@ -217,8 +281,55 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
       {/* Overlay Gradient */}
       <div className={cn(
         "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none transition-opacity duration-300",
-        showControls ? "opacity-100" : "opacity-0"
+        showControls && !showNextUp ? "opacity-100" : "opacity-0"
       )} />
+
+      {/* UP NEXT OVERLAY */}
+      {showNextUp && nextUpMedia && (
+        <div className="absolute inset-0 z-50 flex items-center justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-500">
+          {/* Background Image with Gradient */}
+          <div className="absolute inset-0 z-0 opacity-40">
+            <img
+              src={`https://image.tmdb.org/t/p/original${nextUpMedia.backdropPath}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-black via-black/80 to-transparent" />
+          </div>
+
+          <div className="relative z-10 p-12 max-w-2xl text-right flex flex-col items-end gap-6 mr-10">
+            <div className="space-y-2">
+              <span className="text-gray-400 font-medium uppercase tracking-widest text-sm">Up Next</span>
+              <h2 className="text-5xl font-bold text-white leading-tight drop-shadow-2xl">
+                {nextUpMedia.title}
+              </h2>
+              <p className="text-lg text-gray-300 line-clamp-2 max-w-xl text-right drop-shadow-md">
+                {nextUpMedia.overview}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 mt-4">
+              <button
+                onClick={onClose}
+                className="px-8 py-4 rounded-xl font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // This is a bit of a hack: reload the window with new ID or use callback
+                  // Ideally, we'd have a prop to switch media, but for now navigate/reload works
+                  window.location.href = `/media/tmdb/${nextUpMedia.mediaType}/${nextUpMedia.tmdbId}`;
+                }}
+                className="px-10 py-4 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition-transform active:scale-95 flex items-center gap-3 shadow-xl"
+              >
+                <Play fill="currentColor" size={24} />
+                Play Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Controls Container */}
       <div className={cn(
@@ -286,6 +397,14 @@ export default function VideoPlayer({ mediaId, onClose }: VideoPlayerProps) {
             <span className="text-sm text-gray-300 font-medium">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
+
+            {isHdr && (
+              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-200 border border-purple-500/30 select-none shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                HDR
+              </span>
+            )}
+
+
           </div>
 
           <div className="flex items-center gap-4">

@@ -14,6 +14,9 @@ export const getRecentMedia = async (req: Request, res: Response): Promise<void>
     if (type) {
       libQuery.type = type;
     }
+    if (process.env.DEVICE_ID) {
+      libQuery.deviceId = process.env.DEVICE_ID;
+    }
 
     const libraries = await Library.find(libQuery);
     const libraryIds = libraries.map(lib => lib._id);
@@ -49,6 +52,9 @@ export const getAllMedia = async (req: Request, res: Response): Promise<void> =>
     let libQuery: any = { userId };
     if (type) {
       libQuery.type = type;
+    }
+    if (process.env.DEVICE_ID) {
+      libQuery.deviceId = process.env.DEVICE_ID;
     }
 
     const libraries = await Library.find(libQuery);

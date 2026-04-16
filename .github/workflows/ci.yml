@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, development ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, development ]
 
 jobs:
-  frontend-build:
+  frontend-test-and-build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,9 +22,10 @@ jobs:
         cache-dependency-path: frontend/package-lock.json
     - run: npm ci
     - run: npm run lint
+    - run: npm test
     - run: npm run build
 
-  backend-build:
+  backend-test-and-build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,3 +45,4 @@ jobs:
         cache-dependency-path: backend/package-lock.json
     - run: npm ci
     - run: npm run build
+    - run: npm test

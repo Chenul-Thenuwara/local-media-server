@@ -265,7 +265,7 @@ export default function Search() {
         <TrendingBackground />
       </div>
 
-      <div className="relative z-10 p-8 pt-12 max-w-7xl mx-auto">
+      <div className="relative z-10 p-4 pt-24 md:p-8 md:pt-12 max-w-7xl mx-auto">
         <div className="max-w-4xl mx-auto mb-12">
           {/* Header */}
           <h1 className="text-3xl font-bold mb-6">Search Library & Global</h1>
