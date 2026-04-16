@@ -12,6 +12,7 @@ const api = axios.create({
   baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true'
   },
 });
 
