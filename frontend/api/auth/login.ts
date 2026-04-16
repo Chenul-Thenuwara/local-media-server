@@ -3,20 +3,30 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Inline User Model
+interface IUser extends mongoose.Document {
+  email: string;
+  password?: string;
+}
+
 const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true },
   password: { type: String },
 });
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
+const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 // Inline Device Model
+interface IDevice extends mongoose.Document {
+  deviceId: string;
+  tunnelUrl: string;
+  ownerId?: mongoose.Types.ObjectId;
+}
+
 const DeviceSchema = new mongoose.Schema({
   deviceId: { type: String, required: true, unique: true },
   tunnelUrl: { type: String, required: true },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
-const Device = mongoose.models.Device || mongoose.model('Device', DeviceSchema);
+const Device = mongoose.models.Device || mongoose.model<IDevice>('Device', DeviceSchema);
 
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) return;

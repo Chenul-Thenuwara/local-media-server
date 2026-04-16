@@ -12,6 +12,7 @@ const api = axios.create({
   baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true'
   },
 });
 
@@ -25,8 +26,8 @@ api.interceptors.request.use(
     
     // Dynamically update baseURL if tunnelUrl was just set during this session
     const tunnelUrl = localStorage.getItem('tunnelUrl');
-    // Allow login endpoints to bypass tunnel to hit the central discovery server
-    const isAuthEndpoint = config.url && config.url.includes('/auth/login') || config.url?.includes('discovery');
+    // Allow all auth endpoints (login/register) to bypass tunnel to hit the central discovery server
+    const isAuthEndpoint = config.url && config.url.includes('/auth/') || config.url?.includes('discovery');
     
     if (tunnelUrl && !isAuthEndpoint) {
       config.baseURL = `${tunnelUrl}/api`;
