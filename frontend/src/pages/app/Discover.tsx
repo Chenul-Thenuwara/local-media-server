@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Compass } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Compass, Loader2 } from 'lucide-react';
 import { MediaCard } from '../../components/media/MediaCard';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import api from '../../lib/api';
 
 interface Movie {
   id: number;
@@ -16,14 +18,14 @@ const Discover = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
 
-  const loadMovies = async (pageNum: number) => {
+  const loadMovies = useCallback(async (pageNum: number) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tmdb/trending?page=${pageNum}`);
-      const data = await res.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await api.get(`/tmdb/trending?page=${pageNum}`);
+      const data = res.data;
+
       const newMovies = data.results || [];
 
       if (pageNum === 1) {
@@ -43,22 +45,34 @@ const Discover = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, []);
+
+  // Infinite Scroll Hook
+  const { ref: loadMoreRef, isIntersecting } = useIntersectionObserver({
+    threshold: 0.5,
+    enabled: !loading && !loadingMore
+  });
+
+  useEffect(() => {
+    if (isIntersecting && !loading && !loadingMore) {
+      loadMovies(page + 1);
+    }
+  }, [isIntersecting, loading, loadingMore, page, loadMovies]);
 
   useEffect(() => {
     loadMovies(1);
-  }, []);
+  }, [loadMovies]);
 
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <Loader2 className="animate-spin text-apple-blue" size={40} />
       </div>
     );
   }
 
   return (
-    <div className="p-8 pb-20 overflow-y-auto h-full">
+    <div className="p-4 md:p-8 pb-20 overflow-y-auto h-full header-scroll-mask">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-gray-800 rounded-2xl flex items-center justify-center text-apple-blue shadow-lg">
           <Compass size={24} />
@@ -71,7 +85,9 @@ const Discover = () => {
 
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-200 pl-1">Trending Now</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">
+
+        {/* fluid grid to fill gaps */}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4 md:gap-6">
           {trending.map((movie) => (
             <MediaCard
               key={movie.id}
@@ -88,22 +104,14 @@ const Discover = () => {
           ))}
         </div>
 
-        {/* Load More Button */}
-        <div className="flex justify-center pt-8 pb-4">
-          <button
-            onClick={() => loadMovies(page + 1)}
-            disabled={loadingMore}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {loadingMore ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Load More Movies'
-            )}
-          </button>
+        {/* Infinite Scroll Sentinel */}
+        <div ref={loadMoreRef} className="flex justify-center py-8 min-h-[100px]">
+          {loadingMore && (
+            <div className="flex flex-col items-center gap-2 text-gray-500">
+              <Loader2 className="animate-spin" />
+              <span className="text-sm">Loading more...</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

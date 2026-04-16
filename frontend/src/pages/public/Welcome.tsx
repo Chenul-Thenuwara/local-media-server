@@ -32,13 +32,13 @@ export default function Welcome() {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 pt-32 pb-16 px-6">
+      <main className="relative z-10 pt-24 pb-12 px-4 md:pt-32 md:pb-16 md:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
+            className="text-4xl md:text-7xl font-bold tracking-tight mb-6"
           >
             Your Media. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500">
@@ -50,7 +50,7 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed"
           >
             A powerful, self-hosted streaming server for your personal collection.
             No subscriptions. No tracking. Just your content, everywhere.
@@ -63,11 +63,14 @@ export default function Welcome() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link to="/signup">
-              <Button size="lg" className="shadow-xl shadow-blue-500/20 bg-apple-blue hover:bg-blue-600 border-none">
+              <Button size="lg" className="w-full sm:w-auto shadow-xl shadow-blue-500/20 bg-apple-blue hover:bg-blue-600 border-none">
                 Start Watching Now
               </Button>
             </Link>
-            <Button variant="glass" size="lg" className="group text-white hover:bg-white/20">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto group text-white bg-white/10 backdrop-blur-md hover:bg-white/20 border-none"
+            >
               <span className="mr-2">View Demo</span>
               <Play size={16} className="group-hover:translate-x-0.5 transition-transform" />
             </Button>
@@ -75,7 +78,7 @@ export default function Welcome() {
         </div>
 
         {/* Feature Grid */}
-        <div className="max-w-7xl mx-auto mt-32 grid md:grid-cols-3 gap-8">
+        <div className="max-w-7xl mx-auto mt-16 md:mt-32 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {[
             {
               icon: HardDrive,
@@ -99,7 +102,7 @@ export default function Welcome() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors"
+              className="bg-white/5 backdrop-blur-lg p-6 md:p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors"
             >
               <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 text-apple-blue">
                 <feature.icon size={24} />

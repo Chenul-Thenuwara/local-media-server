@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import User from '../models/User';
 
 interface DecodedToken {
   id: string;
@@ -15,9 +16,9 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as DecodedToken;
 
-      // Attach user id to request
+      // Attach user to request
       // @ts-ignore
-      req.user = { id: decoded.id };
+      req.user = await User.findById(decoded.id).select('-password');
 
       next();
     } catch (error) {
@@ -27,5 +28,14 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
 
   if (!token) {
     res.status(401).json({ message: 'Not authorized, no token' });
+  }
+};
+
+export const admin = (req: Request, res: Response, next: NextFunction) => {
+  // @ts-ignore
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(401).json({ message: 'Not authorized as an admin' });
   }
 };

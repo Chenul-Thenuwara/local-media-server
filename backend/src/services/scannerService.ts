@@ -75,7 +75,27 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: '
         console.log(`[Scanner] Probed ${filename}:`, mediaInfo ? 'Success' : 'Failed');
 
         if (!exists) {
-          // ... (create logic)
+          // Fetch metadata from TMDB
+          const mediaType = type === 'movies' ? 'movie' : 'tv';
+          const metadata = await fetchMetadata(filename, mediaType);
+
+          const newMedia = new Media({
+            libraryId,
+            title: metadata?.title || filename,
+            type: type === 'movies' ? 'movie' : 'tv',
+            path: file,
+            filename,
+            size: (await fs.promises.stat(file)).size,
+            tmdbId: metadata?.tmdbId,
+            posterPath: metadata?.posterPath,
+            backdropPath: metadata?.backdropPath,
+            overview: metadata?.overview,
+            releaseDate: metadata?.releaseDate,
+            mediaInfo
+          });
+
+          await newMedia.save();
+          console.log(`[Scanner] Added: ${filename}`);
         }
         else {
           // Check if we need to backfill mediaInfo or TMDB

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, ArrowLeft, Calendar, FileVideo, HardDrive } from 'lucide-react';
+import { Play, ArrowLeft, Calendar, FileVideo, HardDrive, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
 
@@ -10,6 +10,14 @@ interface CastMember {
   id: number;
   name: string;
   character: string;
+  profile_path: string | null;
+}
+
+interface CrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
   profile_path: string | null;
 }
 
@@ -36,6 +44,7 @@ interface MediaDetail {
   tmdbId?: number;
   credits?: {
     cast: CastMember[];
+    crew: CrewMember[];
   };
   isTmdb?: boolean;
   seasons?: Season[];
@@ -117,10 +126,19 @@ export default function MovieDetail() {
 
   return (
     // ... (wrapper and backdrop code remains same) ...
-    <div className="relative min-h-screen text-white -ml-64 w-[calc(100%+16rem)]">
+    <div className="relative min-h-screen text-white w-full lg:-ml-64 lg:w-[calc(100%+16rem)]">
       {/* Video Player Overlay */}
       {playing && (
-        <VideoPlayer mediaId={id!} onClose={() => setPlaying(false)} />
+        <VideoPlayer
+          mediaId={id!}
+          onClose={() => setPlaying(false)}
+          title={media.title || media.filename}
+          posterPath={media.posterPath}
+          tmdbId={media.tmdbId}
+          mediaType={media.type}
+          audioCodec={media.mediaInfo?.audioCodec}
+          isHdr={media.mediaInfo?.isHdr}
+        />
       )}
 
       {/* Backdrop - Fixed & Full Screen */}
@@ -136,17 +154,17 @@ export default function MovieDetail() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 px-12 pt-8 pl-[calc(16rem+3rem)]">
+      <div className="relative z-10 px-4 pt-24 lg:px-12 lg:pt-8 lg:pl-[calc(16rem+3rem)]">
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-gray-300 hover:text-white mb-8">
           <ArrowLeft className="mr-2" size={20} /> Back
         </Button>
 
-        <div className="flex gap-12 mt-4">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4">
           {/* Poster */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-[300px] shrink-0 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900"
+            className="w-[240px] md:w-[300px] shrink-0 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900 mx-auto lg:mx-0"
           >
             {displayPoster ? (
               <img
@@ -156,7 +174,7 @@ export default function MovieDetail() {
                 className="w-full h-full object-cover animate-in fade-in duration-300"
               />
             ) : (
-              <div className="h-[450px] flex items-center justify-center flex-col gap-4 text-gray-500">
+              <div className="h-[360px] md:h-[450px] flex items-center justify-center flex-col gap-4 text-gray-500">
                 <FileVideo size={48} />
                 <span>No Poster</span>
               </div>
@@ -164,12 +182,12 @@ export default function MovieDetail() {
           </motion.div>
 
           {/* Info */}
-          <div className="flex-1 max-w-4xl pt-8">
+          <div className="flex-1 max-w-4xl pt-4 lg:pt-8 text-center lg:text-left">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl font-bold mb-4"
+              className="text-3xl md:text-5xl font-bold mb-4"
             >
               {media.title || media.filename}
             </motion.h1>
@@ -178,7 +196,7 @@ export default function MovieDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-6 text-gray-300 mb-8"
+              className="flex items-center justify-center lg:justify-start gap-4 md:gap-6 text-gray-300 mb-8 flex-wrap"
             >
               {/* ... (metadata) ... */}
               {media.releaseDate && (
@@ -199,22 +217,22 @@ export default function MovieDetail() {
 
             </motion.div>
 
-            <div className="flex items-center gap-4 mb-10">
+            <div className="flex items-center justify-center lg:justify-start gap-4 mb-10 flex-wrap">
               {/* TMDB Button */}
               {!media.isTmdb && (
                 <Button
                   size="lg"
                   onClick={() => setPlaying(true)}
-                  className="bg-gradient-to-r from-blue-600/60 to-indigo-600/60 hover:from-blue-500/70 hover:to-indigo-500/70 backdrop-blur-md border border-white/20 text-white px-10 py-7 text-xl font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 active:scale-95 group"
+                  className="bg-gradient-to-r from-blue-600/60 to-indigo-600/60 hover:from-blue-500/70 hover:to-indigo-500/70 backdrop-blur-md border border-white/20 text-white px-8 py-6 md:px-10 md:py-7 text-lg md:text-xl font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 active:scale-95 group"
                 >
-                  <Play fill="currentColor" className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <Play fill="currentColor" className="mr-3 w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
                   Play Now
                 </Button>
               )}
 
               {/* Technical Badges */}
               {media.mediaInfo && (
-                <div className="flex items-center gap-3 pl-4 ml-2 select-none">
+                <div className="flex items-center gap-3 pl-0 lg:pl-4 lg:ml-2 select-none">
                   {media.mediaInfo.resolution && (
                     <span title="Resolution" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
                       {media.mediaInfo.resolution}
@@ -225,6 +243,7 @@ export default function MovieDetail() {
                       HDR
                     </span>
                   )}
+
                   {media.mediaInfo.audioCodec && (
                     <span title="Audio Codec" className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-semibold text-gray-200 cursor-help hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm">
                       {media.mediaInfo.audioCodec}
@@ -250,7 +269,7 @@ export default function MovieDetail() {
               transition={{ delay: 0.3 }}
             >
               <h3 className="text-xl font-semibold mb-3 text-gray-200">Synopsis</h3>
-              <p className="text-lg text-gray-400 leading-relaxed max-w-3xl mb-12">
+              <p className="text-lg text-gray-400 leading-relaxed max-w-3xl mb-12 text-justify md:text-left">
                 {media.overview || "No overview available for this title."}
               </p>
             </motion.div>
@@ -261,6 +280,42 @@ export default function MovieDetail() {
         <div className="mt-12">
           <CastCarousel cast={cast} />
         </div>
+
+        {/* Director Section */}
+        {media.credits?.crew && media.credits.crew.filter(c => c.job === 'Director').length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold text-gray-200 mb-4">Director</h3>
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {media.credits.crew
+                .filter(c => c.job === 'Director')
+                .map(director => (
+                  <Link
+                    to={`/person/${director.id}`}
+                    key={director.id}
+                    className="flex items-center gap-4 bg-gray-800/50 rounded-xl p-3 pr-6 border border-white/5 hover:border-apple-blue transition-colors group min-w-[200px]"
+                  >
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 shrink-0">
+                      {director.profile_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w185${director.profile_path}`}
+                          alt={director.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <User size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white group-hover:text-apple-blue transition-colors">{director.name}</p>
+                      <p className="text-xs text-gray-400">Director</p>
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Season View (TV Shows Only) */}
         {media.type === 'tv' && media.seasons && media.tmdbId && (

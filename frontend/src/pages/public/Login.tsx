@@ -30,9 +30,16 @@ export default function Login() {
 
     try {
       const res = await api.post('/auth/login', { email, password });
+      
+      // Save data returning from Vercel Discovery API (or Local API)
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/home');
+      localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
+      
+      if (res.data.tunnelUrl) {
+        localStorage.setItem('tunnelUrl', res.data.tunnelUrl);
+      }
+      
+      navigate('/profiles');
     } catch (err) {
       console.error(err);
       const authErr = err as AuthError;
@@ -66,7 +73,7 @@ export default function Login() {
           required
         />
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
           <label className="flex items-center gap-2 text-gray-300 cursor-pointer select-none">
             <input type="checkbox" className="rounded border-gray-600 bg-white/10 text-apple-blue focus:ring-apple-blue" />
             Remember me

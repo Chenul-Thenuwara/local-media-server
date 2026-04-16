@@ -4,6 +4,17 @@ import path from 'path';
 import { exec } from 'child_process';
 
 export const getDrives = async (req: Request, res: Response): Promise<void> => {
+  if (process.platform !== 'win32') {
+    // We are likely in Docker (Linux)
+    // Return standard mount points
+    const drives = [
+      { name: 'Root (/)', path: '/' },
+      { name: 'Media (Mounted)', path: '/media' }
+    ];
+    res.json(drives);
+    return;
+  }
+
   // Use PowerShell to list drives (more robust on modern Windows)
   exec('powershell -Command "Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Name"', (error, stdout, stderr) => {
     if (error) {

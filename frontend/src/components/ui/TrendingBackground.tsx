@@ -1,6 +1,7 @@
 // ... imports ...
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../../lib/api';
 
 interface Movie {
   id: number;
@@ -9,17 +10,18 @@ interface Movie {
 
 export default function TrendingBackground() {
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/tmdb/trending')
-      .then(res => res.json())
-      .then(data => {
+    api.get('/tmdb/trending')
+      .then(res => {
+        const data = res.data;
         const results = data.results || [];
         // Generate pool by repeatedly adding shuffled sets of the source items
         // This guarantees local uniqueness (no duplicates within each chunk)
         const finalPool: Movie[] = [];
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 10; i++) {
           // Shuffle a fresh copy of the results
           const chunk = [...results];
           for (let j = chunk.length - 1; j > 0; j--) {
@@ -44,15 +46,34 @@ export default function TrendingBackground() {
       .catch(err => console.error('Failed to fetch movies', err));
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize mouse position from -1 to 1
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   if (movies.length === 0) return <div className="fixed inset-0 bg-black" />;
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden bg-black">
       <div className="absolute inset-0 opacity-50">
-        <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 p-4 -rotate-6 scale-125 origin-center">
+        <motion.div
+          animate={{
+            x: mousePos.x * -20, // Move 20px in opposite direction
+            y: mousePos.y * -20
+          }}
+          transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+          className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 -rotate-12 scale-150 origin-center content-start"
+        >
           {movies.map((movie, index) => (
             <motion.div
-              key={movie.id}
+              key={`${movie.id}-${index}`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
@@ -63,7 +84,6 @@ export default function TrendingBackground() {
                 transition: { type: "spring", stiffness: 300, damping: 10 }
               }}
               className="aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-white/5 cursor-default relative"
-              style={{ transformOrigin: 'center center' }}
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -73,7 +93,7 @@ export default function TrendingBackground() {
               <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors" />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black pointer-events-none" />
