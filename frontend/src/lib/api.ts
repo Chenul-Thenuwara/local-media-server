@@ -26,10 +26,14 @@ api.interceptors.request.use(
     
     // Dynamically update baseURL if tunnelUrl was just set during this session
     const tunnelUrl = localStorage.getItem('tunnelUrl');
-    // Allow all auth endpoints (login/register) to bypass tunnel to hit the central discovery server
-    const isAuthEndpoint = config.url && config.url.includes('/auth/') || config.url?.includes('discovery');
+    // Allow public utility endpoints to bypass tunnel and hit Vercel directly
+    const isPublicEndpoint = config.url && (
+      config.url.includes('/auth/') || 
+      config.url.includes('discovery') || 
+      config.url.includes('/tmdb/trending')
+    );
     
-    if (isAuthEndpoint) {
+    if (isPublicEndpoint) {
       config.baseURL = import.meta.env.VITE_API_URL || '/api';
     } else if (tunnelUrl) {
       config.baseURL = `${tunnelUrl}/api`;
