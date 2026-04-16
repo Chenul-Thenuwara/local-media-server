@@ -29,7 +29,9 @@ api.interceptors.request.use(
     // Allow all auth endpoints (login/register) to bypass tunnel to hit the central discovery server
     const isAuthEndpoint = config.url && config.url.includes('/auth/') || config.url?.includes('discovery');
     
-    if (tunnelUrl && !isAuthEndpoint) {
+    if (isAuthEndpoint) {
+      config.baseURL = import.meta.env.VITE_API_URL || '/api';
+    } else if (tunnelUrl) {
       config.baseURL = `${tunnelUrl}/api`;
     }
 
