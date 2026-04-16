@@ -7,6 +7,7 @@ import api from '../../lib/api';
 
 interface AuthError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
