@@ -30,7 +30,8 @@ api.interceptors.request.use(
     const isPublicEndpoint = config.url && (
       config.url.includes('/auth/') || 
       config.url.includes('discovery') || 
-      config.url.includes('/tmdb/trending')
+      config.url.includes('/tmdb/trending') ||
+      config.url.includes('/spotify/')
     );
     
     if (isPublicEndpoint) {

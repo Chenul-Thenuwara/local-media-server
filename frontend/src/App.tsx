@@ -18,7 +18,6 @@ import Watchlist from './pages/app/Watchlist';
 import History from './pages/app/History';
 import Notifications from './pages/app/Notifications';
 import ProfileSelection from './pages/app/ProfileSelection';
-import ServerOffline from './pages/app/ServerOffline';
 
 // Profile
 import AccountSettings from './pages/app/profile/AccountSettings';
@@ -40,13 +39,6 @@ import AdminUsers from './pages/admin/Users';
 import ServerSettings from './pages/admin/ServerSettings';
 import ServerLogs from './pages/admin/Logs';
 
-// Guard: redirect to offline page if no tunnel is configured
-function TunnelGuard({ children }: { children: React.ReactNode }) {
-  const tunnelUrl = localStorage.getItem('tunnelUrl');
-  if (!tunnelUrl) return <Navigate to="/server-offline" replace />;
-  return <>{children}</>;
-}
-
 function App() {
   return (
     <Router>
@@ -60,9 +52,8 @@ function App() {
         {/* Protected App Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profiles" element={<ProfileSelection />} />
-          <Route path="/server-offline" element={<ServerOffline />} />
           <Route element={<AppLayout />}>
-            <Route path="/home" element={<TunnelGuard><Home /></TunnelGuard>} />
+            <Route path="/home" element={<Home />} />
             <Route path="/media/:id" element={<MovieDetail />} />
             <Route path="/media/tmdb/:type/:id" element={<MovieDetail />} />
             <Route path="/person/:id" element={<PersonDetail />} />

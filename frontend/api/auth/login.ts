@@ -74,9 +74,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       device = await Device.findOne().sort({ lastSeen: -1 });
     }
 
-    // If no device found, still log in but with no tunnelUrl
-    // The frontend will handle showing the "server offline" screen
-    const tunnelUrl = device?.tunnelUrl || null;
+    if (!device || !device.tunnelUrl) {
+      return res.status(404).json({ message: 'No active media servers found for your account. Please start your Desktop app.' });
+    }
 
     // Generate standard token used by frontend
     const JWT_SECRET = process.env.JWT_SECRET || '77536a4cec7993c131b13f18a786c3488da36159dccac301f4b73f0a95965545';
@@ -91,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(200).json({
       token,
-      tunnelUrl,
+      tunnelUrl: device.tunnelUrl,
       user: { id: user.id, email: user.email }
     });
 

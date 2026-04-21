@@ -12,6 +12,7 @@ import historyRoutes from './history';
 import googlePhotosRoutes from './googlePhotos';
 import adminRoutes from './admin';
 import settingsRoutes from './settings';
+import spotifyRoutes from './spotify';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/watchlist', watchlistRoutes);
 router.use('/user', userRoutes);
 router.use('/history', historyRoutes);
 router.use('/google-photos', googlePhotosRoutes);
+router.use('/spotify', spotifyRoutes);
 
 router.get('/', (req: Request, res: Response) => {
   res.send('API Root');
