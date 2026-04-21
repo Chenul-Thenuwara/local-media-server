@@ -141,14 +141,15 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
       }
 
       // ─── Handle VIDEO files ────────────────────────────────────────────
-      const videoSubType = detectVideoSubType(filename);
-      const mediaType = videoSubType === 'tv' ? 'tv' : 'movie';
-      const tmdbType = mediaType === 'movie' ? 'movie' : 'tv';
-
+      // Use filename pattern as initial hint, TMDB decides the real type
+      const filenameHint = detectVideoSubType(filename);
       const mediaInfo = await getMediaInfo(file);
 
       if (!exists) {
-        const metadata = await fetchMetadata(filename, tmdbType);
+        // Always fetch metadata — TMDB will tell us if it's a movie or TV show
+        const metadata = await fetchMetadata(filename, filenameHint);
+        // Trust TMDB's detected type over filename pattern
+        const mediaType: 'movie' | 'tv' = metadata?.detectedType || filenameHint;
         const stat = await fs.promises.stat(file);
 
         const newMedia = new Media({
@@ -171,27 +172,30 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
       } else {
         let update: any = {};
 
-        // Re-classify if the stored type doesn't match the detected type
-        if (exists.type !== mediaType) {
-          update.type = mediaType;
-          console.log(`[Scanner] Re-classified ${filename}: ${exists.type} → ${mediaType}`);
+        // Re-classify using TMDB if we don't have it yet, or force for music files that slipped in
+        if (!exists.tmdbId || exists.type === 'music') {
+          const metadata = await fetchMetadata(filename, filenameHint);
+          if (metadata) {
+            update = { ...update, ...metadata };
+            // Use TMDB's detected type if different from stored
+            if (metadata.detectedType && metadata.detectedType !== exists.type) {
+              update.type = metadata.detectedType;
+              console.log(`[Scanner] Re-classified ${filename}: ${exists.type} → ${metadata.detectedType}`);
+            }
+            // Remove tmdbId from update object (it's in metadata directly)
+            update.tmdbId = metadata.tmdbId;
+          }
         }
 
         if (mediaInfo && (!exists.mediaInfo || !exists.mediaInfo.resolution)) {
           update.mediaInfo = mediaInfo;
         }
 
-        if (!exists.tmdbId) {
-          const metadata = await fetchMetadata(filename, tmdbType);
-          if (metadata) update = { ...update, ...metadata };
-        }
-
         if (Object.keys(update).length > 0) {
           await Media.findByIdAndUpdate(exists._id, update);
           console.log(`[Scanner] Updated: ${filename}`);
         }
-      }
-
+      }}
     }
 
     console.log(`[Scanner] Scan complete for ${folderPath}`);
