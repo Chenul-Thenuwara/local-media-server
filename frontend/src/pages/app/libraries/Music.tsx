@@ -137,18 +137,24 @@ export default function Music() {
   const [isSearching, setIsSearching] = useState(false);
   const [loadingReleases, setLoadingReleases] = useState(true);
   const [activeTab, setActiveTab] = useState<'tracks' | 'albums' | 'artists'>('tracks');
+  const [releasesError, setReleasesError] = useState('');
+  const [searchError, setSearchError] = useState('');
 
   useEffect(() => {
     api.get('/spotify/new-releases')
       .then(res => setNewReleases(res.data.albums?.items || []))
-      .catch(console.error)
+      .catch(err => {
+        console.error(err);
+        setReleasesError(err.response?.data?.error || err.message || 'Failed to load releases');
+      })
       .finally(() => setLoadingReleases(false));
   }, []);
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setSearchResults(null); return; }
+    if (!searchQuery.trim()) { setSearchResults(null); setSearchError(''); return; }
     const timer = setTimeout(async () => {
       setIsSearching(true);
+      setSearchError('');
       try {
         const res = await api.get(`/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track,artist,album&limit=20`);
         setSearchResults({
@@ -156,8 +162,10 @@ export default function Music() {
           artists: res.data.artists?.items || [],
           albums: res.data.albums?.items || [],
         });
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        setSearchError(e.response?.data?.error || e.message || 'Search failed');
+        setSearchResults(null);
       } finally {
         setIsSearching(false);
       }
@@ -196,7 +204,13 @@ export default function Music() {
       </motion.div>
 
       {/* Results */}
+      {searchError && (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+          <p className="text-red-400 text-sm">⚠️ {searchError}</p>
+        </div>
+      )}
       {searchResults ? (
+
         <div>
           {/* Tabs */}
           <div className="flex gap-2 mb-6">
@@ -249,6 +263,13 @@ export default function Music() {
             <div className="flex items-center justify-center py-20">
               <Loader2 size={32} className="text-green-400 animate-spin" />
             </div>
+          ) : releasesError ? (
+            <div className="py-10 text-center">
+              <p className="text-red-400 text-sm font-medium">⚠️ Spotify Error</p>
+              <p className="text-gray-500 text-xs mt-1">{releasesError}</p>
+            </div>
+          ) : newReleases.length === 0 ? (
+            <p className="text-gray-500 text-center py-10">No releases found</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {newReleases.map(album => <AlbumCard key={album.id} album={album} />)}
