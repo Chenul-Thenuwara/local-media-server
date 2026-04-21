@@ -33,10 +33,10 @@ const PlayerContext = createContext<PlayerContextType>({
   prev: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePlayer() {
   return useContext(PlayerContext);
 }
-// eslint-disable-next-line react-refresh/only-export-components
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
