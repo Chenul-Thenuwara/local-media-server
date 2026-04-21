@@ -167,9 +167,10 @@ export default function Music() {
           artists: res.data.artists?.items || [],
           albums: res.data.albums?.items || [],
         });
-      } catch (e: any) {
+      } catch (e) {
         console.error(e);
-        setSearchError(e.response?.data?.error || e.message || 'Search failed');
+        const err = e as { response?: { data?: { error?: string } }; message?: string };
+        setSearchError(err.response?.data?.error || err.message || 'Search failed');
         setSearchResults(null);
       } finally {
         setIsSearching(false);

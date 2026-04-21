@@ -71,6 +71,7 @@ export default function MovieDetail() {
   const [playing, setPlaying] = useState(false);
   const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [displayPoster, setDisplayPoster] = useState<string | undefined>(undefined);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [localEpisodes, setLocalEpisodes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -118,9 +119,11 @@ export default function MovieDetail() {
           try {
             const epRes = await api.get(`/media?type=tv`);
             const episodes = (epRes.data || []).filter(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (ep: any) => ep.tmdbId === Number(resolvedTmdbId)
             );
             // Sort by filename (S01E01 etc)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             episodes.sort((a: any, b: any) => a.filename.localeCompare(b.filename));
             setLocalEpisodes(episodes);
           } catch (e) {

@@ -5,26 +5,26 @@ import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Tv } from 'lucide-react';
 
+// Extend MediaItem with episode count
+interface MediaItemWithCount extends MediaItem {
+  _episodeCount?: number;
+  backdropPath?: string;
+}
+
 // Group individual episode files into one entry per series
-function groupByShow(episodes: MediaItem[]): MediaItem[] {
-  const map = new Map<string, MediaItem>();
+function groupByShow(episodes: MediaItem[]): MediaItemWithCount[] {
+  const map = new Map<string, MediaItemWithCount>();
 
   for (const ep of episodes) {
-    // Use tmdbId if available (most reliable), otherwise fall back to title
     const key = ep.tmdbId ? `tmdb-${ep.tmdbId}` : `title-${ep.title?.toLowerCase().trim() || ep._id}`;
 
     if (!map.has(key)) {
-      map.set(key, {
-        ...ep,
-        // Store episode count for display
-        _episodeCount: 1,
-      } as any);
+      map.set(key, { ...ep, _episodeCount: 1 });
     } else {
       const existing = map.get(key)!;
-      (existing as any)._episodeCount = ((existing as any)._episodeCount || 1) + 1;
-      // Keep the one with a poster if current doesn't have one
+      existing._episodeCount = (existing._episodeCount || 1) + 1;
       if (!existing.posterPath && ep.posterPath) {
-        map.set(key, { ...(existing as any), posterPath: ep.posterPath, backdropPath: ep.backdropPath });
+        map.set(key, { ...existing, posterPath: ep.posterPath, backdropPath: (ep as MediaItemWithCount).backdropPath });
       }
     }
   }
@@ -34,7 +34,7 @@ function groupByShow(episodes: MediaItem[]): MediaItem[] {
 
 export default function TVShows() {
   const navigate = useNavigate();
-  const [shows, setShows] = useState<MediaItem[]>([]);
+  const [shows, setShows] = useState<MediaItemWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -118,9 +118,9 @@ export default function TVShows() {
                 >
                   <MediaCard item={show} />
                   {/* Episode count badge */}
-                  {(show as any)._episodeCount > 1 && (
+                  {show._episodeCount && show._episodeCount > 1 && (
                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      {(show as any)._episodeCount} eps
+                      {show._episodeCount} eps
                     </div>
                   )}
                 </div>
