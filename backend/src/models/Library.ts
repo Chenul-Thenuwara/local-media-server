@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ILibrary extends Document {
   name: string;
   path: string;
-  type: 'movies' | 'tv';
+  type: 'movies' | 'tv' | 'music' | 'auto';
   userId: mongoose.Types.ObjectId;
   deviceId?: string;
 }
@@ -11,7 +11,7 @@ export interface ILibrary extends Document {
 const LibrarySchema: Schema = new Schema({
   name: { type: String, required: true },
   path: { type: String, required: true },
-  type: { type: String, enum: ['movies', 'tv'], required: true },
+  type: { type: String, enum: ['movies', 'tv', 'music', 'auto'], required: true },
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   deviceId: { type: String, required: false },
 }, { timestamps: true });

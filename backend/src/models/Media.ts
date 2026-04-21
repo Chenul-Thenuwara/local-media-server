@@ -4,7 +4,7 @@ export interface IMedia extends Document {
   filename: string;
   path: string;
   libraryId: mongoose.Types.ObjectId;
-  type: 'movie' | 'tv';
+  type: 'movie' | 'tv' | 'music';
   size: number;
   // Metadata
   title?: string;
@@ -13,6 +13,13 @@ export interface IMedia extends Document {
   backdropPath?: string;
   releaseDate?: string;
   tmdbId?: number;
+  // Music Metadata
+  artist?: string;
+  album?: string;
+  spotifyTrackId?: string;
+  spotifyAlbumArt?: string;
+  durationMs?: number;
+  genres?: string[];
   // Media Info
   mediaInfo?: {
     resolution?: '4K' | '1080p' | '720p' | 'SD';
@@ -28,7 +35,7 @@ const MediaSchema: Schema = new Schema({
   filename: { type: String, required: true },
   path: { type: String, required: true },
   libraryId: { type: Schema.Types.ObjectId, ref: 'Library', required: true },
-  type: { type: String, enum: ['movie', 'tv'], required: true },
+  type: { type: String, enum: ['movie', 'tv', 'music'], required: true },
   size: { type: Number, required: true },
   // Metadata fields
   title: { type: String },
@@ -37,6 +44,13 @@ const MediaSchema: Schema = new Schema({
   backdropPath: { type: String },
   releaseDate: { type: String },
   tmdbId: { type: Number },
+  // Music fields
+  artist: { type: String },
+  album: { type: String },
+  spotifyTrackId: { type: String },
+  spotifyAlbumArt: { type: String },
+  durationMs: { type: Number },
+  genres: [{ type: String }],
   mediaInfo: {
     resolution: { type: String, enum: ['4K', '1080p', '720p', 'SD'] },
     videoCodec: { type: String },

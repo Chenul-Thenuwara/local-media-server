@@ -2,41 +2,59 @@ import fs from 'fs';
 import path from 'path';
 import Media from '../models/Media';
 import { fetchMetadata } from './tmdbService';
+import { searchTrack, searchArtist } from './spotifyService';
 
 import ffmpeg from 'fluent-ffmpeg';
 // @ts-ignore
 import ffprobeStatic from 'ffprobe-static';
 
-// Set ffprobe path
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
-const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
+const VIDEO_EXTENSIONS = new Set(['.mp4', '.mkv', '.avi', '.mov', '.webm', '.m4v', '.flv']);
+const MUSIC_EXTENSIONS = new Set(['.mp3', '.flac', '.aac', '.m4a', '.ogg', '.wav', '.wma', '.opus']);
 
-// Helper to extract technical metadata
+// Detect media type purely by file extension
+function detectMediaType(filename: string): 'video' | 'music' | null {
+  const ext = path.extname(filename).toLowerCase();
+  if (VIDEO_EXTENSIONS.has(ext)) return 'video';
+  if (MUSIC_EXTENSIONS.has(ext)) return 'music';
+  return null;
+}
+
+// Detect if a video file is likely a TV Show based on naming patterns like S01E02 or 1x02
+function detectVideoSubType(filename: string): 'movie' | 'tv' {
+  const tvPattern = /[Ss]\d{1,2}[Ee]\d{1,2}|season\s*\d+|\d+x\d+/i;
+  return tvPattern.test(filename) ? 'tv' : 'movie';
+}
+
+// Parse basic music tags from filename (before Spotify enrichment)
+function parseMusicTitle(filename: string): { title: string; artist?: string } {
+  const base = path.basename(filename, path.extname(filename));
+  // Common formats: "Artist - Title" or "01. Artist - Title"
+  const dashMatch = base.replace(/^\d+[\.\)]\s*/, '').match(/^(.+?)\s[-–]\s(.+)$/);
+  if (dashMatch) {
+    return { artist: dashMatch[1].trim(), title: dashMatch[2].trim() };
+  }
+  return { title: base };
+}
+
 const getMediaInfo = (filePath: string): Promise<any> => {
   return new Promise((resolve) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        console.error(`Error probing ${filePath}:`, err);
-        return resolve(null);
-      }
+      if (err) return resolve(null);
 
       const videoStream = metadata.streams.find(s => s.codec_type === 'video');
       const audioStream = metadata.streams.find(s => s.codec_type === 'audio');
 
       if (!videoStream) return resolve(null);
 
-      // Determine Resolution
       let resolution = 'SD';
       const height = videoStream.height || 0;
       const width = videoStream.width || 0;
-
       if (width >= 3800 || height >= 2100) resolution = '4K';
       else if (width >= 1900 || height >= 1000) resolution = '1080p';
       else if (width >= 1200 || height >= 700) resolution = '720p';
 
-      // Determine HDR
-      // Common HDR transfers: smpte2084 (PQ), arib-std-b67 (HLG)
       const isHdr = ['smpte2084', 'arib-std-b67'].includes(videoStream.color_transfer || '') ||
         (videoStream.color_space === 'bt2020nc');
 
@@ -51,83 +69,127 @@ const getMediaInfo = (filePath: string): Promise<any> => {
   });
 };
 
-export const scanLibrary = async (libraryId: string, folderPath: string, type: 'movies' | 'tv') => {
-  console.log(`Scanning ${folderPath} for ${type}...`);
+export const scanLibrary = async (libraryId: string, folderPath: string, type: string) => {
+  console.log(`[Scanner] Scanning ${folderPath} (mode: ${type})...`);
 
   try {
     if (!fs.existsSync(folderPath)) {
-      console.error(`Path does not exist: ${folderPath}`);
+      console.error(`[Scanner] Path does not exist: ${folderPath}`);
       return;
     }
 
     const files = await getFiles(folderPath);
 
     for (const file of files) {
-      const ext = path.extname(file).toLowerCase();
-      if (VIDEO_EXTENSIONS.includes(ext)) {
-        const filename = path.basename(file);
+      const filename = path.basename(file);
+      const detectedKind = detectMediaType(filename);
+      if (!detectedKind) continue; // Skip unknown extensions
 
-        // Check if exists
-        const exists = await Media.findOne({ path: file, libraryId });
+      const exists = await Media.findOne({ path: file, libraryId });
 
-        // Always scan for tech details if we are updating or creating
-        const mediaInfo = await getMediaInfo(file);
-        console.log(`[Scanner] Probed ${filename}:`, mediaInfo ? 'Success' : 'Failed');
-
-        if (!exists) {
-          // Fetch metadata from TMDB
-          const mediaType = type === 'movies' ? 'movie' : 'tv';
-          const metadata = await fetchMetadata(filename, mediaType);
-
-          const newMedia = new Media({
-            libraryId,
-            title: metadata?.title || filename,
-            type: type === 'movies' ? 'movie' : 'tv',
-            path: file,
-            filename,
-            size: (await fs.promises.stat(file)).size,
-            tmdbId: metadata?.tmdbId,
-            posterPath: metadata?.posterPath,
-            backdropPath: metadata?.backdropPath,
-            overview: metadata?.overview,
-            releaseDate: metadata?.releaseDate,
-            mediaInfo
-          });
-
-          await newMedia.save();
-          console.log(`[Scanner] Added: ${filename}`);
-        }
-        else {
-          // Check if we need to backfill mediaInfo or TMDB
-          let update: any = {};
-
-          // Force update for debugging if mediaInfo is found
-          if (mediaInfo) {
-            console.log(`[Scanner] update candidate for ${filename}. Existing mediaInfo:`, !!exists.mediaInfo);
-            // Logic to update if missing OR if we just want to ensure it's there (we can improve this check later)
-            if (!exists.mediaInfo || !exists.mediaInfo.resolution) {
-              update.mediaInfo = mediaInfo;
+      // ─── Handle MUSIC files ────────────────────────────────────────────
+      if (detectedKind === 'music') {
+        if (exists) {
+          // Backfill Spotify data if missing
+          if (!exists.spotifyTrackId) {
+            const parsed = parseMusicTitle(filename);
+            const spotify = await searchTrack(parsed.title, parsed.artist);
+            if (spotify) {
+              await Media.findByIdAndUpdate(exists._id, {
+                spotifyTrackId: spotify.spotifyTrackId,
+                spotifyAlbumArt: spotify.spotifyAlbumArt,
+                durationMs: spotify.durationMs,
+                releaseDate: spotify.releaseDate,
+                genres: spotify.genres,
+              });
+              console.log(`[Scanner] Spotify enriched music: ${filename}`);
             }
           }
+          continue;
+        }
 
-          if (!exists.tmdbId) {
-            const mediaType = type === 'movies' ? 'movie' : 'tv';
-            const metadata = await fetchMetadata(filename, mediaType);
-            if (metadata) update = { ...update, ...metadata };
-          }
+        const stat = await fs.promises.stat(file);
+        const parsed = parseMusicTitle(filename);
 
-          if (Object.keys(update).length > 0) {
-            await Media.findByIdAndUpdate(exists._id, update);
-            console.log(`[Scanner] Updated Data for: ${filename}`, update.mediaInfo);
-          } else {
-            console.log(`[Scanner] No updates needed for ${filename}`);
-          }
+        // Try Spotify enrichment
+        const spotify = await searchTrack(parsed.title, parsed.artist);
+        let artistImage: string | undefined;
+        if (parsed.artist) {
+          const artistData = await searchArtist(parsed.artist);
+          artistImage = artistData?.image || undefined;
+        }
+
+        const newMedia = new Media({
+          libraryId,
+          type: 'music',
+          path: file,
+          filename,
+          size: stat.size,
+          title: parsed.title,
+          artist: parsed.artist || (spotify ? undefined : undefined),
+          album: spotify?.album,
+          spotifyTrackId: spotify?.spotifyTrackId,
+          spotifyAlbumArt: spotify?.spotifyAlbumArt || artistImage,
+          durationMs: spotify?.durationMs,
+          releaseDate: spotify?.releaseDate,
+          genres: spotify?.genres,
+        });
+
+        await newMedia.save();
+        console.log(`[Scanner] Added music: ${filename}`);
+        continue;
+      }
+
+      // ─── Handle VIDEO files ────────────────────────────────────────────
+      const videoSubType = detectVideoSubType(filename);
+      const mediaType = videoSubType === 'tv' ? 'tv' : 'movie';
+      const tmdbType = mediaType === 'movie' ? 'movie' : 'tv';
+
+      const mediaInfo = await getMediaInfo(file);
+
+      if (!exists) {
+        const metadata = await fetchMetadata(filename, tmdbType);
+        const stat = await fs.promises.stat(file);
+
+        const newMedia = new Media({
+          libraryId,
+          title: metadata?.title || filename,
+          type: mediaType,
+          path: file,
+          filename,
+          size: stat.size,
+          tmdbId: metadata?.tmdbId,
+          posterPath: metadata?.posterPath,
+          backdropPath: metadata?.backdropPath,
+          overview: metadata?.overview,
+          releaseDate: metadata?.releaseDate,
+          mediaInfo
+        });
+
+        await newMedia.save();
+        console.log(`[Scanner] Added ${mediaType}: ${filename}`);
+      } else {
+        let update: any = {};
+
+        if (mediaInfo && (!exists.mediaInfo || !exists.mediaInfo.resolution)) {
+          update.mediaInfo = mediaInfo;
+        }
+
+        if (!exists.tmdbId) {
+          const metadata = await fetchMetadata(filename, tmdbType);
+          if (metadata) update = { ...update, ...metadata };
+        }
+
+        if (Object.keys(update).length > 0) {
+          await Media.findByIdAndUpdate(exists._id, update);
+          console.log(`[Scanner] Updated: ${filename}`);
         }
       }
     }
-    console.log(`Scan complete for ${folderPath}`);
+
+    console.log(`[Scanner] Scan complete for ${folderPath}`);
   } catch (err) {
-    console.error('Error scanning library:', err);
+    console.error('[Scanner] Error:', err);
   }
 };
 
