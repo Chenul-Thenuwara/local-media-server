@@ -350,84 +350,22 @@ export default function MovieDetail() {
           </div>
         )}
 
-        {/* LOCAL EPISODES — Your Files */}
-        {isTvShow && localEpisodes.length > 0 && (
-          <div className="mt-12">
-            <h3 className="text-xl font-semibold text-gray-200 mb-4 flex items-center gap-3">
-              <span className="w-2 h-6 bg-apple-blue rounded-full inline-block" />
-              Your Episodes
-              <span className="text-sm text-gray-500 font-normal ml-1">{localEpisodes.length} file{localEpisodes.length !== 1 ? 's' : ''}</span>
-            </h3>
-            <div className="space-y-2">
-              {localEpisodes.map((ep, idx) => {
-                // Try to extract season/episode from filename e.g. S01E02
-                const epMatch = ep.filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
-                const seasonNum = epMatch ? parseInt(epMatch[1]) : null;
-                const epNum = epMatch ? parseInt(epMatch[2]) : null;
-                const label = epMatch ? `S${String(seasonNum).padStart(2,'0')}E${String(epNum).padStart(2,'0')}` : `#${idx + 1}`;
-
-                return (
-                  <motion.div
-                    key={ep._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-apple-blue/40 transition-all group cursor-pointer"
-                    onClick={() => setPlayingEpisodeId(ep._id)}
-                  >
-                    {/* Episode number badge */}
-                    <div className="w-16 h-10 bg-black/40 rounded-lg flex items-center justify-center shrink-0 border border-white/10 group-hover:border-apple-blue/40 transition-colors">
-                      <span className="text-xs font-bold text-apple-blue">{label}</span>
-                    </div>
-
-                    {/* Episode info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {ep.title && ep.title !== media.title ? ep.title : ep.filename}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{ep.filename}</p>
-                    </div>
-
-                    {/* Tech badges */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {ep.mediaInfo?.resolution && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300">
-                          {ep.mediaInfo.resolution}
-                        </span>
-                      )}
-                      {ep.mediaInfo?.isHdr && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300">HDR</span>
-                      )}
-                    </div>
-
-                    {/* Play icon */}
-                    <div className="w-9 h-9 rounded-full bg-apple-blue/0 group-hover:bg-apple-blue/20 flex items-center justify-center transition-all shrink-0">
-                      <Play size={18} fill="currentColor" className="text-apple-blue" />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Season View (TV Shows — TMDB episode guide) */}
+        {/* Episodes — combined TMDB guide + local play buttons */}
         {isTvShow && media.seasons && media.tmdbId && (
           <div className="mt-12">
             <SeasonView
               tmdbId={media.tmdbId}
               seasons={media.seasons}
+              localEpisodes={localEpisodes}
+              onPlayEpisode={(epId) => setPlayingEpisodeId(epId)}
               onSeasonSelect={async (seasonNum, poster) => {
                 setDisplayPoster(poster);
-                // Fetch season specific cast
                 if (media.tmdbId) {
                   try {
                     const res = await api.get(`/tmdb/tv/${media.tmdbId}/season/${seasonNum}/credits`);
-                    if (res.data.cast) {
-                      setCast(res.data.cast);
-                    }
+                    if (res.data.cast) setCast(res.data.cast);
                   } catch (e) {
-                    console.error("Failed to fetch season credits", e);
+                    console.error('Failed to fetch season credits', e);
                   }
                 }
               }}
@@ -438,3 +376,4 @@ export default function MovieDetail() {
     </div>
   );
 }
+
