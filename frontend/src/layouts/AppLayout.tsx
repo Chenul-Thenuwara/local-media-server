@@ -3,7 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
-  Film, Tv, Music, Image, Video,
+  Film, Tv, Music, Image,
   Shield, User, LogOut, Play, PanelLeftClose, History, Users, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -148,7 +148,6 @@ export default function AppLayout() {
             <NavItem to="/libraries/tv" icon={Tv} collapsed={!sidebarOpen}>TV Shows</NavItem>
             <NavItem to="/libraries/music" icon={Music} collapsed={!sidebarOpen}>Music</NavItem>
             <NavItem to="/libraries/photos" icon={Image} collapsed={!sidebarOpen}>Photos</NavItem>
-            <NavItem to="/libraries/personal" icon={Video} collapsed={!sidebarOpen}>Personal</NavItem>
           </div>
 
           <div className="space-y-1">

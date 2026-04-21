@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Info, FolderPlus, Film, Tv, Search, Loader2 } from 'lucide-react';
+import { Info, FolderPlus, Film, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -158,10 +158,8 @@ export default function Home() {
     }, 300);
   };
 
-  // Setup Form State
   const [setupName, setSetupName] = useState('');
   const [setupPath, setSetupPath] = useState('');
-  const [setupType, setSetupType] = useState<'movies' | 'tv'>('movies');
   const [setupLoading, setSetupLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -234,7 +232,7 @@ export default function Home() {
       await api.post('/libraries', {
         name: setupName,
         path: setupPath,
-        type: setupType
+        type: 'auto'
       });
       // Refresh to switch to dashboard view
       await checkLibraries();
@@ -341,38 +339,6 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-300 ml-1 uppercase tracking-wider">Content Type</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSetupType('movies')}
-                  className={`relative group overflow-hidden flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 ${setupType === 'movies'
-                    ? 'bg-apple-blue border-apple-blue text-white shadow-lg shadow-blue-500/30'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
-                    }`}
-                >
-                  <div className={`p-2 rounded-full ${setupType === 'movies' ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'} transition-colors`}>
-                    <Film size={20} />
-                  </div>
-                  <span className="font-semibold text-sm">Movies</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSetupType('tv')}
-                  className={`relative group overflow-hidden flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 ${setupType === 'tv'
-                    ? 'bg-apple-blue border-apple-blue text-white shadow-lg shadow-blue-500/30'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
-                    }`}
-                >
-                  <div className={`p-2 rounded-full ${setupType === 'tv' ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'} transition-colors`}>
-                    <Tv size={20} />
-                  </div>
-                  <span className="font-semibold text-sm">TV Shows</span>
-                </button>
-              </div>
-            </div>
 
             <Button
               type="submit"

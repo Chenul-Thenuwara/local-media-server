@@ -69,7 +69,10 @@ export default function MovieDetail() {
   const [cast, setCast] = useState<CastMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [displayPoster, setDisplayPoster] = useState<string | undefined>(undefined);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [localEpisodes, setLocalEpisodes] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -95,7 +98,7 @@ export default function MovieDetail() {
         if (isTmdbItem) mediaData.isTmdb = true;
 
         setMedia(mediaData);
-        setDisplayPoster(mediaData.posterPath); // Initialize display poster
+        setDisplayPoster(mediaData.posterPath);
 
         // Handle Cast
         if (isTmdbItem && mediaData.credits) {
@@ -106,6 +109,25 @@ export default function MovieDetail() {
             setCast(castRes.data.cast || []);
           } catch (e) {
             console.error('Failed to load local cast', e);
+          }
+        }
+
+        // Fetch local episode files if this is a TV show
+        const resolvedTmdbId = mediaData.tmdbId || (isTmdbItem ? id : null);
+        const resolvedType = mediaData.type || (type === 'tv' ? 'tv' : 'movie');
+        if (resolvedType === 'tv' && resolvedTmdbId) {
+          try {
+            const epRes = await api.get(`/media?type=tv`);
+            const episodes = (epRes.data || []).filter(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (ep: any) => ep.tmdbId === Number(resolvedTmdbId)
+            );
+            // Sort by filename (S01E01 etc)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            episodes.sort((a: any, b: any) => a.filename.localeCompare(b.filename));
+            setLocalEpisodes(episodes);
+          } catch (e) {
+            console.error('Failed to load local episodes', e);
           }
         }
       } catch (err) {
@@ -120,6 +142,9 @@ export default function MovieDetail() {
   if (loading) return <div className="h-full flex items-center justify-center text-gray-400">Loading...</div>;
   if (!media) return <div className="h-full flex items-center justify-center text-gray-400">Media not found</div>;
 
+  const resolvedType = media.type || (type === 'tv' ? 'tv' : 'movie');
+  const isTvShow = resolvedType === 'tv';
+
   const backdropUrl = media.backdropPath
     ? `https://image.tmdb.org/t/p/original${media.backdropPath}`
     : null;
@@ -127,8 +152,8 @@ export default function MovieDetail() {
   return (
     // ... (wrapper and backdrop code remains same) ...
     <div className="relative min-h-screen text-white w-full lg:-ml-64 lg:w-[calc(100%+16rem)]">
-      {/* Video Player Overlay */}
-      {playing && (
+      {/* Video Player Overlay — single episode or main play */}
+      {playing && !playingEpisodeId && (
         <VideoPlayer
           mediaId={id!}
           onClose={() => setPlaying(false)}
@@ -138,6 +163,17 @@ export default function MovieDetail() {
           mediaType={media.type}
           audioCodec={media.mediaInfo?.audioCodec}
           isHdr={media.mediaInfo?.isHdr}
+        />
+      )}
+      {/* Episode player */}
+      {playingEpisodeId && (
+        <VideoPlayer
+          mediaId={playingEpisodeId}
+          onClose={() => setPlayingEpisodeId(null)}
+          title={localEpisodes.find(e => e._id === playingEpisodeId)?.title || ''}
+          posterPath={media.posterPath}
+          tmdbId={media.tmdbId}
+          mediaType="tv"
         />
       )}
 
@@ -317,23 +353,22 @@ export default function MovieDetail() {
           </div>
         )}
 
-        {/* Season View (TV Shows Only) */}
-        {media.type === 'tv' && media.seasons && media.tmdbId && (
+        {/* Episodes — combined TMDB guide + local play buttons */}
+        {isTvShow && media.seasons && media.tmdbId && (
           <div className="mt-12">
             <SeasonView
               tmdbId={media.tmdbId}
               seasons={media.seasons}
+              localEpisodes={localEpisodes}
+              onPlayEpisode={(epId) => setPlayingEpisodeId(epId)}
               onSeasonSelect={async (seasonNum, poster) => {
                 setDisplayPoster(poster);
-                // Fetch season specific cast
                 if (media.tmdbId) {
                   try {
                     const res = await api.get(`/tmdb/tv/${media.tmdbId}/season/${seasonNum}/credits`);
-                    if (res.data.cast) {
-                      setCast(res.data.cast);
-                    }
+                    if (res.data.cast) setCast(res.data.cast);
                   } catch (e) {
-                    console.error("Failed to fetch season credits", e);
+                    console.error('Failed to fetch season credits', e);
                   }
                 }
               }}
@@ -344,3 +379,4 @@ export default function MovieDetail() {
     </div>
   );
 }
+

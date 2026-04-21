@@ -29,7 +29,6 @@ import Movies from './pages/app/libraries/Movies';
 import TVShows from './pages/app/libraries/TVShows';
 import Music from './pages/app/libraries/Music';
 import Photos from './pages/app/libraries/Photos';
-import PersonalVideos from './pages/app/libraries/PersonalVideos';
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard';
@@ -76,7 +75,6 @@ function App() {
             <Route path="/libraries/tv" element={<TVShows />} />
             <Route path="/libraries/music" element={<Music />} />
             <Route path="/libraries/photos" element={<Photos />} />
-            <Route path="/libraries/personal" element={<PersonalVideos />} />
 
             {/* Admin */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

@@ -22,8 +22,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     res.status(200).json(response.data);
-  } catch (error: any) {
-    console.error('TMDB Error:', error.message);
-    res.status(500).json({ message: 'Failed to fetch TMDB data', details: error.message });
+  } catch (error) {
+    const err = error as Error;
+    console.error('TMDB Error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch TMDB data', details: err.message });
   }
 }

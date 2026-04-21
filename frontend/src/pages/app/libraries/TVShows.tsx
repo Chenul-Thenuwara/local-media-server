@@ -1,11 +1,40 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../lib/api';
 import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Tv } from 'lucide-react';
 
+// Extend MediaItem with episode count
+interface MediaItemWithCount extends MediaItem {
+  _episodeCount?: number;
+  backdropPath?: string;
+}
+
+// Group individual episode files into one entry per series
+function groupByShow(episodes: MediaItem[]): MediaItemWithCount[] {
+  const map = new Map<string, MediaItemWithCount>();
+
+  for (const ep of episodes) {
+    const key = ep.tmdbId ? `tmdb-${ep.tmdbId}` : `title-${ep.title?.toLowerCase().trim() || ep._id}`;
+
+    if (!map.has(key)) {
+      map.set(key, { ...ep, _episodeCount: 1 });
+    } else {
+      const existing = map.get(key)!;
+      existing._episodeCount = (existing._episodeCount || 1) + 1;
+      if (!existing.posterPath && ep.posterPath) {
+        map.set(key, { ...existing, posterPath: ep.posterPath, backdropPath: (ep as MediaItemWithCount).backdropPath });
+      }
+    }
+  }
+
+  return Array.from(map.values());
+}
+
 export default function TVShows() {
-  const [shows, setShows] = useState<MediaItem[]>([]);
+  const navigate = useNavigate();
+  const [shows, setShows] = useState<MediaItemWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,17 +44,15 @@ export default function TVShows() {
 
   const fetchShows = async () => {
     try {
-      // Cache bust to ensure fresh request + filter by type=tv
       const res = await api.get(`/media?type=tv&_t=${Date.now()}`);
-      console.log('TV Shows fetched:', res.data);
       if (Array.isArray(res.data)) {
-        setShows(res.data);
+        // Group episodes → one card per series
+        const grouped = groupByShow(res.data);
+        setShows(grouped);
       } else {
-        console.error('API returned non-array:', res.data);
         setError('Invalid API response');
       }
     } catch (err) {
-      console.error('Failed to fetch TV shows', err);
       setError(err instanceof Error ? err.message : 'Failed to load TV shows');
     } finally {
       setLoading(false);
@@ -57,7 +84,7 @@ export default function TVShows() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">TV Shows</h1>
-          <p className="text-gray-400 text-sm mt-1">{shows.length} title{shows.length !== 1 && 's'}</p>
+          <p className="text-gray-400 text-sm mt-1">{shows.length} series</p>
         </div>
       </div>
 
@@ -77,7 +104,26 @@ export default function TVShows() {
             <h2 className="text-xl font-semibold text-gray-200 mb-4 pl-1">All TV Shows</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">
               {shows.map((show) => (
-                <MediaCard key={show._id} item={show} />
+                <div
+                  key={show._id}
+                  className="relative cursor-pointer"
+                  onClick={() => {
+                    // Go to TMDB TV detail page so SeasonView & episode list loads
+                    if (show.tmdbId) {
+                      navigate(`/media/tmdb/tv/${show.tmdbId}`);
+                    } else {
+                      navigate(`/media/${show._id}`);
+                    }
+                  }}
+                >
+                  <MediaCard item={show} />
+                  {/* Episode count badge */}
+                  {show._episodeCount && show._episodeCount > 1 && (
+                    <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {show._episodeCount} eps
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

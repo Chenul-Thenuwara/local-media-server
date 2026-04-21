@@ -36,9 +36,19 @@ connectDB().then(async () => {
 
     const deviceQuery = process.env.DEVICE_ID ? { deviceId } : {};
     const libraries = await Library.find(deviceQuery);
-    console.log(`Startup: Found ${libraries.length} libraries for device ${deviceId}. Starting scan...`);
 
-    for (const lib of libraries) {
+    // Deduplicate by path — keep the newest library per unique path
+    const uniqueLibraries = Object.values(
+      libraries.reduce((acc: Record<string, any>, lib: any) => {
+        const key = lib.path;
+        if (!acc[key] || lib.createdAt > acc[key].createdAt) acc[key] = lib;
+        return acc;
+      }, {})
+    );
+
+    console.log(`Startup: Found ${libraries.length} libraries (${uniqueLibraries.length} unique paths) for device ${deviceId}. Starting scan...`);
+
+    for (const lib of uniqueLibraries as any[]) {
       scanLibrary(lib._id, lib.path, lib.type);
     }
   } catch (e) {
