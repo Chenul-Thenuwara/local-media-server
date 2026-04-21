@@ -69,7 +69,9 @@ export default function MovieDetail() {
   const [cast, setCast] = useState<CastMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [displayPoster, setDisplayPoster] = useState<string | undefined>(undefined);
+  const [localEpisodes, setLocalEpisodes] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -95,7 +97,7 @@ export default function MovieDetail() {
         if (isTmdbItem) mediaData.isTmdb = true;
 
         setMedia(mediaData);
-        setDisplayPoster(mediaData.posterPath); // Initialize display poster
+        setDisplayPoster(mediaData.posterPath);
 
         // Handle Cast
         if (isTmdbItem && mediaData.credits) {
@@ -106,6 +108,23 @@ export default function MovieDetail() {
             setCast(castRes.data.cast || []);
           } catch (e) {
             console.error('Failed to load local cast', e);
+          }
+        }
+
+        // Fetch local episode files if this is a TV show
+        const resolvedTmdbId = mediaData.tmdbId || (isTmdbItem ? id : null);
+        const resolvedType = mediaData.type || (type === 'tv' ? 'tv' : 'movie');
+        if (resolvedType === 'tv' && resolvedTmdbId) {
+          try {
+            const epRes = await api.get(`/media?type=tv`);
+            const episodes = (epRes.data || []).filter(
+              (ep: any) => ep.tmdbId === Number(resolvedTmdbId)
+            );
+            // Sort by filename (S01E01 etc)
+            episodes.sort((a: any, b: any) => a.filename.localeCompare(b.filename));
+            setLocalEpisodes(episodes);
+          } catch (e) {
+            console.error('Failed to load local episodes', e);
           }
         }
       } catch (err) {
@@ -120,6 +139,9 @@ export default function MovieDetail() {
   if (loading) return <div className="h-full flex items-center justify-center text-gray-400">Loading...</div>;
   if (!media) return <div className="h-full flex items-center justify-center text-gray-400">Media not found</div>;
 
+  const resolvedType = media.type || (type === 'tv' ? 'tv' : 'movie');
+  const isTvShow = resolvedType === 'tv';
+
   const backdropUrl = media.backdropPath
     ? `https://image.tmdb.org/t/p/original${media.backdropPath}`
     : null;
@@ -127,8 +149,8 @@ export default function MovieDetail() {
   return (
     // ... (wrapper and backdrop code remains same) ...
     <div className="relative min-h-screen text-white w-full lg:-ml-64 lg:w-[calc(100%+16rem)]">
-      {/* Video Player Overlay */}
-      {playing && (
+      {/* Video Player Overlay — single episode or main play */}
+      {playing && !playingEpisodeId && (
         <VideoPlayer
           mediaId={id!}
           onClose={() => setPlaying(false)}
@@ -138,6 +160,17 @@ export default function MovieDetail() {
           mediaType={media.type}
           audioCodec={media.mediaInfo?.audioCodec}
           isHdr={media.mediaInfo?.isHdr}
+        />
+      )}
+      {/* Episode player */}
+      {playingEpisodeId && (
+        <VideoPlayer
+          mediaId={playingEpisodeId}
+          onClose={() => setPlayingEpisodeId(null)}
+          title={localEpisodes.find(e => e._id === playingEpisodeId)?.title || ''}
+          posterPath={media.posterPath}
+          tmdbId={media.tmdbId}
+          mediaType="tv"
         />
       )}
 
@@ -317,8 +350,69 @@ export default function MovieDetail() {
           </div>
         )}
 
-        {/* Season View (TV Shows Only) */}
-        {media.type === 'tv' && media.seasons && media.tmdbId && (
+        {/* LOCAL EPISODES — Your Files */}
+        {isTvShow && localEpisodes.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold text-gray-200 mb-4 flex items-center gap-3">
+              <span className="w-2 h-6 bg-apple-blue rounded-full inline-block" />
+              Your Episodes
+              <span className="text-sm text-gray-500 font-normal ml-1">{localEpisodes.length} file{localEpisodes.length !== 1 ? 's' : ''}</span>
+            </h3>
+            <div className="space-y-2">
+              {localEpisodes.map((ep, idx) => {
+                // Try to extract season/episode from filename e.g. S01E02
+                const epMatch = ep.filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
+                const seasonNum = epMatch ? parseInt(epMatch[1]) : null;
+                const epNum = epMatch ? parseInt(epMatch[2]) : null;
+                const label = epMatch ? `S${String(seasonNum).padStart(2,'0')}E${String(epNum).padStart(2,'0')}` : `#${idx + 1}`;
+
+                return (
+                  <motion.div
+                    key={ep._id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-apple-blue/40 transition-all group cursor-pointer"
+                    onClick={() => setPlayingEpisodeId(ep._id)}
+                  >
+                    {/* Episode number badge */}
+                    <div className="w-16 h-10 bg-black/40 rounded-lg flex items-center justify-center shrink-0 border border-white/10 group-hover:border-apple-blue/40 transition-colors">
+                      <span className="text-xs font-bold text-apple-blue">{label}</span>
+                    </div>
+
+                    {/* Episode info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {ep.title && ep.title !== media.title ? ep.title : ep.filename}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{ep.filename}</p>
+                    </div>
+
+                    {/* Tech badges */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {ep.mediaInfo?.resolution && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300">
+                          {ep.mediaInfo.resolution}
+                        </span>
+                      )}
+                      {ep.mediaInfo?.isHdr && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300">HDR</span>
+                      )}
+                    </div>
+
+                    {/* Play icon */}
+                    <div className="w-9 h-9 rounded-full bg-apple-blue/0 group-hover:bg-apple-blue/20 flex items-center justify-center transition-all shrink-0">
+                      <Play size={18} fill="currentColor" className="text-apple-blue" />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Season View (TV Shows — TMDB episode guide) */}
+        {isTvShow && media.seasons && media.tmdbId && (
           <div className="mt-12">
             <SeasonView
               tmdbId={media.tmdbId}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../lib/api';
 import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
@@ -32,6 +33,7 @@ function groupByShow(episodes: MediaItem[]): MediaItem[] {
 }
 
 export default function TVShows() {
+  const navigate = useNavigate();
   const [shows, setShows] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +104,18 @@ export default function TVShows() {
             <h2 className="text-xl font-semibold text-gray-200 mb-4 pl-1">All TV Shows</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">
               {shows.map((show) => (
-                <div key={show._id} className="relative">
+                <div
+                  key={show._id}
+                  className="relative cursor-pointer"
+                  onClick={() => {
+                    // Go to TMDB TV detail page so SeasonView & episode list loads
+                    if (show.tmdbId) {
+                      navigate(`/media/tmdb/tv/${show.tmdbId}`);
+                    } else {
+                      navigate(`/media/${show._id}`);
+                    }
+                  }}
+                >
                   <MediaCard item={show} />
                   {/* Episode count badge */}
                   {(show as any)._episodeCount > 1 && (
