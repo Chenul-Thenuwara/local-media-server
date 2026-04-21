@@ -68,17 +68,21 @@ router.get('/album/:id', async (req, res) => {
   }
 });
 
-// Get new releases
+// Get new releases (via search - /browse/new-releases is deprecated)
 router.get('/new-releases', async (req, res) => {
   try {
     const token = await getSpotifyToken();
-    const response = await axios.get('https://api.spotify.com/v1/browse/new-releases?limit=20', {
+    const year = new Date().getFullYear();
+    const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: { Authorization: `Bearer ${token}` },
+      params: { q: `year:${year}`, type: 'album', limit: 20, market: 'US' },
     });
     res.json(response.data);
   } catch (error: any) {
+    console.error('Spotify new-releases error:', error.message);
     res.status(500).json({ error: 'Failed to fetch new releases' });
   }
 });
+
 
 export default router;

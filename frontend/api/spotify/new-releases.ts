@@ -28,11 +28,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const token = await getToken();
-    const response = await axios.get('https://api.spotify.com/v1/browse/new-releases?limit=20', {
+    const year = new Date().getFullYear();
+
+    // Use search instead of deprecated /browse/new-releases
+    const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: { Authorization: `Bearer ${token}` },
+      params: {
+        q: `year:${year}`,
+        type: 'album',
+        limit: 20,
+        market: 'US',
+      },
     });
-    res.status(200).json(response.data);
+
+    // Return same shape as old new-releases so frontend doesn't need changes
+    res.status(200).json({ albums: response.data.albums });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Spotify new-releases error:', error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.error?.message || error.message });
   }
 }

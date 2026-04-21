@@ -142,7 +142,12 @@ export default function Music() {
 
   useEffect(() => {
     api.get('/spotify/new-releases')
-      .then(res => setNewReleases(res.data.albums?.items || []))
+      .then(res => {
+        // Vercel endpoint returns { albums: { items: [] } }
+        // Backend endpoint returns { albums: { items: [] } } too after fix
+        const items = res.data.albums?.items || res.data.items || [];
+        setNewReleases(items);
+      })
       .catch(err => {
         console.error(err);
         setReleasesError(err.response?.data?.error || err.message || 'Failed to load releases');
