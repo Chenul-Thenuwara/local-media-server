@@ -171,6 +171,12 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
       } else {
         let update: any = {};
 
+        // Re-classify if the stored type doesn't match the detected type
+        if (exists.type !== mediaType) {
+          update.type = mediaType;
+          console.log(`[Scanner] Re-classified ${filename}: ${exists.type} → ${mediaType}`);
+        }
+
         if (mediaInfo && (!exists.mediaInfo || !exists.mediaInfo.resolution)) {
           update.mediaInfo = mediaInfo;
         }
@@ -185,6 +191,7 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
           console.log(`[Scanner] Updated: ${filename}`);
         }
       }
+
     }
 
     console.log(`[Scanner] Scan complete for ${folderPath}`);
