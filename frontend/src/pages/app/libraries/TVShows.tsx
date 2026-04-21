@@ -4,6 +4,33 @@ import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Tv } from 'lucide-react';
 
+// Group individual episode files into one entry per series
+function groupByShow(episodes: MediaItem[]): MediaItem[] {
+  const map = new Map<string, MediaItem>();
+
+  for (const ep of episodes) {
+    // Use tmdbId if available (most reliable), otherwise fall back to title
+    const key = ep.tmdbId ? `tmdb-${ep.tmdbId}` : `title-${ep.title?.toLowerCase().trim() || ep._id}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        ...ep,
+        // Store episode count for display
+        _episodeCount: 1,
+      } as any);
+    } else {
+      const existing = map.get(key)!;
+      (existing as any)._episodeCount = ((existing as any)._episodeCount || 1) + 1;
+      // Keep the one with a poster if current doesn't have one
+      if (!existing.posterPath && ep.posterPath) {
+        map.set(key, { ...(existing as any), posterPath: ep.posterPath, backdropPath: ep.backdropPath });
+      }
+    }
+  }
+
+  return Array.from(map.values());
+}
+
 export default function TVShows() {
   const [shows, setShows] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,17 +42,15 @@ export default function TVShows() {
 
   const fetchShows = async () => {
     try {
-      // Cache bust to ensure fresh request + filter by type=tv
       const res = await api.get(`/media?type=tv&_t=${Date.now()}`);
-      console.log('TV Shows fetched:', res.data);
       if (Array.isArray(res.data)) {
-        setShows(res.data);
+        // Group episodes → one card per series
+        const grouped = groupByShow(res.data);
+        setShows(grouped);
       } else {
-        console.error('API returned non-array:', res.data);
         setError('Invalid API response');
       }
     } catch (err) {
-      console.error('Failed to fetch TV shows', err);
       setError(err instanceof Error ? err.message : 'Failed to load TV shows');
     } finally {
       setLoading(false);
@@ -57,7 +82,7 @@ export default function TVShows() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">TV Shows</h1>
-          <p className="text-gray-400 text-sm mt-1">{shows.length} title{shows.length !== 1 && 's'}</p>
+          <p className="text-gray-400 text-sm mt-1">{shows.length} series</p>
         </div>
       </div>
 
@@ -77,7 +102,15 @@ export default function TVShows() {
             <h2 className="text-xl font-semibold text-gray-200 mb-4 pl-1">All TV Shows</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">
               {shows.map((show) => (
-                <MediaCard key={show._id} item={show} />
+                <div key={show._id} className="relative">
+                  <MediaCard item={show} />
+                  {/* Episode count badge */}
+                  {(show as any)._episodeCount > 1 && (
+                    <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {(show as any)._episodeCount} eps
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
