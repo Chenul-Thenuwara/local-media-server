@@ -36,6 +36,7 @@ const PlayerContext = createContext<PlayerContextType>({
 export function usePlayer() {
   return useContext(PlayerContext);
 }
+// eslint-disable-next-line react-refresh/only-export-components
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -47,6 +48,34 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [muted, setMuted] = useState(false);
+
+  const playTrack = (track: Track, newQueue?: Track[]) => {
+    if (newQueue) {
+      setQueue(newQueue);
+      const idx = newQueue.findIndex(t => t.id === track.id);
+      setQueueIndex(idx >= 0 ? idx : 0);
+    }
+    setCurrentTrack(track);
+    const src = track.localPath || track.previewUrl || '';
+    if (audioRef.current) {
+      audioRef.current.src = src;
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+    }
+  };
+
+  const handleNext = () => {
+    if (queue.length === 0) return;
+    const next = (queueIndex + 1) % queue.length;
+    setQueueIndex(next);
+    playTrack(queue[next]);
+  };
+
+  const handlePrev = () => {
+    if (queue.length === 0) return;
+    const prev = (queueIndex - 1 + queue.length) % queue.length;
+    setQueueIndex(prev);
+    playTrack(queue[prev]);
+  };
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -68,21 +97,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.removeEventListener('loadedmetadata', onDuration);
       audio.removeEventListener('ended', onEnded);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const playTrack = (track: Track, newQueue?: Track[]) => {
-    if (newQueue) {
-      setQueue(newQueue);
-      const idx = newQueue.findIndex(t => t.id === track.id);
-      setQueueIndex(idx >= 0 ? idx : 0);
-    }
-    setCurrentTrack(track);
-    const src = track.localPath || track.previewUrl || '';
-    if (audioRef.current) {
-      audioRef.current.src = src;
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
-    }
-  };
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -94,19 +110,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleNext = () => {
-    if (queue.length === 0) return;
-    const next = (queueIndex + 1) % queue.length;
-    setQueueIndex(next);
-    playTrack(queue[next]);
-  };
-
-  const handlePrev = () => {
-    if (queue.length === 0) return;
-    const prev = (queueIndex - 1 + queue.length) % queue.length;
-    setQueueIndex(prev);
-    playTrack(queue[prev]);
-  };
 
   const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const t = parseFloat(e.target.value);

@@ -43,8 +43,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Return same shape as old new-releases so frontend doesn't need changes
     res.status(200).json({ albums: response.data.albums });
-  } catch (error: any) {
-    console.error('Spotify new-releases error:', error.response?.data || error.message);
-    res.status(500).json({ error: error.response?.data?.error?.message || error.message });
+  } catch (error) {
+    const err = error as { response?: { data?: { error?: { message?: string } } }; message?: string };
+    console.error('Spotify new-releases error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.error?.message || err.message });
   }
 }

@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 
-    let device = await Device.findOne().sort({ lastSeen: -1 });
+    const device = await Device.findOne().sort({ lastSeen: -1 });
 
     res.status(201).json({
       token,
@@ -76,8 +76,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user: { id: user.id, email: user.email, name: user.name }
     });
 
-  } catch (error: any) {
-    console.error('Registration Error:', error);
-    res.status(500).json({ message: error.message || 'Internal Server Error', stack: error.stack });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Registration Error:', err);
+    res.status(500).json({ message: err.message || 'Internal Server Error', stack: err.stack });
   }
 }

@@ -36,7 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       params: { q, type, limit },
     });
     res.status(200).json(response.data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({ error: err.message });
   }
 }

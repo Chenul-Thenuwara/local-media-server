@@ -75,8 +75,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(200).json(formattedProfiles);
 
-  } catch (error: any) {
-    console.error('Profiles Error:', error);
-    res.status(500).json({ message: error.message || 'Server Error' });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Profiles Error:', err);
+    res.status(500).json({ message: err.message || 'Server Error' });
   }
 }
