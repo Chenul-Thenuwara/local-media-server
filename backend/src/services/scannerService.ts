@@ -195,7 +195,7 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
           await Media.findByIdAndUpdate(exists._id, update);
           console.log(`[Scanner] Updated: ${filename}`);
         }
-      }}
+      }
     }
 
     console.log(`[Scanner] Scan complete for ${folderPath}`);
