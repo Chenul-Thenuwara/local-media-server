@@ -17,64 +17,75 @@ export function useSpotifyPlayer(accessToken: string | undefined) {
     if (!accessToken) return;
 
     const scriptId = 'spotify-player-sdk';
+    
+    const initPlayer = () => {
+      if (window.Spotify) {
+        const spPlayer = new window.Spotify.Player({
+          name: 'LMS - Media Player',
+          getOAuthToken: (cb: (token: string) => void) => {
+            cb(accessToken);
+          },
+          volume: 0.5,
+        });
+
+        spPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
+          console.log('Spotify Player Ready with Device ID', device_id);
+          setDeviceId(device_id);
+          setIsReady(true);
+        });
+
+        spPlayer.addListener('not_ready', ({ device_id }: { device_id: string }) => {
+          console.log('Device ID has gone offline', device_id);
+          setIsReady(false);
+          setDeviceId(null);
+        });
+
+        spPlayer.addListener('initialization_error', ({ message }: { message: string }) => {
+          setError(message);
+        });
+        spPlayer.addListener('authentication_error', ({ message }: { message: string }) => {
+          setError(message);
+        });
+        spPlayer.addListener('account_error', ({ message }: { message: string }) => {
+          setError('Spotify Premium is required for playback.');
+        });
+
+        spPlayer.addListener('player_state_changed', (state: any) => {
+          if (!state) return;
+          setPlaybackState({
+            position: state.position,
+            duration: state.duration,
+            paused: state.paused,
+            track: state.track_window.current_track,
+          });
+        });
+
+        spPlayer.connect();
+        setPlayer(spPlayer);
+      }
+    };
+
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
       script.id = scriptId;
       script.src = 'https://sdk.scdn.co/spotify-player.js';
       script.async = true;
       document.body.appendChild(script);
+      window.onSpotifyWebPlaybackSDKReady = initPlayer;
+    } else if (window.Spotify) {
+      initPlayer();
     }
-
-    window.onSpotifyWebPlaybackSDKReady = () => {
-      const spPlayer = new window.Spotify.Player({
-        name: 'LMS - Media Player',
-        getOAuthToken: (cb: (token: string) => void) => {
-          cb(accessToken);
-        },
-        volume: 0.5,
-      });
-
-      spPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
-        console.log('Spotify Player Ready with Device ID', device_id);
-        setDeviceId(device_id);
-        setIsReady(true);
-      });
-
-      spPlayer.addListener('not_ready', ({ device_id }: { device_id: string }) => {
-        console.log('Device ID has gone offline', device_id);
-        setIsReady(false);
-      });
-
-      spPlayer.addListener('initialization_error', ({ message }: { message: string }) => {
-        setError(message);
-      });
-      spPlayer.addListener('authentication_error', ({ message }: { message: string }) => {
-        setError(message);
-      });
-      spPlayer.addListener('account_error', ({ message }: { message: string }) => {
-        setError('Spotify Premium is required for playback.');
-      });
-
-      spPlayer.addListener('player_state_changed', (state: any) => {
-        if (!state) return;
-        setPlaybackState({
-          position: state.position,
-          duration: state.duration,
-          paused: state.paused,
-          track: state.track_window.current_track,
-        });
-      });
-
-      spPlayer.connect();
-      setPlayer(spPlayer);
-    };
 
     return () => {
       if (player) {
-        player.disconnect();
+         try {
+           player.disconnect();
+         } catch (e) {
+           console.error('Error disconnecting Spotify player:', e);
+         }
       }
     };
-  }, [accessToken, player]);
+  }, [accessToken]); // Removed player from dependencies to avoid loop
 
   const [playbackState, setPlaybackState] = useState<{
     position: number;
