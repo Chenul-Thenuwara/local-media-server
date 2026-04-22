@@ -213,7 +213,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                       <input
                         type="range" min={0} max={duration || 1} step={0.1} value={progress}
                         onChange={seek}
-                        className="flex-1 h-1 appearance-none bg-white/20 rounded-full accent-white cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #4ade80 ${(progress / (duration || 1)) * 100}%, rgba(255,255,255,0.15) ${(progress / (duration || 1)) * 100}%)`
+                        }}
+                        className="flex-1 h-1 appearance-none rounded-full accent-green-400 cursor-pointer"
                       />
                       <span className="text-xs text-gray-500 w-8">{fmt(duration)}</span>
                     </div>
@@ -229,7 +232,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                 <input
                   type="range" min={0} max={1} step={0.01} value={muted ? 0 : volume}
                   onChange={changeVolume}
-                  className="w-20 h-1 appearance-none bg-white/20 rounded-full accent-white cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4ade80 ${(muted ? 0 : volume) * 100}%, rgba(255,255,255,0.15) ${(muted ? 0 : volume) * 100}%)`
+                  }}
+                  className="w-20 h-1 appearance-none rounded-full accent-green-400 cursor-pointer"
                 />
                 <button
                   onClick={() => { audioRef.current?.pause(); setCurrentTrack(null); setIsPlaying(false); }}

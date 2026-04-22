@@ -24,6 +24,9 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   comparePin(candidatePin: string): Promise<boolean>;
   googleRefreshToken?: string;
+  spotifyAccessToken?: string;
+  spotifyRefreshToken?: string;
+  spotifyTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,7 +51,10 @@ const UserSchema: Schema = new Schema({
     posterPath: String,
     addedAt: { type: Date, default: Date.now }
   }],
-  googleRefreshToken: String
+  googleRefreshToken: String,
+  spotifyAccessToken: String,
+  spotifyRefreshToken: String,
+  spotifyTokenExpiry: Date,
 }, { timestamps: true });
 
 // Hash password before saving
