@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music2, X } from 'lucide-react';
+import { useSpotifyAuth } from '../../hooks/useSpotifyAuth';
+import { useSpotifyPlayer } from '../../hooks/useSpotifyPlayer';
 
 export interface Track {
   id: string;
@@ -11,6 +13,7 @@ export interface Track {
   localPath?: string; // tunnel URL for local file
   previewUrl?: string; // Spotify 30s preview
   spotifyUrl?: string; // link to open in Spotify
+  spotifyUri?: string; // spotify:track:ID
   durationMs?: number;
 }
 
@@ -50,6 +53,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [volume, setVolume] = useState(0.8);
   const [muted, setMuted] = useState(false);
 
+  const spotifyAuth = useSpotifyAuth();
+  const spotifyPlayer = useSpotifyPlayer(spotifyAuth.accessToken);
+
+  // Sync state from Spotify SDK player
+  useEffect(() => {
+    if (currentTrack?.spotifyUri && spotifyAuth.connected && spotifyPlayer.playbackState) {
+      const ps = spotifyPlayer.playbackState;
+      setIsPlaying(!ps.paused);
+      setProgress(ps.position / 1000);
+      setDuration(ps.duration / 1000);
+    }
+  }, [spotifyPlayer.playbackState, currentTrack, spotifyAuth.connected]);
+
   const playTrack = (track: Track, newQueue?: Track[]) => {
     if (newQueue) {
       setQueue(newQueue);
@@ -57,16 +73,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setQueueIndex(idx >= 0 ? idx : 0);
     }
     setCurrentTrack(track);
-    const src = track.localPath || track.previewUrl || '';
+
+    // Stop HTML5 audio if we switch to Spotify SDK or a new track
     if (audioRef.current) {
-      if (src) {
-        audioRef.current.src = src;
-        audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
-      } else {
-        // No audio source — show track info but don't attempt playback
-        audioRef.current.src = '';
-        setIsPlaying(false);
-      }
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+
+    if (track.spotifyUri && spotifyAuth.connected) {
+      spotifyPlayer.playTrack(track.spotifyUri);
+      return;
+    }
+
+    const src = track.localPath || track.previewUrl || '';
+    if (audioRef.current && src) {
+      audioRef.current.src = src;
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+    } else {
+      setIsPlaying(false);
     }
   };
 
@@ -108,18 +132,32 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const togglePlay = () => {
+    if (currentTrack?.spotifyUri && spotifyAuth.connected) {
+      spotifyPlayer.togglePlay();
+      return;
+    }
+
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      const src = currentTrack?.localPath || currentTrack?.previewUrl || '';
+      if (src) {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      }
     }
   };
 
 
   const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const t = parseFloat(e.target.value);
+    if (currentTrack?.spotifyUri && spotifyAuth.connected) {
+      spotifyPlayer.seek(t * 1000);
+      setProgress(t);
+      return;
+    }
+
     if (audioRef.current) audioRef.current.currentTime = t;
     setProgress(t);
   };
@@ -127,15 +165,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value);
     setVolume(v);
+    if (currentTrack?.spotifyUri && spotifyAuth.connected) {
+      spotifyPlayer.setVolume(v);
+    }
     if (audioRef.current) audioRef.current.volume = v;
     setMuted(v === 0);
   };
 
   const toggleMute = () => {
-    if (!audioRef.current) return;
     const newMuted = !muted;
     setMuted(newMuted);
-    audioRef.current.volume = newMuted ? 0 : volume;
+    const newVol = newMuted ? 0 : volume;
+
+    if (currentTrack?.spotifyUri && spotifyAuth.connected) {
+      spotifyPlayer.setVolume(newVol);
+    }
+    if (audioRef.current) audioRef.current.volume = newVol;
   };
 
   const fmt = (s: number) => {

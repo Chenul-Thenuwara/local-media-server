@@ -4,6 +4,8 @@ import { Search, Play, Disc3, Mic2, Music2, Loader2, ArrowLeft, Clock, Library, 
 import api from '../../../lib/api';
 import { usePlayer, type Track } from '../../../components/music/MiniPlayer';
 import { cn } from '../../../lib/utils';
+import { useSpotifyAuth } from '../../../hooks/useSpotifyAuth';
+import { useSpotifyPlayer } from '../../../hooks/useSpotifyPlayer';
 
 interface SpotifyTrack {
   id: string;
@@ -49,6 +51,8 @@ function toPlayerTrack(t: SpotifyTrack, albumArt?: string): Track {
     albumArt: t.album?.images[0]?.url || albumArt,
     previewUrl: t.preview_url || undefined,
     spotifyUrl: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
+    spotifyUri: `spotify:track:${t.id}`,
+    durationMs: t.duration_ms,
   };
 }
 
@@ -474,8 +478,14 @@ export default function Music() {
   const [searchError, setSearchError] = useState('');
   const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null);
   const [activeSource, setActiveSource] = useState<'local' | 'spotify'>('local');
+  const spotifyAuth = useSpotifyAuth();
+  const spotifyPlayer = useSpotifyPlayer(spotifyAuth.accessToken);
 
   useEffect(() => {
+    if (spotifyPlayer.error) {
+       console.error('Spotify Player Error:', spotifyPlayer.error);
+    }
+  }, [spotifyPlayer.error]);
     api.get('/spotify/new-releases')
       .then(res => {
         const items = res.data.albums?.items || res.data.items || [];
@@ -530,36 +540,104 @@ export default function Music() {
             </motion.div>
 
             {/* Source Tabs */}
-            <div className="flex space-x-1 mb-8 bg-white/5 p-1 rounded-xl w-fit">
-              <button
-                onClick={() => setActiveSource('local')}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  activeSource === 'local'
-                    ? 'bg-green-400 text-black shadow-sm'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                )}
-              >
-                <Library size={15} />
-                Local Library
-              </button>
-              <button
-                onClick={() => { setActiveSource('spotify'); setSelectedAlbum(null); }}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  activeSource === 'spotify'
-                    ? 'bg-green-400 text-black shadow-sm'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                )}
-              >
-                <Headphones size={15} />
-                Spotify
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+              <div className="flex space-x-1 bg-white/5 p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setActiveSource('local')}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    activeSource === 'local'
+                      ? 'bg-green-400 text-black shadow-sm'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <Library size={15} />
+                  Local Library
+                </button>
+                <button
+                  onClick={() => { setActiveSource('spotify'); setSelectedAlbum(null); }}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    activeSource === 'spotify'
+                      ? 'bg-green-400 text-black shadow-sm'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <Headphones size={15} />
+                  Spotify
+                </button>
+              </div>
+
+              {activeSource === 'spotify' && (
+                <div className="flex items-center gap-3">
+                  {spotifyAuth.connected ? (
+                    <div className="flex items-center gap-3 bg-white/5 pl-2 pr-4 py-1.5 rounded-full border border-white/10 group overflow-hidden transition-all">
+                      {spotifyAuth.image ? (
+                        <img src={spotifyAuth.image} alt={spotifyAuth.displayName} className="w-7 h-7 rounded-full object-cover border border-white/20" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
+                          <Mic2 size={14} className="text-green-400" />
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-[11px] text-gray-500 font-medium leading-tight">Connected as</span>
+                        <span className="text-sm font-semibold text-white leading-tight">{spotifyAuth.displayName || 'Spotify User'}</span>
+                      </div>
+                      <button 
+                        onClick={spotifyAuth.disconnect}
+                        className="ml-2 text-xs text-gray-500 hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={spotifyAuth.connect}
+                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-green-400/50 text-sm font-semibold text-white transition-all group"
+                    >
+                      <Disc3 size={16} className="text-green-400 group-hover:animate-spin" />
+                      Connect Spotify
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
+
             {activeSource === 'local' ? (
               <LocalMusicTab />
             ) : (
               <>
+            {!spotifyAuth.connected && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative overflow-hidden group mb-8 p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/5 border border-green-500/20"
+              >
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-green-400 flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
+                      <Headphones size={24} className="text-black" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Full Playback with Spotify</h3>
+                      <p className="text-gray-400 text-sm max-w-lg mt-0.5">
+                        Connect your Spotify Premium account to play full tracks directly. 
+                        Browsing and searching works without a connection.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={spotifyAuth.connect}
+                    className="px-6 py-2.5 rounded-xl bg-green-400 hover:bg-green-300 text-black font-bold transition-all shadow-lg shadow-green-500/20 whitespace-nowrap"
+                  >
+                    Connect Now
+                  </button>
+                </div>
+                {/* Decorative record */}
+                <Disc3 size={120} className="absolute -right-10 -bottom-10 text-green-400/5 rotate-12" />
+              </motion.div>
+            )}
+
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
               <div className="relative max-w-xl">
                 <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
