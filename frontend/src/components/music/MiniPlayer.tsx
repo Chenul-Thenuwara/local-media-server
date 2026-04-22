@@ -221,10 +221,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
               {/* Controls */}
               <div className="flex-1 flex flex-col items-center gap-1">
-                {!currentTrack.localPath && !currentTrack.previewUrl ? (
+                {!currentTrack.localPath && !currentTrack.previewUrl && !(currentTrack.spotifyUri && spotifyAuth.connected) ? (
                   // No audio available — show Spotify link
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-gray-400">No preview available</p>
+                    <p className="text-xs text-gray-500">No playback available</p>
                     {currentTrack.spotifyUrl && (
                       <a
                         href={currentTrack.spotifyUrl}

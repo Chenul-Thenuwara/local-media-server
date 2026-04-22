@@ -486,6 +486,8 @@ export default function Music() {
        console.error('Spotify Player Error:', spotifyPlayer.error);
     }
   }, [spotifyPlayer.error]);
+
+  useEffect(() => {
     api.get('/spotify/new-releases')
       .then(res => {
         const items = res.data.albums?.items || res.data.items || [];
