@@ -38,6 +38,8 @@ api.interceptors.request.use(
       config.baseURL = import.meta.env.VITE_API_URL || '/api';
     } else if (tunnelUrl) {
       config.baseURL = `${tunnelUrl}/api`;
+    } else {
+      config.baseURL = import.meta.env.VITE_API_URL || '/api';
     }
 
     return config;
