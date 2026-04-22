@@ -1,17 +1,40 @@
 import { useState, useEffect, useCallback } from 'react';
 
+interface SpotifyPlayer {
+  addListener(event: string, callback: (data: unknown) => void): void;
+  connect(): Promise<boolean>;
+  disconnect(): void;
+  togglePlay(): Promise<void>;
+  seek(positionMs: number): Promise<void>;
+  setVolume(volume: number): Promise<void>;
+}
+
 declare global {
   interface Window {
     onSpotifyWebPlaybackSDKReady: () => void;
-    Spotify: any;
+    Spotify: {
+      Player: new (config: { name: string; getOAuthToken: (cb: (token: string) => void) => void; volume: number }) => SpotifyPlayer;
+    };
   }
 }
 
 export function useSpotifyPlayer(accessToken: string | undefined) {
-  const [player, setPlayer] = useState<any>(null);
+  const [player, setPlayer] = useState<SpotifyPlayer | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playbackState, setPlaybackState] = useState<{
+    position: number;
+    duration: number;
+    paused: boolean;
+    track: {
+      id: string;
+      uri: string;
+      name: string;
+      album: { name: string; images: { url: string }[] };
+      artists: { name: string }[];
+    };
+  } | null>(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -46,17 +69,18 @@ export function useSpotifyPlayer(accessToken: string | undefined) {
         spPlayer.addListener('authentication_error', ({ message }: { message: string }) => {
           setError(message);
         });
-        spPlayer.addListener('account_error', ({ message }: { message: string }) => {
+        spPlayer.addListener('account_error', () => {
           setError('Spotify Premium is required for playback.');
         });
 
-        spPlayer.addListener('player_state_changed', (state: any) => {
+        spPlayer.addListener('player_state_changed', (state: unknown) => {
           if (!state) return;
+          const s = state as SpotifyPlayerState;
           setPlaybackState({
-            position: state.position,
-            duration: state.duration,
-            paused: state.paused,
-            track: state.track_window.current_track,
+            position: s.position,
+            duration: s.duration,
+            paused: s.paused,
+            track: s.track_window.current_track,
           });
         });
 
@@ -85,14 +109,7 @@ export function useSpotifyPlayer(accessToken: string | undefined) {
          }
       }
     };
-  }, [accessToken]); // Removed player from dependencies to avoid loop
-
-  const [playbackState, setPlaybackState] = useState<{
-    position: number;
-    duration: number;
-    paused: boolean;
-    track: any;
-  } | null>(null);
+  }, [accessToken, player]); // Added player back to dependencies but it should be fine with initPlayer guard
 
   const playTrack = useCallback(async (trackUri: string) => {
     if (!deviceId || !accessToken) return;

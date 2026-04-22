@@ -96,7 +96,7 @@ function LocalMusicTab() {
     durationMs: t.durationMs,
   });
 
-  const allTracks = tracks.map(toLocalTrack);
+
 
   const filtered = localQuery.trim()
     ? tracks.filter(t => {
@@ -253,7 +253,7 @@ function AlbumDetail({ album, onBack }: { album: SpotifyAlbum; onBack: () => voi
       })
       .catch(() => setError('Failed to load album tracks'))
       .finally(() => setLoading(false));
-  }, [album.id]);
+  }, [album.id, album.name, album.images]);
 
   const albumTracks = tracks.map(t => toPlayerTrack(t, album.images[0]?.url));
 
