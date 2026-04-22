@@ -46,6 +46,7 @@ function TrackRow({ track, index, queue }: { track: SpotifyTrack; index: number;
     album: t.album.name,
     albumArt: t.album.images[0]?.url,
     previewUrl: t.preview_url || undefined,
+    spotifyUrl: `https://open.spotify.com/track/${t.id}`,
   });
 
   const handleClick = () => {

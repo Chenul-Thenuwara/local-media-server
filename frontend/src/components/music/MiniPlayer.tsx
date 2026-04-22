@@ -10,6 +10,7 @@ export interface Track {
   albumArt?: string;
   localPath?: string; // tunnel URL for local file
   previewUrl?: string; // Spotify 30s preview
+  spotifyUrl?: string; // link to open in Spotify
   durationMs?: number;
 }
 
@@ -58,8 +59,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setCurrentTrack(track);
     const src = track.localPath || track.previewUrl || '';
     if (audioRef.current) {
-      audioRef.current.src = src;
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      if (src) {
+        audioRef.current.src = src;
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      } else {
+        // No audio source — show track info but don't attempt playback
+        audioRef.current.src = '';
+        setIsPlaying(false);
+      }
     }
   };
 
@@ -169,31 +176,49 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
               {/* Controls */}
               <div className="flex-1 flex flex-col items-center gap-1">
-                <div className="flex items-center gap-6">
-                  <button onClick={handlePrev} className="text-gray-400 hover:text-white transition-colors">
-                    <SkipBack size={18} />
-                  </button>
-                  <button
-                    onClick={togglePlay}
-                    className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-black hover:scale-105 transition-transform"
-                  >
-                    {isPlaying ? <Pause size={16} fill="black" /> : <Play size={16} fill="black" />}
-                  </button>
-                  <button onClick={handleNext} className="text-gray-400 hover:text-white transition-colors">
-                    <SkipForward size={18} />
-                  </button>
-                </div>
-
-                {/* Seek Bar */}
-                <div className="flex items-center gap-2 w-full max-w-md">
-                  <span className="text-xs text-gray-500 w-8 text-right">{fmt(progress)}</span>
-                  <input
-                    type="range" min={0} max={duration || 1} step={0.1} value={progress}
-                    onChange={seek}
-                    className="flex-1 h-1 appearance-none bg-white/20 rounded-full accent-white cursor-pointer"
-                  />
-                  <span className="text-xs text-gray-500 w-8">{fmt(duration)}</span>
-                </div>
+                {!currentTrack.localPath && !currentTrack.previewUrl ? (
+                  // No audio available — show Spotify link
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-xs text-gray-400">No preview available</p>
+                    {currentTrack.spotifyUrl && (
+                      <a
+                        href={currentTrack.spotifyUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-green-400 hover:text-green-300 underline transition-colors"
+                      >
+                        Open in Spotify ↗
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-6">
+                      <button onClick={handlePrev} className="text-gray-400 hover:text-white transition-colors">
+                        <SkipBack size={18} />
+                      </button>
+                      <button
+                        onClick={togglePlay}
+                        className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-black hover:scale-105 transition-transform"
+                      >
+                        {isPlaying ? <Pause size={16} fill="black" /> : <Play size={16} fill="black" />}
+                      </button>
+                      <button onClick={handleNext} className="text-gray-400 hover:text-white transition-colors">
+                        <SkipForward size={18} />
+                      </button>
+                    </div>
+                    {/* Seek Bar */}
+                    <div className="flex items-center gap-2 w-full max-w-md">
+                      <span className="text-xs text-gray-500 w-8 text-right">{fmt(progress)}</span>
+                      <input
+                        type="range" min={0} max={duration || 1} step={0.1} value={progress}
+                        onChange={seek}
+                        className="flex-1 h-1 appearance-none bg-white/20 rounded-full accent-white cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500 w-8">{fmt(duration)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Volume + Close */}

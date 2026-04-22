@@ -9,6 +9,15 @@ let mainWindow;
 let backendProcess;
 let tunnelInstance;
 
+// Prevent tunnel connection errors from crashing the Electron main process
+process.on('uncaughtException', (err) => {
+  if (err.message && (err.message.includes('localtunnel') || err.message.includes('connection refused') || err.message.includes('ECONNREFUSED'))) {
+    console.warn('[Tunnel] Connection error (suppressed):', err.message);
+  } else {
+    console.error('[Uncaught Exception]', err);
+  }
+});
+
 function getDeviceId() {
   const userDataPath = app.getPath('userData');
   const deviceIdPath = path.join(userDataPath, 'device_id.txt');
@@ -29,7 +38,13 @@ async function startTunnel() {
     console.log('Tunnel URL:', tunnelInstance.url);
     
     tunnelInstance.on('close', () => {
-      console.log('Tunnel closed');
+      console.log('Tunnel closed — reconnecting in 5s...');
+      setTimeout(startTunnel, 5000);
+    });
+
+    // Suppress unhandled errors from the tunnel connection (e.g. ECONNREFUSED)
+    tunnelInstance.on('error', (err) => {
+      console.warn('[Tunnel] Error (suppressed):', err.message);
     });
 
     return tunnelInstance.url;
@@ -89,7 +104,9 @@ function createWindow() {
   const isDev = !app.isPackaged;
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    // Vite picks the next available port if 5173 is busy — read from env or try common ports
+    const vitePort = process.env.VITE_PORT || 5173;
+    mainWindow.loadURL(`http://localhost:${vitePort}`);
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadURL('http://localhost:3000');

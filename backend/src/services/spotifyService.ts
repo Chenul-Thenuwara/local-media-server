@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || 'dc4736d707b74ffc99146fa7c48d507c';
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '5860e93fab3242dd95b443926da54e6e';
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '005eba4dc9364770a51dd8bd47903ed6';
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || 'c7ee6ab0d021406ea514cca1076d340d';
 
 let cachedToken: string | null = null;
 let tokenExpiresAt: number = 0;
@@ -24,6 +24,11 @@ async function getAccessToken(): Promise<string> {
   cachedToken = res.data.access_token;
   tokenExpiresAt = Date.now() + (res.data.expires_in - 60) * 1000;
   return cachedToken!;
+}
+
+export function invalidateToken() {
+  cachedToken = null;
+  tokenExpiresAt = 0;
 }
 
 export async function searchTrack(title: string, artist?: string) {
