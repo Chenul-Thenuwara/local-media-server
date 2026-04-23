@@ -61,6 +61,22 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
     );
   }
 
+  const handleConnect = () => {
+    if (!authUrl) return;
+    const width = 450;
+    const height = 730;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    const popup = window.open(authUrl, 'Google Login', `width=${width},height=${height},top=${top},left=${left},menubar=no,toolbar=no`);
+
+    const timer = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(timer);
+        checkConnection();
+      }
+    }, 500);
+  };
+
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 rounded-xl border border-white/10">
@@ -78,7 +94,7 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
         <p className="text-gray-400 max-w-sm mb-6 text-sm">
           Link your Google account to access your cloud {filter === 'VIDEO' ? 'videos' : 'photos'} directly here.
         </p>
-        <Button onClick={() => window.location.href = authUrl} className="bg-white text-black hover:bg-gray-200">
+        <Button onClick={handleConnect} className="bg-white text-black hover:bg-gray-200">
           Connect Account
         </Button>
       </div>

@@ -32,7 +32,11 @@ const GoogleCallback = () => {
 
       api.post('/google-photos/auth/callback', { code, userId })
         .then(() => {
-          navigate('/libraries/photos?tab=google');
+          if (window.opener) {
+            window.close();
+          } else {
+            navigate('/libraries/photos?tab=google');
+          }
         })
         .catch(err => {
           console.error('Google Auth Failed:', err);
