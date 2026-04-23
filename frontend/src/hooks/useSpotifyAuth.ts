@@ -52,28 +52,20 @@ export function useSpotifyAuth() {
     const tunnelUrl = localStorage.getItem('tunnelUrl') || '';
     const loginUrl = `${tunnelUrl}/api/spotify/auth/login?token=${token}`;
     
-    // In Electron, main.js will intercept this window.open and redirect it to the user's default OS browser
-    window.open(loginUrl, '_blank');
+    // Open in a popup window centered on screen
+    const width = 450;
+    const height = 730;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    const popup = window.open(loginUrl, 'Spotify Login', `width=${width},height=${height},top=${top},left=${left},menubar=no,toolbar=no`);
 
-    // Start polling the backend to see when the user finishes logging in
-    let attempts = 0;
-    const timer = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await api.get('/spotify/auth/me');
-        if (res.data.connected) {
-          setStatus(res.data);
-          clearInterval(timer);
-        }
-      } catch (err) {
-        // ignore errors during polling
-      }
-
-      // Stop polling after 5 minutes (150 attempts * 2s)
-      if (attempts >= 150) {
+    // Poll to detect when the user closes the popup or it auto-closes
+    const timer = setInterval(() => {
+      if (popup?.closed) {
         clearInterval(timer);
+        fetchStatus();
       }
-    }, 2000);
+    }, 500);
   };
 
   const disconnect = async () => {

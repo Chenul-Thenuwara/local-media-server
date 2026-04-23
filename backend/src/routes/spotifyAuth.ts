@@ -8,8 +8,8 @@ const router = Router();
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!;
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
-const REDIRECT_URI = `${BACKEND_URL}/api/spotify/auth/callback`;
+const REDIRECT_URI = 'http://localhost:3000/api/spotify/auth/callback';
+const FRONTEND_MUSIC = 'http://localhost:5173/libraries/music';
 
 const SCOPES = [
   'streaming',
@@ -45,24 +45,14 @@ router.get('/login', (req: Request, res: Response) => {
 // ─── GET /api/spotify/auth/callback ─────────────────────────────────────────
 // Spotify redirects here with code + state. Exchange for tokens, save to user.
 router.get('/callback', async (req: Request, res: Response) => {
-  const errorHtml = (msg: string) => `
-    <html>
-      <head><title>Spotify Error</title></head>
-      <body style="background:#0a0a0a; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;">
-        <div style="text-align:center;">
-          <h2 style="color:#ef4444;">${msg}</h2>
-          <p style="color:#a3a3a3;">You can safely close this tab.</p>
-        </div>
-      </body>
-    </html>
-  `;
+  const { code, state, error } = req.query;
 
   if (error) {
-    return res.send(errorHtml('Authentication Denied'));
+    return res.redirect(`${FRONTEND_MUSIC}?spotify=denied`);
   }
 
   if (!code || !state) {
-    return res.send(errorHtml('Invalid Authentication Request'));
+    return res.redirect(`${FRONTEND_MUSIC}?spotify=error`);
   }
 
   try {
@@ -100,29 +90,10 @@ router.get('/callback', async (req: Request, res: Response) => {
       spotifyTokenExpiry: expiry,
     });
 
-    // Send a success page that automatically closes itself
-    res.send(`
-      <html>
-        <head><title>Spotify Connected</title></head>
-        <body style="background:#0a0a0a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-          <div style="background:#171717; padding:40px; border-radius:20px; text-align:center; border:1px solid #262626; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <h2 style="margin:0 0 8px 0; color:#4ade80; font-size:24px;">Spotify Connected!</h2>
-            <p style="margin:0; color:#a3a3a3;">You can safely close this tab and return to the app.</p>
-          </div>
-          <script>
-            // Try to auto-close the tab after 3 seconds
-            setTimeout(() => window.close(), 3000);
-          </script>
-        </body>
-      </html>
-    `);
+    res.redirect(`${FRONTEND_MUSIC}?spotify=connected`);
   } catch (err) {
     console.error('[Spotify Auth] Callback error:', err);
-    res.send('<h2 style="color:red;text-align:center;margin-top:50px;font-family:sans-serif;">Authentication Error. Please try again.</h2>');
+    res.redirect(`${FRONTEND_MUSIC}?spotify=error`);
   }
 });
 
