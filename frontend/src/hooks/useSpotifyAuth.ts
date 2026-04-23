@@ -28,13 +28,21 @@ export function useSpotifyAuth() {
   useEffect(() => {
     fetchStatus();
 
-    // Re-check status if we just returned from OAuth
+    // Check if we just returned from OAuth (either in main window or popup)
     const params = new URLSearchParams(window.location.search);
-    if (params.get('spotify') === 'connected') {
-      fetchStatus();
-      // Clean up URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+    const spotifyParam = params.get('spotify');
+    
+    if (spotifyParam === 'connected' || spotifyParam === 'error' || spotifyParam === 'denied') {
+      if (window.opener) {
+        // We are inside the popup window! Close it immediately.
+        window.close();
+      } else {
+        // We are in the main window (fallback if popup wasn't used)
+        fetchStatus();
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
     }
   }, [fetchStatus]);
 
@@ -42,7 +50,22 @@ export function useSpotifyAuth() {
     const token = localStorage.getItem('token');
     if (!token) return;
     const tunnelUrl = localStorage.getItem('tunnelUrl') || '';
-    window.location.href = `${tunnelUrl}/api/spotify/auth/login?token=${token}`;
+    const loginUrl = `${tunnelUrl}/api/spotify/auth/login?token=${token}`;
+    
+    // Open in a popup window centered on screen
+    const width = 450;
+    const height = 730;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    const popup = window.open(loginUrl, 'Spotify Login', `width=${width},height=${height},top=${top},left=${left},menubar=no,toolbar=no`);
+
+    // Poll to detect when the user closes the popup or it auto-closes
+    const timer = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(timer);
+        fetchStatus();
+      }
+    }, 500);
   };
 
   const disconnect = async () => {

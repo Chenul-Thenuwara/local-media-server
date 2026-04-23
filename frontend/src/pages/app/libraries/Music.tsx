@@ -570,37 +570,27 @@ export default function Music() {
                 </button>
               </div>
 
-              {activeSource === 'spotify' && (
+              {activeSource === 'spotify' && spotifyAuth.connected && (
                 <div className="flex items-center gap-3">
-                  {spotifyAuth.connected ? (
-                    <div className="flex items-center gap-3 bg-white/5 pl-2 pr-4 py-1.5 rounded-full border border-white/10 group overflow-hidden transition-all">
-                      {spotifyAuth.image ? (
-                        <img src={spotifyAuth.image} alt={spotifyAuth.displayName} className="w-7 h-7 rounded-full object-cover border border-white/20" />
-                      ) : (
-                        <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
-                          <Mic2 size={14} className="text-green-400" />
-                        </div>
-                      )}
-                      <div className="flex flex-col">
-                        <span className="text-[11px] text-gray-500 font-medium leading-tight">Connected as</span>
-                        <span className="text-sm font-semibold text-white leading-tight">{spotifyAuth.displayName || 'Spotify User'}</span>
+                  <div className="flex items-center gap-3 bg-white/5 pl-2 pr-4 py-1.5 rounded-full border border-white/10 group overflow-hidden transition-all">
+                    {spotifyAuth.image ? (
+                      <img src={spotifyAuth.image} alt={spotifyAuth.displayName} className="w-7 h-7 rounded-full object-cover border border-white/20" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <Mic2 size={14} className="text-green-400" />
                       </div>
-                      <button 
-                        onClick={spotifyAuth.disconnect}
-                        className="ml-2 text-xs text-gray-500 hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
-                      >
-                        Disconnect
-                      </button>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[11px] text-gray-500 font-medium leading-tight">Connected as</span>
+                      <span className="text-sm font-semibold text-white leading-tight">{spotifyAuth.displayName || 'Spotify User'}</span>
                     </div>
-                  ) : (
-                    <button
-                      onClick={spotifyAuth.connect}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-green-400/50 text-sm font-semibold text-white transition-all group"
+                    <button 
+                      onClick={spotifyAuth.disconnect}
+                      className="ml-2 text-xs text-gray-500 hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
                     >
-                      <Disc3 size={16} className="text-green-400 group-hover:animate-spin" />
-                      Connect Spotify
+                      Disconnect
                     </button>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
