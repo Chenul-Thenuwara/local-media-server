@@ -163,7 +163,7 @@ export const createUser = async (req: Request, res: Response) => {
       password,
       managedBy: managed ? (req as any).user._id : undefined,
       pin: managed ? pin : undefined,
-      role: managed ? 'viewer' : 'admin', // Default role logic
+      role: 'viewer', // All new users created here should be viewers by default
       permissions: managed ? permissions : undefined
     });
 
