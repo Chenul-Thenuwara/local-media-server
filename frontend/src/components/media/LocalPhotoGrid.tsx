@@ -66,10 +66,8 @@ export function LocalPhotoGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {photos.map((photo) => {
-        // Construct standard static file URL for viewing
-        // Assuming the backend has a /stream route or static serving, 
-        // usually /api/media/stream/:id or similar is used for local media
-        const imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/stream/${photo._id}`;
+        const token = localStorage.getItem('token');
+        const imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/stream/${photo._id}?token=${token}`;
 
         return (
           <div key={photo._id} className="aspect-square rounded-lg overflow-hidden bg-gray-800 relative group cursor-pointer">
