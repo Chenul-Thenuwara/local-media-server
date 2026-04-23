@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Film, Tv, Music, Plus, RefreshCw, Trash2, HardDrive, Image } from 'lucide-react';
+import { Folder, Film, Tv, Music, Plus, RefreshCw, Trash2, HardDrive, Image, X } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -147,7 +147,15 @@ const AdminLibraries = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
             >
-              <h2 className="text-2xl font-bold text-white mb-6">Add Library</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Add Library</h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1.5">Name</label>
@@ -176,7 +184,7 @@ const AdminLibraries = () => {
                 </div>
 
                 <div className="flex gap-3 mt-8">
-                  <Button type="button" variant="ghost" className="flex-1" onClick={() => setIsModalOpen(false)}>
+                  <Button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white">
                     Cancel
                   </Button>
                   <Button type="submit" className="flex-1 bg-apple-blue hover:bg-blue-600">
