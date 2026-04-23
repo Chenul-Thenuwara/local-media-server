@@ -23,7 +23,7 @@ const AdminLibraries = () => {
   const [formData, setFormData] = useState({
     name: '',
     path: '',
-    type: 'movie'
+    type: 'auto'
   });
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const AdminLibraries = () => {
     try {
       await adminService.createLibrary(formData);
       setIsModalOpen(false);
-      setFormData({ name: '', path: '', type: 'movie' });
+      setFormData({ name: '', path: '', type: 'auto' });
       fetchLibraries();
     } catch (err) {
       console.error(err);
@@ -155,7 +155,7 @@ const AdminLibraries = () => {
                     required
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Movies"
+                    placeholder="e.g. My Media"
                     className="bg-black/30 border-white/10"
                   />
                 </div>
@@ -168,31 +168,11 @@ const AdminLibraries = () => {
                       required
                       value={formData.path}
                       onChange={e => setFormData({ ...formData, path: e.target.value })}
-                      placeholder="C:\Media\Movies"
+                      placeholder="C:\Media"
                       className="pl-10 bg-black/30 border-white/10"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Absolute path to media directory on server</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Content Type</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {['movie', 'tv', 'music', 'photo'].map(type => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, type })}
-                        className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${formData.type === type
-                            ? 'bg-apple-blue/20 border-apple-blue text-white'
-                            : 'bg-black/20 border-white/10 text-gray-400 hover:border-white/30'
-                          }`}
-                      >
-                        {getIcon(type)}
-                        <span className="text-[10px] uppercase font-bold">{type}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Absolute path to media directory on server. Content will be auto-detected.</p>
                 </div>
 
                 <div className="flex gap-3 mt-8">
