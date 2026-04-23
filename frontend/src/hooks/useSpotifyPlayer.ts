@@ -1,5 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 
+interface SpotifyPlayerState {
+  position: number;
+  duration: number;
+  paused: boolean;
+  track_window: {
+    current_track: {
+      id: string;
+      uri: string;
+      name: string;
+      album: { name: string; images: { url: string }[] };
+      artists: { name: string }[];
+    };
+  };
+}
+
 interface SpotifyPlayer {
   addListener(event: string, callback: (data: unknown) => void): void;
   connect(): Promise<boolean>;
