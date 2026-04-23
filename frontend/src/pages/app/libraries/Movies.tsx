@@ -15,8 +15,8 @@ export default function Movies() {
 
   const fetchMovies = async () => {
     try {
-      // Cache bust to ensure fresh request
-      const res = await api.get(`/media?_t=${Date.now()}`);
+      // Cache bust to ensure fresh request and filter by movie type
+      const res = await api.get(`/media?type=movie&_t=${Date.now()}`);
       console.log('Movies fetched:', res.data);
       if (Array.isArray(res.data)) {
         setMovies(res.data);
