@@ -22,7 +22,7 @@ export const getSystemStats = async (req: Request, res: Response) => {
       .limit(5);
 
     // Fetch libraries
-    const libraries = await Library.find({}, 'name type');
+    const libraries = await Library.find({}, 'name type createdAt');
     console.log('Libraries Found:', libraries.length);
 
     // Aggregate size and counts
@@ -49,21 +49,39 @@ export const getSystemStats = async (req: Request, res: Response) => {
     // Format size (bytes to GB)
     const storageUsed = (stats.totalSize / (1024 * 1024 * 1024)).toFixed(2) + " GB";
 
+    const timeAgo = (date: Date) => {
+      if (!date) return 'Just now';
+      const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+      let interval = seconds / 31536000;
+      if (interval > 1) return Math.floor(interval) + " years ago";
+      interval = seconds / 2592000;
+      if (interval > 1) return Math.floor(interval) + " months ago";
+      interval = seconds / 86400;
+      if (interval > 1) return Math.floor(interval) + " days ago";
+      interval = seconds / 3600;
+      if (interval > 1) return Math.floor(interval) + " hours ago";
+      interval = seconds / 60;
+      if (interval > 1) return Math.floor(interval) + " mins ago";
+      return "Just now";
+    };
+
     // Combine recent activity
     const activityList = [
       ...recentMedia.map(m => ({
         id: m._id,
         title: `Added: ${m.title || m.filename}`,
-        time: 'Just now',
-        type: m.type
+        time: timeAgo(m.createdAt),
+        type: m.type,
+        timestamp: m.createdAt ? new Date(m.createdAt).getTime() : 0
       })),
       ...libraries.map(lib => ({
         id: lib._id,
         title: `Library: ${lib.name}`,
-        time: 'Active',
-        type: 'library'
+        time: lib.createdAt ? `Created ${timeAgo(lib.createdAt as Date)}` : 'Active',
+        type: 'library',
+        timestamp: lib.createdAt ? new Date(lib.createdAt).getTime() : 0
       }))
-    ].slice(0, 10);
+    ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
 
     // Calculate RAM Usage
     const totalMem = os.totalmem();
