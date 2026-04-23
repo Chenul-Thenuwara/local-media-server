@@ -69,7 +69,7 @@ export function GoogleMediaGrid({ filter }: GoogleMediaGridProps) {
         </div>
         <h2 className="text-xl font-bold text-white mb-2">Connect Google Photos</h2>
 
-        {errorMsg && (
+        {errorMsg && errorMsg !== 'Not connected' && (
           <div className="mb-4 p-2 bg-red-500/20 text-red-400 text-xs rounded font-mono max-w-xs break-all">
             Error: {errorMsg}
           </div>
