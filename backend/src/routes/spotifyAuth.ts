@@ -8,8 +8,8 @@ const router = Router();
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!;
-const REDIRECT_URI = 'http://localhost:3000/api/spotify/auth/callback';
-const FRONTEND_MUSIC = 'http://localhost:5173/libraries/music';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
+const REDIRECT_URI = `${BACKEND_URL}/api/spotify/auth/callback`;
 
 const SCOPES = [
   'streaming',
@@ -45,14 +45,24 @@ router.get('/login', (req: Request, res: Response) => {
 // ─── GET /api/spotify/auth/callback ─────────────────────────────────────────
 // Spotify redirects here with code + state. Exchange for tokens, save to user.
 router.get('/callback', async (req: Request, res: Response) => {
-  const { code, state, error } = req.query;
+  const errorHtml = (msg: string) => `
+    <html>
+      <head><title>Spotify Error</title></head>
+      <body style="background:#0a0a0a; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;">
+        <div style="text-align:center;">
+          <h2 style="color:#ef4444;">${msg}</h2>
+          <p style="color:#a3a3a3;">You can safely close this tab.</p>
+        </div>
+      </body>
+    </html>
+  `;
 
   if (error) {
-    return res.redirect(`${FRONTEND_MUSIC}?spotify=denied`);
+    return res.send(errorHtml('Authentication Denied'));
   }
 
   if (!code || !state) {
-    return res.redirect(`${FRONTEND_MUSIC}?spotify=error`);
+    return res.send(errorHtml('Invalid Authentication Request'));
   }
 
   try {
