@@ -112,6 +112,15 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3000');
   }
 
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    // Open Spotify auth and external links in the user's default web browser
+    if (url.includes('/api/spotify/auth/login') || url.includes('spotify.com')) {
+      require('electron').shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
   mainWindow.on('closed', function () {
     mainWindow = null;
   });

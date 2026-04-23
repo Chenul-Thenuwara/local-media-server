@@ -90,10 +90,29 @@ router.get('/callback', async (req: Request, res: Response) => {
       spotifyTokenExpiry: expiry,
     });
 
-    res.redirect(`${FRONTEND_MUSIC}?spotify=connected`);
+    // Send a success page that automatically closes itself
+    res.send(`
+      <html>
+        <head><title>Spotify Connected</title></head>
+        <body style="background:#0a0a0a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="background:#171717; padding:40px; border-radius:20px; text-align:center; border:1px solid #262626; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <h2 style="margin:0 0 8px 0; color:#4ade80; font-size:24px;">Spotify Connected!</h2>
+            <p style="margin:0; color:#a3a3a3;">You can safely close this tab and return to the app.</p>
+          </div>
+          <script>
+            // Try to auto-close the tab after 3 seconds
+            setTimeout(() => window.close(), 3000);
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     console.error('[Spotify Auth] Callback error:', err);
-    res.redirect(`${FRONTEND_MUSIC}?spotify=error`);
+    res.send('<h2 style="color:red;text-align:center;margin-top:50px;font-family:sans-serif;">Authentication Error. Please try again.</h2>');
   }
 });
 
