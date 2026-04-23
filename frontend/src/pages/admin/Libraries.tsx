@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Film, Tv, Music, Plus, RefreshCw, Trash2, HardDrive } from 'lucide-react';
+import { Folder, Film, Tv, Music, Plus, RefreshCw, Trash2, HardDrive, Image } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -9,7 +9,7 @@ interface Library {
   _id: string;
   name: string;
   path: string;
-  type: 'movie' | 'tv' | 'music';
+  type: 'movie' | 'tv' | 'music' | 'photo';
   items?: number;
 }
 
@@ -73,6 +73,7 @@ const AdminLibraries = () => {
       case 'movie': return <Film size={32} className="text-purple-400" />;
       case 'tv': return <Tv size={32} className="text-blue-400" />;
       case 'music': return <Music size={32} className="text-green-400" />;
+      case 'photo': return <Image size={32} className="text-yellow-400" />;
       default: return <Folder size={32} className="text-gray-400" />;
     }
   };
@@ -176,19 +177,19 @@ const AdminLibraries = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1.5">Content Type</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['movie', 'tv', 'music'].map(type => (
+                  <div className="grid grid-cols-4 gap-2">
+                    {['movie', 'tv', 'music', 'photo'].map(type => (
                       <button
                         key={type}
                         type="button"
                         onClick={() => setFormData({ ...formData, type })}
-                        className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition-all ${formData.type === type
+                        className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${formData.type === type
                             ? 'bg-apple-blue/20 border-apple-blue text-white'
                             : 'bg-black/20 border-white/10 text-gray-400 hover:border-white/30'
                           }`}
                       >
                         {getIcon(type)}
-                        <span className="text-xs uppercase font-bold">{type}</span>
+                        <span className="text-[10px] uppercase font-bold">{type}</span>
                       </button>
                     ))}
                   </div>
