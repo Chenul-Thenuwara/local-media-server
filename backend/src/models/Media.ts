@@ -4,7 +4,7 @@ export interface IMedia extends Document {
   filename: string;
   path: string;
   libraryId: mongoose.Types.ObjectId;
-  type: 'movie' | 'tv' | 'music';
+  type: 'movie' | 'tv' | 'music' | 'photo';
   size: number;
   // Metadata
   title?: string;
@@ -35,7 +35,7 @@ const MediaSchema: Schema = new Schema({
   filename: { type: String, required: true },
   path: { type: String, required: true },
   libraryId: { type: Schema.Types.ObjectId, ref: 'Library', required: true },
-  type: { type: String, enum: ['movie', 'tv', 'music'], required: true },
+  type: { type: String, enum: ['movie', 'tv', 'music', 'photo'], required: true },
   size: { type: Number, required: true },
   // Metadata fields
   title: { type: String },

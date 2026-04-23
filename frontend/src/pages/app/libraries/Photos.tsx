@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { MediaTabs } from '../../../components/media/MediaTabs';
 import { GoogleMediaGrid } from '../../../components/media/GoogleMediaGrid';
 
+import { LocalPhotoGrid } from '../../../components/media/LocalPhotoGrid';
+
 const Photos = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTabRaw = searchParams.get('tab');
@@ -22,9 +24,7 @@ const Photos = () => {
       <MediaTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
       {activeTab === 'local' ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-500 bg-white/5 rounded-xl border border-white/10">
-          <p>Local library scanning coming soon.</p>
-        </div>
+        <LocalPhotoGrid />
       ) : (
         <GoogleMediaGrid filter="PHOTO" />
       )}

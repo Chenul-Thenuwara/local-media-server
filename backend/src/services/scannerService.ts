@@ -12,12 +12,14 @@ ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 const VIDEO_EXTENSIONS = new Set(['.mp4', '.mkv', '.avi', '.mov', '.webm', '.m4v', '.flv']);
 const MUSIC_EXTENSIONS = new Set(['.mp3', '.flac', '.aac', '.m4a', '.ogg', '.wav', '.wma', '.opus']);
+const PHOTO_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.bmp']);
 
 // Detect media type purely by file extension
-function detectMediaType(filename: string): 'video' | 'music' | null {
+function detectMediaType(filename: string): 'video' | 'music' | 'photo' | null {
   const ext = path.extname(filename).toLowerCase();
   if (VIDEO_EXTENSIONS.has(ext)) return 'video';
   if (MUSIC_EXTENSIONS.has(ext)) return 'music';
+  if (PHOTO_EXTENSIONS.has(ext)) return 'photo';
   return null;
 }
 
@@ -86,6 +88,24 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
       if (!detectedKind) continue; // Skip unknown extensions
 
       const exists = await Media.findOne({ path: file, libraryId });
+
+      // ─── Handle PHOTO files ────────────────────────────────────────────
+      if (detectedKind === 'photo') {
+        if (!exists) {
+          const stat = await fs.promises.stat(file);
+          const newMedia = new Media({
+            libraryId,
+            type: 'photo',
+            path: file,
+            filename,
+            size: stat.size,
+            title: filename, // Basic title for photos
+          });
+          await newMedia.save();
+          console.log(`[Scanner] Added photo: ${filename}`);
+        }
+        continue;
+      }
 
       // ─── Handle MUSIC files ────────────────────────────────────────────
       if (detectedKind === 'music') {
