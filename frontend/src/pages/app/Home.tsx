@@ -160,6 +160,7 @@ export default function Home() {
 
   const [setupName, setSetupName] = useState('');
   const [setupPath, setSetupPath] = useState('');
+  const [setupType, setSetupType] = useState<'movie' | 'tv' | 'music' | 'photo' | 'auto'>('auto');
   const [setupLoading, setSetupLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -232,7 +233,7 @@ export default function Home() {
       await api.post('/libraries', {
         name: setupName,
         path: setupPath,
-        type: 'auto'
+        type: setupType
       });
       // Refresh to switch to dashboard view
       await checkLibraries();
@@ -339,6 +340,24 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300 ml-1 uppercase tracking-wider">Content Type</label>
+              <div className="grid grid-cols-4 gap-2">
+                {['movie', 'tv', 'music', 'photo'].map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSetupType(type as any)}
+                    className={`p-2 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${setupType === type
+                        ? 'bg-apple-blue/20 border-apple-blue text-white'
+                        : 'bg-black/20 border-white/10 text-gray-400 hover:border-white/30'
+                      }`}
+                  >
+                    <span className="text-[10px] uppercase font-bold">{type}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <Button
               type="submit"
