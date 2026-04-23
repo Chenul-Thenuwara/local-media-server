@@ -6,6 +6,8 @@ export interface ILibrary extends Document {
   type: 'movie' | 'tv' | 'music' | 'photo' | 'auto';
   userId: mongoose.Types.ObjectId;
   deviceId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const LibrarySchema: Schema = new Schema({
