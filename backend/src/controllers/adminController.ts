@@ -184,3 +184,30 @@ export const createUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error creating user', error });
   }
 };
+
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // @ts-ignore
+    const currentUserId = req.user.id;
+
+    // Prevent self-deletion from the admin panel for safety
+    if (id === currentUserId) {
+      // @ts-ignore
+      return res.status(400).json({ message: 'You cannot delete your own account' });
+    }
+
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      // @ts-ignore
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete User Error:', error);
+    res.status(500).json({ message: 'Error deleting user', error });
+  }
+};

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSystemStats, getUsers, createUser } from '../controllers/adminController';
+import { getSystemStats, getUsers, createUser, deleteUser } from '../controllers/adminController';
 import { protect, admin } from '../middleware/authMiddleware';
 import Media from '../models/Media';
 import { fetchMetadata } from '../services/tmdbService';
@@ -12,6 +12,7 @@ router.use(protect);
 router.get('/stats', getSystemStats);
 router.get('/users', getUsers);
 router.post('/users', createUser);
+router.delete('/users/:id', deleteUser);
 
 // Bulk re-classify all video media using TMDB multi-search
 router.post('/reclassify', async (req, res) => {

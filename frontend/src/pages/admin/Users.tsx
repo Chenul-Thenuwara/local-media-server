@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, MoreVertical, Shield, ShieldAlert } from 'lucide-react';
+import { Search, Plus, Trash2, Shield, ShieldAlert } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { adminService } from '../../services/adminService';
 import AddUserModal from '../../components/admin/AddUserModal';
@@ -33,6 +33,17 @@ const AdminUsers = () => {
       fetchUsers(); // Refresh list
     } catch (error) {
       console.error("Failed to create user", error);
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await adminService.deleteUser(id);
+        fetchUsers();
+      } catch (error: any) {
+        alert(error.response?.data?.message || 'Failed to delete user');
+      }
     }
   };
 
@@ -93,7 +104,7 @@ const AdminUsers = () => {
         {loading ? (
           <div className="col-span-full text-center text-gray-400 py-12">Loading users...</div>
         ) : users.map((user) => (
-          <UserCard key={user._id} user={user} />
+          <UserCard key={user._id} user={user} onDelete={() => handleDeleteUser(user._id)} />
         ))}
       </div>
     </div>
@@ -101,7 +112,7 @@ const AdminUsers = () => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const UserCard = ({ user }: { user: any }) => (
+const UserCard = ({ user, onDelete }: { user: any, onDelete: () => void }) => (
   <motion.div
     whileHover={{ y: -4 }}
     className="group relative p-6 rounded-3xl bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all h-[280px] flex flex-col items-center text-center"
@@ -111,8 +122,8 @@ const UserCard = ({ user }: { user: any }) => (
 
     {/* Actions Menu (Absolute Top Right) */}
     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-      <button className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white">
-        <MoreVertical size={16} />
+      <button onClick={onDelete} className="p-2 hover:bg-red-500/20 rounded-full text-gray-400 hover:text-red-400 transition-colors">
+        <Trash2 size={16} />
       </button>
     </div>
 
