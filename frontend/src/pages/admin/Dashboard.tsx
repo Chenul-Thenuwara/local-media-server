@@ -42,20 +42,26 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-            User Administration
+            Admin Dashboard
           </h1>
-          <p className="text-gray-400 mt-1">Manage users, access levels, and permissions</p>
+          <p className="text-gray-400 mt-1">System overview and management</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 text-sm text-blue-400">
-            <Users size={14} />
-            <span>Admin Active</span>
+          {stats?.localIp && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 text-sm text-blue-400">
+              <Globe size={14} />
+              <span className="font-mono">{stats.localIp}:{window.location.port}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 text-sm text-green-400">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            {stats?.systemHealth || "System Optimal"}
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard
           title="Total Users"
           value={stats?.users || 0}
@@ -64,17 +70,31 @@ const AdminDashboard = () => {
           color="blue"
         />
         <StatCard
-          title="Managed Accounts"
-          value={stats?.managedUsers || 0}
-          trend="Sub-users"
-          icon={Users}
+          title="Storage Used"
+          value={stats?.storage || "0 GB"}
+          trend="Total"
+          icon={HardDrive}
           color="purple"
         />
         <StatCard
-          title="Access Groups"
-          value="4"
-          trend="Permissions"
-          icon={Shield}
+          title="RAM Usage"
+          value={`${stats?.ramUsage || 0} GB`}
+          trend={`of ${stats?.ramTotal || 0} GB`}
+          icon={Activity}
+          color="orange"
+        />
+        <StatCard
+          title="Media Items"
+          value={stats?.mediaItems || 0}
+          trend={`${stats?.movies || 0} Movies, ${stats?.tvShows || 0} TV`}
+          icon={Film}
+          color="pink"
+        />
+        <StatCard
+          title="Libraries"
+          value={stats?.libraries || 0}
+          trend="Connected"
+          icon={Database}
           color="emerald"
         />
       </div>
@@ -82,28 +102,42 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
         <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-xl font-semibold text-white/90">Administration Actions</h2>
+          <h2 className="text-xl font-semibold text-white/90">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ActionCard
               to="/admin/users"
               title="User Management"
-              description="Create, edit, and manage user accounts"
+              description="Manage access, roles, and permissions"
               icon={Users}
               gradient="from-blue-500/20 to-cyan-500/20"
             />
             <ActionCard
-              to="/admin/users?action=new"
-              title="Add New User"
-              description="Onboard a new staff member or sub-user"
-              icon={Users}
+              to="/admin/libraries"
+              title="Media Libraries"
+              description="Manage content, paths, and scans"
+              icon={Film}
+              gradient="from-purple-500/20 to-pink-500/20"
+            />
+            <ActionCard
+              to="/admin/settings"
+              title="Server Settings"
+              description="Configure network, transcoding, and system"
+              icon={Settings}
               gradient="from-emerald-500/20 to-green-500/20"
+            />
+            <ActionCard
+              to="/admin/logs"
+              title="System Logs"
+              description="View error logs and activity history"
+              icon={FileText}
+              gradient="from-orange-500/20 to-red-500/20"
             />
           </div>
         </div>
 
         {/* Recent Activity */}
         <div className="bg-white/5 rounded-2xl border border-white/10 p-6 backdrop-blur-xl">
-          <h2 className="text-xl font-semibold text-white/90 mb-6">User Activity</h2>
+          <h2 className="text-xl font-semibold text-white/90 mb-6">Active Libraries</h2>
           <div className="space-y-6">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {stats?.recentActivity?.map((activity: any, i: number) => (

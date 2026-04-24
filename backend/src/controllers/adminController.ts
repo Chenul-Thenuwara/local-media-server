@@ -1,71 +1,63 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import os from 'os';
 import User from '../models/User';
 import Library from '../models/Library';
 import Media from '../models/Media';
 
 export const getSystemStats = async (req: Request, res: Response) => {
-  console.log('Admin Stats Request Received');
   try {
-    console.log('Using DB:', mongoose.connection.db?.databaseName);
+    // @ts-ignore
+    const currentUserId = req.user.id;
 
-    const userCount = await User.countDocuments({ role: 'admin' });
-    console.log('User Count:', userCount);
+    // Count only users managed by this user (+ themselves)
+    const userCount = await User.countDocuments({
+      $or: [{ _id: currentUserId }, { managedBy: currentUserId }]
+    });
 
-    const libraryCount = await Library.countDocuments();
-    console.log('Library Count:', libraryCount);
+    // Only look at THIS user's libraries
+    const libraries = await Library.find({ userId: currentUserId }, 'name type createdAt');
+    const libraryIds = libraries.map(lib => lib._id);
+    const libraryCount = libraries.length;
 
-    // Fetch recent media (movies/tv)
-    const recentMedia = await Media.find({}, 'title type createdAt')
+    // Fetch recent media only from this user's libraries
+    const recentMedia = await Media.find({ libraryId: { $in: libraryIds } }, 'title filename type createdAt')
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Fetch libraries
-    const libraries = await Library.find({}, 'name type createdAt');
-    console.log('Libraries Found:', libraries.length);
-
-    // Aggregate size and counts
+    // Aggregate size/counts scoped to this user's libraries
     const mediaStats = await Media.aggregate([
+      { $match: { libraryId: { $in: libraryIds } } },
       {
         $group: {
           _id: null,
-          totalSize: { $sum: "$size" },
+          totalSize: { $sum: '$size' },
           totalCount: { $sum: 1 },
-          moviesCount: {
-            $sum: { $cond: [{ $eq: ["$type", "movie"] }, 1, 0] }
-          },
-          tvCount: {
-            $sum: { $cond: [{ $eq: ["$type", "tv"] }, 1, 0] }
-          }
+          moviesCount: { $sum: { $cond: [{ $eq: ['$type', 'movie'] }, 1, 0] } },
+          tvCount: { $sum: { $cond: [{ $eq: ['$type', 'tv'] }, 1, 0] } }
         }
       }
     ]);
 
-    console.log('Media Stats:', mediaStats);
-
     const stats = mediaStats[0] || { totalSize: 0, totalCount: 0, moviesCount: 0, tvCount: 0 };
-
-    // Format size (bytes to GB)
-    const storageUsed = (stats.totalSize / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+    const storageUsed = (stats.totalSize / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 
     const timeAgo = (date: Date) => {
       if (!date) return 'Just now';
       const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
       let interval = seconds / 31536000;
-      if (interval > 1) return Math.floor(interval) + " years ago";
+      if (interval > 1) return Math.floor(interval) + ' years ago';
       interval = seconds / 2592000;
-      if (interval > 1) return Math.floor(interval) + " months ago";
+      if (interval > 1) return Math.floor(interval) + ' months ago';
       interval = seconds / 86400;
-      if (interval > 1) return Math.floor(interval) + " days ago";
+      if (interval > 1) return Math.floor(interval) + ' days ago';
       interval = seconds / 3600;
-      if (interval > 1) return Math.floor(interval) + " hours ago";
+      if (interval > 1) return Math.floor(interval) + ' hours ago';
       interval = seconds / 60;
-      if (interval > 1) return Math.floor(interval) + " mins ago";
-      return "Just now";
+      if (interval > 1) return Math.floor(interval) + ' mins ago';
+      return 'Just now';
     };
 
-    // Combine recent activity
+    // Activity: recent media + this user's libraries
     const activityList = [
       ...recentMedia.map(m => ({
         id: m._id,
@@ -83,23 +75,20 @@ export const getSystemStats = async (req: Request, res: Response) => {
       }))
     ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
 
-    // Calculate RAM Usage
+    // RAM Usage
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
-    const usedMemGB = (usedMem / (1024 * 1024 * 1024)).toFixed(2);
+    const usedMemGB = ((totalMem - freeMem) / (1024 * 1024 * 1024)).toFixed(2);
     const totalMemGB = (totalMem / (1024 * 1024 * 1024)).toFixed(2);
 
-    // Get Local IP
+    // Local IP
     const nets = os.networkInterfaces();
     let localIp = 'localhost';
-
     for (const name of Object.keys(nets)) {
       for (const net of nets[name] || []) {
-        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
         if (net.family === 'IPv4' && !net.internal) {
           localIp = net.address;
-          break; // Take the first one
+          break;
         }
       }
       if (localIp !== 'localhost') break;
@@ -116,7 +105,7 @@ export const getSystemStats = async (req: Request, res: Response) => {
       ramTotal: totalMemGB,
       activeStreams: 0,
       systemHealth: 'Good',
-      localIp: localIp,
+      localIp,
       port: process.env.PORT || 3000,
       recentActivity: activityList
     });
@@ -125,6 +114,7 @@ export const getSystemStats = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching stats', error });
   }
 };
+
 
 export const getUsers = async (req: Request, res: Response) => {
   try {

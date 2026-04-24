@@ -164,7 +164,7 @@ export default function AppLayout() {
                 </motion.p>
               )}
             </AnimatePresence>
-            <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>User Admin</NavItem>
+            <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>Admin Panel</NavItem>
             <NavItem to="/notifications" icon={Bell} collapsed={!sidebarOpen}>Notifications</NavItem>
           </div>
         </nav>
