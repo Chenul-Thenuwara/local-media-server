@@ -22,6 +22,11 @@ export const adminService = {
     return response.data;
   },
 
+  updateUserRole: async (id: string, role: string) => {
+    const response = await api.patch(`/admin/users/${id}/role`, { role });
+    return response.data;
+  },
+
   // Library Management
   getLibraries: async () => {
     const response = await api.get('/libraries');

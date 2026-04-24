@@ -201,3 +201,43 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting user', error });
   }
 };
+
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    // @ts-ignore
+    const currentUserId = req.user.id;
+
+    const validRoles = ['admin', 'viewer', 'guest'];
+    if (!validRoles.includes(role)) {
+      // @ts-ignore
+      return res.status(400).json({ message: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
+    }
+
+    // Can't change your own role
+    if (id === currentUserId) {
+      // @ts-ignore
+      return res.status(400).json({ message: 'You cannot change your own role' });
+    }
+
+    // Only allow editing users you manage or that are sub-users of the current admin
+    const userToUpdate = await User.findOne({
+      _id: id,
+      $or: [{ managedBy: currentUserId }, { _id: currentUserId }]
+    });
+
+    if (!userToUpdate) {
+      // @ts-ignore
+      return res.status(404).json({ message: 'User not found or not authorised to edit' });
+    }
+
+    userToUpdate.role = role;
+    await userToUpdate.save();
+
+    res.json({ message: 'Role updated', role: userToUpdate.role });
+  } catch (error) {
+    console.error('Update Role Error:', error);
+    res.status(500).json({ message: 'Error updating role', error });
+  }
+};
