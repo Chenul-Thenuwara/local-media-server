@@ -10,6 +10,7 @@ interface MediaItem {
   filename: string;
   posterPath?: string;
   type?: string;
+  tmdbId?: number;
 }
 
 interface MediaRowProps {
@@ -37,7 +38,13 @@ export function MediaRow({ title, items, onRefresh, className }: MediaRowProps) 
           <motion.div
             key={item._id}
             whileHover={{ scale: 1.05 }}
-            onClick={() => navigate(`/media/${item._id}`)}
+            onClick={() => {
+              if (item.type === 'tv' && item.tmdbId) {
+                navigate(`/media/tmdb/tv/${item.tmdbId}`);
+              } else {
+                navigate(`/media/${item._id}`);
+              }
+            }}
             className="flex-none w-[150px] md:w-[200px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800 cursor-pointer snap-start relative group"
           >
             {/* Show Poster if available, else placeholder */}
