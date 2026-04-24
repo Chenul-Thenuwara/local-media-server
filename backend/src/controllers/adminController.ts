@@ -221,18 +221,13 @@ export const updateUserRole = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'You cannot change your own role' });
     }
 
-    // Only allow editing users you manage or that are sub-users of the current admin
-    const userToUpdate = await User.findOne({
-      _id: id,
-      $or: [{ managedBy: currentUserId }, { _id: currentUserId }]
-    });
-
+    const userToUpdate = await User.findById(id);
     if (!userToUpdate) {
       // @ts-ignore
-      return res.status(404).json({ message: 'User not found or not authorised to edit' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    userToUpdate.role = role;
+    userToUpdate.role = role as 'admin' | 'viewer' | 'guest';
     await userToUpdate.save();
 
     res.json({ message: 'Role updated', role: userToUpdate.role });
@@ -241,3 +236,4 @@ export const updateUserRole = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error updating role', error });
   }
 };
+
