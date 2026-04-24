@@ -14,6 +14,7 @@ import PersonDetail from './pages/app/PersonDetail';
 import Discover from './pages/app/Discover';
 import GoogleCallback from './pages/app/GoogleCallback';
 import Search from './pages/app/Search';
+import AiChat from './pages/app/AiChat';
 import Watchlist from './pages/app/Watchlist';
 import History from './pages/app/History';
 import Notifications from './pages/app/Notifications';
@@ -64,6 +65,7 @@ function App() {
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/history" element={<History />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/ai-chat" element={<AiChat />} />
 
             {/* Profile */}
             <Route path="/profile/account" element={<AccountSettings />} />
