@@ -214,7 +214,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Track Info */}
-              <div className="w-40 shrink-0">
+              <div className="w-24 sm:w-40 shrink-0">
                 <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
                 <p className="text-xs text-gray-400 truncate">{currentTrack.artist}</p>
               </div>
@@ -223,14 +223,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               <div className="flex-1 flex flex-col items-center gap-1">
                 {!currentTrack.localPath && !currentTrack.previewUrl && !(currentTrack.spotifyUri && spotifyAuth.connected) ? (
                   // No audio available — show Spotify link
-                  <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-gray-500">No playback available</p>
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
+                    <p className="hidden sm:block text-xs text-gray-500">No playback available</p>
                     {currentTrack.spotifyUrl && (
                       <a
                         href={currentTrack.spotifyUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs text-green-400 hover:text-green-300 underline transition-colors"
+                        className="text-xs text-green-400 hover:text-green-300 underline transition-colors whitespace-nowrap"
                       >
                         Open in Spotify ↗
                       </a>
@@ -271,20 +271,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
               {/* Volume + Close */}
               <div className="flex items-center gap-3 shrink-0">
-                <button onClick={toggleMute} className="text-gray-400 hover:text-white transition-colors">
-                  {muted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                </button>
-                <input
-                  type="range" min={0} max={1} step={0.01} value={muted ? 0 : volume}
-                  onChange={changeVolume}
-                  style={{
-                    background: `linear-gradient(to right, #4ade80 ${(muted ? 0 : volume) * 100}%, rgba(255,255,255,0.15) ${(muted ? 0 : volume) * 100}%)`
-                  }}
-                  className="w-20 h-1 appearance-none rounded-full accent-green-400 cursor-pointer"
-                />
+                <div className="hidden sm:flex items-center gap-3">
+                  <button onClick={toggleMute} className="text-gray-400 hover:text-white transition-colors">
+                    {muted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                  </button>
+                  <input
+                    type="range" min={0} max={1} step={0.01} value={muted ? 0 : volume}
+                    onChange={changeVolume}
+                    style={{
+                      background: `linear-gradient(to right, #4ade80 ${(muted ? 0 : volume) * 100}%, rgba(255,255,255,0.15) ${(muted ? 0 : volume) * 100}%)`
+                    }}
+                    className="w-20 h-1 appearance-none rounded-full accent-green-400 cursor-pointer"
+                  />
+                </div>
                 <button
                   onClick={() => { audioRef.current?.pause(); setCurrentTrack(null); setIsPlaying(false); }}
-                  className="text-gray-400 hover:text-white transition-colors ml-2"
+                  className="text-gray-400 hover:text-white transition-colors ml-0 sm:ml-2"
                 >
                   <X size={18} />
                 </button>
