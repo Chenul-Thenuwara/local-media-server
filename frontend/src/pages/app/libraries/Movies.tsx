@@ -3,7 +3,6 @@ import api from '../../../lib/api';
 import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Film } from 'lucide-react';
-import { WhatToWatchNext } from '../../../components/media/WhatToWatchNext';
 
 export default function Movies() {
   const [movies, setMovies] = useState<MediaItem[]>([]);
@@ -73,9 +72,6 @@ export default function Movies() {
         <div className="space-y-12">
           {/* Recent Row */}
           <MediaRow title="Recently Added" items={movies.slice(0, 10)} />
-
-          {/* AI Suggestions */}
-          <WhatToWatchNext items={movies} type="movie" />
 
           {/* All Grid */}
           <div>
