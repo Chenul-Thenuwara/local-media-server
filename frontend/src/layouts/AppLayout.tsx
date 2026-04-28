@@ -22,7 +22,7 @@ export default function AppLayout() {
           >
             <PanelLeftClose size={24} className="rotate-180" />
           </button>
-          <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066] tracking-wide">Cineora</span>
+          <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500 tracking-wide">Cineora</span>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export default function AppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/80 z-40 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm"
           />
         )}
       </AnimatePresence>
@@ -61,7 +61,7 @@ export default function AppLayout() {
         // Better approach: Always render aside, but control position via variants based on screen size?
         // Actually, easiest is: Mobile = fixed drawer. Desktop = relative/absolute layout.
         className={cn(
-          "fixed inset-y-0 left-0 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-50 overflow-hidden transition-all duration-300",
+          "fixed inset-y-0 left-0 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-[70] overflow-hidden transition-all duration-300",
           "lg:translate-x-0", // Always visible on desktop (width controlled by animate)
           !sidebarOpen && "translate-x-[-100%] lg:translate-x-0"
           // On mobile: if !open, hide. On desktop: always show (collapsed or expanded)
@@ -74,7 +74,7 @@ export default function AppLayout() {
       >
         <div className={cn("flex items-center mb-8 p-6", sidebarOpen ? "justify-between" : "justify-center flex-col gap-6")}>
           <div className="flex items-center gap-3">
-            <motion.div layout className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-[#F37021]/20 shrink-0 flex items-center justify-center bg-[#3D2314]">
+            <motion.div layout className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-blue-500/20 shrink-0 flex items-center justify-center bg-transparent">
               <img src="/favicon.png" alt="Cineora Logo" className="w-full h-full object-cover scale-[1.15]" />
             </motion.div>
             <AnimatePresence>
@@ -83,7 +83,7 @@ export default function AppLayout() {
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
-                  className="font-bold text-xl tracking-wide whitespace-nowrap overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066]"
+                  className="font-bold text-xl tracking-wide whitespace-nowrap overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500"
                 >
                   Cineora
                 </motion.span>

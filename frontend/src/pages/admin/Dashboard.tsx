@@ -39,14 +39,14 @@ const AdminDashboard = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#F37021] to-[#F0B066] bg-clip-text text-transparent tracking-wide">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-apple-blue to-purple-500 bg-clip-text text-transparent tracking-wide">
             Cineora Admin
           </h1>
           <p className="text-gray-400 mt-1">System overview and management</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {stats?.localIp && (
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 text-sm text-blue-400">
               <Globe size={14} />

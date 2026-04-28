@@ -210,7 +210,7 @@ export default function AiChat() {
 
       {/* ── Page Header (matches Discover/Watchlist style) ── */}
       <div className="px-4 md:px-8 pt-8 pb-4 shrink-0">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gray-800 rounded-2xl flex items-center justify-center text-apple-blue shadow-lg">
               <MessageSquare size={24} />
@@ -410,7 +410,7 @@ export default function AiChat() {
             }
           </motion.button>
         </form>
-        <p className="text-center text-[11px] text-gray-600 mt-2.5">
+        <p className="hidden md:block text-center text-[11px] text-gray-600 mt-2.5">
           Press <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-500 text-[10px]">Enter</kbd> to send ·{' '}
           <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-500 text-[10px]">Shift+Enter</kbd> for new line
         </p>

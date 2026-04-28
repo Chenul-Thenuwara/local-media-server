@@ -274,7 +274,7 @@ function AlbumDetail({ album, onBack }: { album: SpotifyAlbum; onBack: () => voi
       </button>
 
       {/* Album Hero */}
-      <div className="flex gap-6 mb-8 items-end">
+      <div className="flex flex-col md:flex-row gap-6 mb-8 md:items-end">
         <div className="w-44 h-44 rounded-2xl overflow-hidden shadow-2xl shadow-black/60 shrink-0">
           <img src={album.images[0]?.url} alt={album.name} className="w-full h-full object-cover" />
         </div>
@@ -285,11 +285,11 @@ function AlbumDetail({ album, onBack }: { album: SpotifyAlbum; onBack: () => voi
             {album.artists.map(a => a.name).join(', ')} · {album.release_date?.slice(0, 4)}
             {album.total_tracks ? ` · ${album.total_tracks} tracks` : ''}
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <button
               onClick={() => albumTracks.length > 0 && playTrack(albumTracks[0], albumTracks)}
               disabled={albumTracks.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-green-400 text-black font-semibold text-sm hover:bg-green-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-green-500/30"
+              className="flex justify-center items-center gap-2 px-5 py-2.5 rounded-full bg-green-400 text-black font-semibold text-sm hover:bg-green-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 w-full sm:w-auto"
             >
               <Play size={16} fill="black" />
               Play All
@@ -299,7 +299,7 @@ function AlbumDetail({ album, onBack }: { album: SpotifyAlbum; onBack: () => voi
                 href={album.external_urls.spotify}
                 target="_blank"
                 rel="noreferrer"
-                className="px-5 py-2.5 rounded-full border border-white/20 text-white text-sm font-medium hover:bg-white/10 transition-colors"
+                className="flex justify-center px-5 py-2.5 rounded-full border border-white/20 text-white text-sm font-medium hover:bg-white/10 transition-colors w-full sm:w-auto text-center"
               >
                 Open in Spotify ↗
               </a>
