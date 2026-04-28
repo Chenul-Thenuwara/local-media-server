@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music2, X } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music2, X, ChevronDown } from 'lucide-react';
 import { useSpotifyAuth } from '../../hooks/useSpotifyAuth';
 import { useSpotifyPlayer } from '../../hooks/useSpotifyPlayer';
 
@@ -44,6 +44,7 @@ export function usePlayer() {
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [queue, setQueue] = useState<Track[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -193,17 +194,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     <PlayerContext.Provider value={{ currentTrack, queue, isPlaying, playTrack, togglePlay, next: handleNext, prev: handlePrev }}>
       {children}
       <AnimatePresence>
-        {currentTrack && (
+      <AnimatePresence>
+        {currentTrack && !isExpanded && (
           <motion.div
+            layoutId="player-container"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-t border-white/10 px-4 py-3"
+            className="fixed bottom-0 left-0 right-0 z-[80] bg-black/90 backdrop-blur-2xl border-t border-white/10 px-4 py-3 cursor-pointer group"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest('button, input, a')) return;
+              setIsExpanded(true);
+            }}
           >
             <div className="max-w-screen-xl mx-auto flex items-center gap-4">
               {/* Album Art */}
-              <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/10 shrink-0 shadow-lg">
+              <motion.div layoutId="player-art" className="w-12 h-12 rounded-lg overflow-hidden bg-white/10 shrink-0 shadow-lg relative">
                 {currentTrack.albumArt ? (
                   <img src={currentTrack.albumArt} alt={currentTrack.album} className="w-full h-full object-cover" />
                 ) : (
@@ -211,12 +218,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                     <Music2 size={20} className="text-gray-400" />
                   </div>
                 )}
-              </div>
+                {/* Hover expand icon */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 hidden md:flex items-center justify-center transition-opacity">
+                   <ChevronDown size={16} className="text-white rotate-180" />
+                </div>
+              </motion.div>
 
               {/* Track Info */}
-              <div className="w-24 sm:w-40 shrink-0">
-                <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
-                <p className="text-xs text-gray-400 truncate">{currentTrack.artist}</p>
+              <div className="w-32 sm:w-40 shrink-0">
+                <motion.p layoutId="player-title" className="text-sm font-semibold text-white truncate">{currentTrack.title}</motion.p>
+                <motion.p layoutId="player-artist" className="text-xs text-gray-400 truncate">{currentTrack.artist}</motion.p>
               </div>
 
               {/* Controls */}
@@ -246,14 +257,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                         onClick={togglePlay}
                         className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-black hover:scale-105 transition-transform"
                       >
-                        {isPlaying ? <Pause size={16} fill="black" /> : <Play size={16} fill="black" />}
+                        {isPlaying ? <Pause size={16} fill="black" /> : <Play size={16} fill="black" className="ml-0.5" />}
                       </button>
                       <button onClick={handleNext} className="text-gray-400 hover:text-white transition-colors">
                         <SkipForward size={18} />
                       </button>
                     </div>
                     {/* Seek Bar */}
-                    <div className="flex items-center gap-2 w-full max-w-md">
+                    <div className="hidden md:flex items-center gap-2 w-full max-w-md">
                       <span className="text-xs text-gray-500 w-8 text-right">{fmt(progress)}</span>
                       <input
                         type="range" min={0} max={duration || 1} step={0.1} value={progress}
@@ -291,6 +302,118 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                   <X size={18} />
                 </button>
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {currentTrack && isExpanded && (
+          <motion.div
+            layoutId="player-container"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl flex flex-col px-6 py-8 sm:p-12 overflow-y-auto"
+          >
+            {/* Top Bar */}
+            <div className="flex items-center justify-between mb-8 max-w-xl mx-auto w-full shrink-0">
+              <button onClick={() => setIsExpanded(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                <ChevronDown size={24} />
+              </button>
+              <div className="text-center">
+                <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-semibold">Now Playing</p>
+              </div>
+              <button onClick={() => { audioRef.current?.pause(); setCurrentTrack(null); setIsPlaying(false); setIsExpanded(false); }} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full gap-8 pb-10">
+              {/* Album Art */}
+              <motion.div layoutId="player-art" className="w-full aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white/5 shadow-2xl shadow-black">
+                {currentTrack.albumArt ? (
+                  <img src={currentTrack.albumArt} alt={currentTrack.album} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Music2 size={80} className="text-gray-600" />
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Track Info */}
+              <div className="text-center space-y-1">
+                <motion.p layoutId="player-title" className="text-2xl sm:text-3xl font-bold text-white truncate px-2">{currentTrack.title}</motion.p>
+                <motion.p layoutId="player-artist" className="text-base sm:text-lg text-gray-400 truncate px-2">{currentTrack.artist}</motion.p>
+                {currentTrack.album && <p className="text-sm text-gray-500 truncate mt-1 px-2">{currentTrack.album}</p>}
+              </div>
+
+              {/* Playback Controls */}
+              {!currentTrack.localPath && !currentTrack.previewUrl && !(currentTrack.spotifyUri && spotifyAuth.connected) ? (
+                <div className="flex justify-center mt-4">
+                  {currentTrack.spotifyUrl ? (
+                    <a
+                      href={currentTrack.spotifyUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-8 py-3 rounded-full bg-green-400 text-black font-bold hover:bg-green-300 transition-colors"
+                    >
+                      Open in Spotify
+                    </a>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No playback available</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-8 mt-4">
+                  {/* Seek Bar */}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="range" min={0} max={duration || 1} step={0.1} value={progress}
+                      onChange={seek}
+                      style={{
+                        background: `linear-gradient(to right, #4ade80 ${(progress / (duration || 1)) * 100}%, rgba(255,255,255,0.15) ${(progress / (duration || 1)) * 100}%)`
+                      }}
+                      className="w-full h-1.5 appearance-none rounded-full accent-green-400 cursor-pointer"
+                    />
+                    <div className="flex items-center justify-between text-xs text-gray-400 font-medium">
+                      <span>{fmt(progress)}</span>
+                      <span>{fmt(duration)}</span>
+                    </div>
+                  </div>
+
+                  {/* Player Controls */}
+                  <div className="flex items-center justify-center gap-8">
+                    <button onClick={handlePrev} className="text-white hover:text-green-400 transition-colors">
+                      <SkipBack size={36} fill="currentColor" />
+                    </button>
+                    <button
+                      onClick={togglePlay}
+                      className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-black hover:scale-105 transition-transform shadow-lg shadow-white/10"
+                    >
+                      {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" className="ml-2" />}
+                    </button>
+                    <button onClick={handleNext} className="text-white hover:text-green-400 transition-colors">
+                      <SkipForward size={36} fill="currentColor" />
+                    </button>
+                  </div>
+
+                  {/* Volume Slider */}
+                  <div className="flex items-center gap-4 px-4 hidden sm:flex">
+                    <button onClick={toggleMute} className="text-gray-400 hover:text-white transition-colors shrink-0">
+                      {muted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
+                    <input
+                      type="range" min={0} max={1} step={0.01} value={muted ? 0 : volume}
+                      onChange={changeVolume}
+                      style={{
+                        background: `linear-gradient(to right, #4ade80 ${(muted ? 0 : volume) * 100}%, rgba(255,255,255,0.15) ${(muted ? 0 : volume) * 100}%)`
+                      }}
+                      className="flex-1 h-1.5 appearance-none rounded-full accent-green-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
