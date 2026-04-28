@@ -14,8 +14,9 @@ export const getSystemStats = async (req: Request, res: Response) => {
       $or: [{ _id: currentUserId }, { managedBy: currentUserId }]
     });
 
-    // Only look at THIS user's libraries
-    const libraries = await Library.find({ userId: currentUserId }, 'name type createdAt');
+    // Only look at THIS user's libraries on THIS device (same filter as libraryController)
+    const deviceQuery = process.env.DEVICE_ID ? { deviceId: process.env.DEVICE_ID } : {};
+    const libraries = await Library.find({ userId: currentUserId, ...deviceQuery }, 'name type createdAt');
     const libraryIds = libraries.map(lib => lib._id);
     const libraryCount = libraries.length;
 

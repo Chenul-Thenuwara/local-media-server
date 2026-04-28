@@ -113,5 +113,77 @@ router.get('/new-releases', async (req, res) => {
   }
 });
 
+// Get top charting tracks (via search for trending music)
+router.get('/top-tracks', async (req, res) => {
+  try {
+    let token = await getSpotifyToken();
+    const year = new Date().getFullYear();
+    const params = { q: `year:${year} tag:hipster`, type: 'track', limit: 20, market: 'US' };
+    let response;
+    try {
+      response = await axios.get('https://api.spotify.com/v1/search', {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
+    } catch (innerErr: any) {
+      const status = innerErr?.response?.status;
+      if (status === 400 || status === 401) {
+        invalidateToken();
+        token = await getSpotifyToken();
+        response = await axios.get('https://api.spotify.com/v1/search', {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
+        });
+      } else throw innerErr;
+    }
+
+    // Also fetch popular tracks via genre search
+    let popularResponse;
+    try {
+      popularResponse = await axios.get('https://api.spotify.com/v1/search', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { q: 'genre:pop', type: 'track', limit: 20, market: 'US' },
+      });
+    } catch (e) {
+      popularResponse = response;
+    }
+
+    const tracks = popularResponse?.data?.tracks?.items || response?.data?.tracks?.items || [];
+    res.json({ tracks });
+  } catch (error: any) {
+    console.error('Spotify top-tracks error:', error?.response?.data || error?.message);
+    res.status(500).json({ error: 'Failed to fetch top tracks' });
+  }
+});
+
+// Get new release albums (enriched)
+router.get('/new-release-albums', async (req, res) => {
+  try {
+    let token = await getSpotifyToken();
+    const year = new Date().getFullYear();
+    let response;
+    try {
+      response = await axios.get('https://api.spotify.com/v1/search', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { q: `year:${year}`, type: 'album', limit: 15, market: 'US' },
+      });
+    } catch (innerErr: any) {
+      const status = innerErr?.response?.status;
+      if (status === 400 || status === 401) {
+        invalidateToken();
+        token = await getSpotifyToken();
+        response = await axios.get('https://api.spotify.com/v1/search', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { q: `year:${year}`, type: 'album', limit: 15, market: 'US' },
+        });
+      } else throw innerErr;
+    }
+    const albums = response?.data?.albums?.items || [];
+    res.json({ albums });
+  } catch (error: any) {
+    console.error('Spotify new-release-albums error:', error?.response?.data || error?.message);
+    res.status(500).json({ error: 'Failed to fetch new release albums' });
+  }
+});
 
 export default router;

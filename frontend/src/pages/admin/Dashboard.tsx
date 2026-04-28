@@ -41,8 +41,8 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-            Admin Dashboard
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#F37021] to-[#F0B066] bg-clip-text text-transparent tracking-wide">
+            Cineora Admin
           </h1>
           <p className="text-gray-400 mt-1">System overview and management</p>
         </div>

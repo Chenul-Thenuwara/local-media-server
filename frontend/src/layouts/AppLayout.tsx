@@ -22,7 +22,7 @@ export default function AppLayout() {
           >
             <PanelLeftClose size={24} className="rotate-180" />
           </button>
-          <span className="font-semibold text-lg">LMS</span>
+          <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066] tracking-wide">Cineora</span>
         </div>
       </div>
 
@@ -74,11 +74,8 @@ export default function AppLayout() {
       >
         <div className={cn("flex items-center mb-8 p-6", sidebarOpen ? "justify-between" : "justify-center flex-col gap-6")}>
           <div className="flex items-center gap-3">
-            <motion.div
-              layout
-              className="w-8 h-8 bg-apple-blue rounded-lg text-white flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0"
-            >
-              <Play size={16} fill="currentColor" />
+            <motion.div layout className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-[#F37021]/20 shrink-0 flex items-center justify-center bg-[#3D2314]">
+              <img src="/favicon.png" alt="Cineora Logo" className="w-full h-full object-cover scale-[1.15]" />
             </motion.div>
             <AnimatePresence>
               {sidebarOpen && (
@@ -86,9 +83,9 @@ export default function AppLayout() {
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
-                  className="font-semibold text-xl tracking-tight whitespace-nowrap overflow-hidden"
+                  className="font-bold text-xl tracking-wide whitespace-nowrap overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066]"
                 >
-                  LMS
+                  Cineora
                 </motion.span>
               )}
             </AnimatePresence>

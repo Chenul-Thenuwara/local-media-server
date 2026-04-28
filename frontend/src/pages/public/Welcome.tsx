@@ -15,10 +15,10 @@ export default function Welcome() {
       <nav className="fixed top-0 z-50 w-full bg-black/50 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold tracking-tight text-lg">
-            <div className="w-8 h-8 bg-apple-blue rounded-lg text-white flex items-center justify-center">
-              <Play size={16} fill="currentColor" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-[#F37021]/20 flex items-center justify-center shrink-0">
+              <img src="/favicon.png" alt="Cineora Logo" className="w-full h-full object-cover scale-[1.15]" />
             </div>
-            <span>LMS</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066] font-bold text-xl tracking-wide">Cineora</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login">
@@ -41,7 +41,7 @@ export default function Welcome() {
             className="text-4xl md:text-7xl font-bold tracking-tight mb-6"
           >
             Your Media. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F37021] to-[#F0B066]">
               Unleashed.
             </span>
           </motion.h1>
@@ -63,7 +63,7 @@ export default function Welcome() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link to="/signup">
-              <Button size="lg" className="w-full sm:w-auto shadow-xl shadow-blue-500/20 bg-apple-blue hover:bg-blue-600 border-none">
+              <Button size="lg" className="w-full sm:w-auto shadow-xl shadow-[#F37021]/20 bg-[#F37021] hover:bg-[#D9601A] text-white border-none tracking-wide">
                 Start Watching Now
               </Button>
             </Link>
