@@ -194,7 +194,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     <PlayerContext.Provider value={{ currentTrack, queue, isPlaying, playTrack, togglePlay, next: handleNext, prev: handlePrev }}>
       {children}
       <AnimatePresence>
-      <AnimatePresence>
         {currentTrack && !isExpanded && (
           <motion.div
             layoutId="player-container"
