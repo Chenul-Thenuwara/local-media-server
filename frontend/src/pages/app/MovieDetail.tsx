@@ -61,6 +61,7 @@ interface MediaDetail {
 import VideoPlayer from '../../components/player/VideoPlayer';
 import { CastCarousel } from '../../components/media/CastCarousel';
 import { SeasonView } from '../../components/media/SeasonView';
+import { GeminiMovieSuggestions } from '../../components/media/GeminiMovieSuggestions';
 
 export default function MovieDetail() {
   const { id, type } = useParams<{ id: string; type?: string }>();
@@ -316,6 +317,15 @@ export default function MovieDetail() {
         <div className="mt-12">
           <CastCarousel cast={cast} />
         </div>
+
+        {/* AI Movie Suggestions */}
+        {media.title && (
+          <GeminiMovieSuggestions
+            movieTitle={media.title}
+            overview={media.overview}
+            mediaType={resolvedType as 'movie' | 'tv'}
+          />
+        )}
 
         {/* Director Section */}
         {media.credits?.crew && media.credits.crew.filter(c => c.job === 'Director').length > 0 && (
