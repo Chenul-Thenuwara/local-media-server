@@ -6,6 +6,7 @@ import { usePlayer, type Track } from '../../../components/music/MiniPlayer';
 import { cn } from '../../../lib/utils';
 import { useSpotifyAuth } from '../../../hooks/useSpotifyAuth';
 import { useSpotifyPlayer } from '../../../hooks/useSpotifyPlayer';
+import { WhatToWatchNext } from '../../../components/media/WhatToWatchNext';
 
 interface SpotifyTrack {
   id: string;
@@ -132,103 +133,114 @@ function LocalMusicTab() {
   );
 
   return (
-    <div>
-      {/* Search + Play All row */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input
-            type="text"
-            value={localQuery}
-            onChange={e => setLocalQuery(e.target.value)}
-            placeholder="Filter by title, artist, album..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-400/40 transition-all"
-          />
-          {localQuery && (
-            <button
-              onClick={() => setLocalQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+    <div className="space-y-8">
+      {/* AI Suggestions */}
+      <WhatToWatchNext items={tracks} type="music" />
+
+      <div>
+        {/* Search + Play All row */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              type="text"
+              value={localQuery}
+              onChange={e => setLocalQuery(e.target.value)}
+              placeholder="Filter by title, artist, album..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-400/40 transition-all"
+            />
+            {localQuery && (
+              <button
+                onClick={() => setLocalQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <button
+              onClick={() => setRefreshKey(k => k + 1)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-400 hover:text-white transition-all w-full sm:w-auto"
             >
-              <X size={13} />
+              <RefreshCw size={14} />Refresh
             </button>
-          )}
+          <p className="text-gray-500 text-xs shrink-0">
+            {filtered.length}{localQuery ? ` of ${tracks.length}` : ''} track{filtered.length !== 1 ? 's' : ''}
+          </p>
+          <button
+            onClick={() => filteredPlayerTracks.length > 0 && playTrack(filteredPlayerTracks[0], filteredPlayerTracks)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-400 text-black text-sm font-semibold hover:bg-green-300 transition-colors shadow-lg shadow-green-500/20 shrink-0"
+          >
+            <Play size={14} fill="black" /> Play All
+          </button>
         </div>
-        <p className="text-gray-500 text-xs shrink-0">
-          {filtered.length}{localQuery ? ` of ${tracks.length}` : ''} track{filtered.length !== 1 ? 's' : ''}
-        </p>
-        <button
-          onClick={() => filteredPlayerTracks.length > 0 && playTrack(filteredPlayerTracks[0], filteredPlayerTracks)}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-400 text-black text-sm font-semibold hover:bg-green-300 transition-colors shadow-lg shadow-green-500/20 shrink-0"
-        >
-          <Play size={14} fill="black" /> Play All
-        </button>
-      </div>
 
-      {/* Header row */}
-      <div className="flex items-center gap-4 px-4 pb-2 border-b border-white/10 text-xs text-gray-500 uppercase tracking-wider mb-1">
-        <span className="w-8 text-center shrink-0">#</span>
-        <span className="w-10 shrink-0" />{/* album art spacer */}
-        <span className="flex-1">Title</span>
-        <Clock size={14} className="shrink-0" />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">
-          <Search size={32} className="mx-auto mb-3 opacity-30" />
-          <p>No tracks match &ldquo;{localQuery}&rdquo;</p>
+        {/* Header row */}
+        <div className="flex items-center gap-4 px-4 pb-2 border-b border-white/10 text-xs text-gray-500 uppercase tracking-wider mb-1">
+          <span className="w-8 text-center shrink-0">#</span>
+          <span className="w-10 shrink-0" />{/* album art spacer */}
+          <span className="flex-1">Title</span>
+          <Clock size={14} className="shrink-0" />
         </div>
-      ) : (
-      <div className="space-y-0.5 mt-1">
-        {filtered.map((track, i) => {
-          const pt = toLocalTrack(track);
-          const isActive = currentTrack?.id === track._id;
-          return (
-            <motion.div
-              key={track._id}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.02 }}
-              onClick={() => isActive ? togglePlay() : playTrack(pt, filteredPlayerTracks)}
-              className={`flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer group transition-all ${
-                isActive ? 'bg-white/10' : 'hover:bg-white/5'
-              }`}
-            >
-              <div className="w-8 text-center shrink-0">
-                {isActive ? (
-                  <div className="text-green-400">
-                    {isPlaying
-                      ? <Disc3 size={16} className="animate-spin mx-auto" />
-                      : <Play size={16} fill="currentColor" className="mx-auto" />}
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-gray-500 text-sm group-hover:hidden">{i + 1}</span>
-                    <Play size={14} className="text-white hidden group-hover:block mx-auto" fill="white" />
-                  </>
-                )}
-              </div>
 
-              {track.spotifyAlbumArt ? (
-                <img src={track.spotifyAlbumArt} alt={track.album || ''} className="w-10 h-10 rounded-md object-cover shrink-0" />
-              ) : (
-                <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center shrink-0">
-                  <Music2 size={16} className="text-gray-500" />
+        {filtered.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">
+            <Search size={32} className="mx-auto mb-3 opacity-30" />
+            <p>No tracks match &ldquo;{localQuery}&rdquo;</p>
+          </div>
+        ) : (
+        <div className="space-y-0.5 mt-1">
+          {filtered.map((track, i) => {
+            const pt = toLocalTrack(track);
+            const isActive = currentTrack?.id === track._id;
+            return (
+              <motion.div
+                key={track._id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.02 }}
+                onClick={() => isActive ? togglePlay() : playTrack(pt, filteredPlayerTracks)}
+                className={`flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer group transition-all ${
+                  isActive ? 'bg-white/10' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-8 text-center shrink-0">
+                  {isActive ? (
+                    <div className="text-green-400">
+                      {isPlaying
+                        ? <Disc3 size={16} className="animate-spin mx-auto" />
+                        : <Play size={16} fill="currentColor" className="mx-auto" />}
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-gray-500 text-sm group-hover:hidden">{i + 1}</span>
+                      <Play size={14} className="text-white hidden group-hover:block mx-auto" fill="white" />
+                    </>
+                  )}
                 </div>
-              )}
 
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium truncate ${isActive ? 'text-green-400' : 'text-white'}`}>{track.title}</p>
-                <p className="text-xs text-gray-400 truncate">{track.artist || 'Unknown Artist'}{track.album ? ` · ${track.album}` : ''}</p>
-              </div>
+                {track.spotifyAlbumArt ? (
+                  <img src={track.spotifyAlbumArt} alt={track.album || ''} className="w-10 h-10 rounded-md object-cover shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center shrink-0">
+                    <Music2 size={16} className="text-gray-500" />
+                  </div>
+                )}
 
-              <p className="text-sm text-gray-500 shrink-0">
-                {track.durationMs ? msToTime(track.durationMs) : '--:--'}
-              </p>
-            </motion.div>
-          );
-        })}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium truncate ${isActive ? 'text-green-400' : 'text-white'}`}>{track.title}</p>
+                  <p className="text-xs text-gray-400 truncate">{track.artist || 'Unknown Artist'}{track.album ? ` · ${track.album}` : ''}</p>
+                </div>
+
+                <p className="text-sm text-gray-500 shrink-0">
+                  {track.durationMs ? msToTime(track.durationMs) : '--:--'}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+        )}
       </div>
-      )}
     </div>
   );
 }

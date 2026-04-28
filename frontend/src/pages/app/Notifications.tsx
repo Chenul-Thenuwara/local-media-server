@@ -329,7 +329,7 @@ export default function Notifications() {
           <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         <div className="relative px-6 pt-8 pb-6 md:px-10 md:pt-10">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20">
                 <Bell size={20} fill="currentColor" />
@@ -341,9 +341,9 @@ export default function Notifications() {
             </div>
             <button
               onClick={() => setRefreshKey(k => k + 1)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-400 hover:text-white transition-all"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-400 hover:text-white transition-all w-full sm:w-auto"
             >
-              <RefreshCw size={14} /><span className="hidden sm:inline">Refresh</span>
+              <RefreshCw size={14} />Refresh
             </button>
           </div>
 

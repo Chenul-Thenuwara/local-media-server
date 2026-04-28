@@ -4,6 +4,7 @@ import api from '../../../lib/api';
 import { MediaCard, type MediaItem } from '../../../components/media/MediaCard';
 import { MediaRow } from '../../../components/media/MediaRow';
 import { Tv } from 'lucide-react';
+import { WhatToWatchNext } from '../../../components/media/WhatToWatchNext';
 
 // Extend MediaItem with episode count
 interface MediaItemWithCount extends MediaItem {
@@ -98,6 +99,9 @@ export default function TVShows() {
         <div className="space-y-12">
           {/* Recent Row */}
           <MediaRow title="Recently Added" items={shows.slice(0, 10)} />
+
+          {/* AI Suggestions */}
+          <WhatToWatchNext items={shows} type="tv" />
 
           {/* All Grid */}
           <div>
