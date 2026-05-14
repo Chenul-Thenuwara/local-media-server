@@ -149,3 +149,38 @@ export const getMediaById = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ message: 'Error fetching media details' });
   }
 };
+
+// Get ALL episodes for a specific TV show by tmdbId (no deduplication)
+export const getEpisodesByTmdbId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tmdbId } = req.params;
+    // @ts-ignore
+    const userId = req.user.id;
+
+    let libQuery: any = { userId };
+    if (process.env.DEVICE_ID) {
+      libQuery.deviceId = process.env.DEVICE_ID;
+    }
+
+    const libraries = await Library.find(libQuery);
+    const libraryIds = libraries.map(lib => lib._id);
+
+    if (libraryIds.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Return ALL episode records — no grouping
+    const episodes = await Media.find({
+      libraryId: { $in: libraryIds },
+      type: 'tv',
+      tmdbId: Number(tmdbId),
+    }).sort({ seasonNumber: 1, episodeNumber: 1, filename: 1 });
+
+    res.json(episodes);
+  } catch (error) {
+    console.error('getEpisodesByTmdbId Error:', error);
+    res.status(500).json({ message: 'Error fetching episodes' });
+  }
+};
+

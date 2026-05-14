@@ -9,6 +9,24 @@ import api from '../../lib/api';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+interface TmdbRaw {
+  id?: number;
+  tmdbId?: number;
+  _id?: string;
+  title?: string;
+  name?: string;
+  overview?: string;
+  posterPath?: string;
+  poster_path?: string;
+  backdropPath?: string;
+  backdrop_path?: string;
+  releaseDate?: string;
+  release_date?: string;
+  first_air_date?: string;
+  rating?: number;
+  vote_average?: number;
+}
+
 interface MediaItem {
   id: number;
   title: string;
@@ -258,7 +276,7 @@ export default function Notifications() {
   const [activeTab, setActiveTab] = useState<'movies' | 'music'>('movies');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const mapTmdb = (item: any, type: 'movie' | 'tv'): MediaItem => ({
+  const mapTmdb = (item: TmdbRaw, type: 'movie' | 'tv'): MediaItem => ({
     id: item.id || item.tmdbId || item._id,
     title: item.title || item.name || '',
     overview: item.overview || '',
@@ -278,7 +296,7 @@ export default function Notifications() {
     // Trending Movies (existing endpoint)
     api.get('/tmdb/trending?page=1').then(res => {
       const results = res.data.results || [];
-      setTrendingMovies(results.slice(0, 12).map((i: any) => mapTmdb(i, 'movie')));
+      setTrendingMovies(results.slice(0, 12).map((i: TmdbRaw) => mapTmdb(i, 'movie')));
     }).catch(() => setMoviesError(true)).finally(() => setMoviesLoading(false));
 
     // Trending TV + Top Rated Movies (use discover/search existing endpoint)
@@ -287,16 +305,16 @@ export default function Notifications() {
       api.get('/tmdb/search?type=movie&orderBy=Top+Rated&page=1'),
     ]).then(([tvRes, topratedRes]) => {
       if (tvRes.status === 'fulfilled') {
-        setTrendingTV((tvRes.value.data || []).slice(0, 12).map((i: any) => mapTmdb(i, 'tv')));
+        setTrendingTV((tvRes.value.data || []).slice(0, 12).map((i: TmdbRaw) => mapTmdb(i, 'tv')));
       } else setTvError(true);
       if (topratedRes.status === 'fulfilled') {
-        setTopRatedMovies((topratedRes.value.data || []).slice(0, 8).map((i: any) => mapTmdb(i, 'movie')));
+        setTopRatedMovies((topratedRes.value.data || []).slice(0, 8).map((i: TmdbRaw) => mapTmdb(i, 'movie')));
       }
     }).finally(() => setTvLoading(false));
 
     // Top Rated TV
     api.get('/tmdb/search?type=tv&orderBy=Latest&page=1').then(res => {
-      setTopRatedTV((res.data || []).slice(0, 8).map((i: any) => mapTmdb(i, 'tv')));
+      setTopRatedTV((res.data || []).slice(0, 8).map((i: TmdbRaw) => mapTmdb(i, 'tv')));
     }).catch(() => {});
 
     // Spotify Albums (existing /spotify/new-releases)
@@ -312,7 +330,10 @@ export default function Notifications() {
     }).catch(() => {}).finally(() => setTracksLoading(false));
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const tabs = [
     { id: 'movies' as const, label: 'Movies & TV', icon: Film },

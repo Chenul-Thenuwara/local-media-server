@@ -120,9 +120,9 @@ export default function Welcome() {
           transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
           <h1 className="text-[clamp(3rem,12vw,10rem)] font-black leading-[0.9] tracking-[-0.04em] mb-0 mt-4 md:mt-0">
-            <span className="block text-white mix-blend-difference">PRIVATE</span>
+            <span className="block text-white mix-blend-difference">Your Media</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-purple-400 to-blue-600">
-              CINEMA
+              Unleashed
             </span>
           </h1>
         </motion.div>
@@ -134,7 +134,7 @@ export default function Welcome() {
           transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="mt-6 md:mt-8 text-white/50 text-base md:text-lg max-w-lg leading-relaxed tracking-wide px-4"
         >
-          Stream your entire collection — movies, shows, music and photos — from your own server.
+          Stream your entire collection  movies, shows, music and photos  from your own server.
           No subscriptions. No tracking.
         </motion.p>
 

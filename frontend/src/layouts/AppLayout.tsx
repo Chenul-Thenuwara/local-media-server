@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
   Film, Tv, Music, Image,
-  Shield, User, LogOut, Play, PanelLeftClose, History, Users, MessageSquare, type LucideIcon
+  Shield, User, LogOut, PanelLeftClose, History, Users, MessageSquare, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 

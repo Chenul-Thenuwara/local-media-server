@@ -33,9 +33,10 @@ export function LocalPhotoGrid() {
       const res = await api.get('/media?type=photo');
       if (Array.isArray(res.data)) setPhotos(res.data);
       setErrorMsg('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch local photos', err);
-      setErrorMsg(err.response?.data?.error || err.message || 'Failed to load local photos');
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
+      setErrorMsg(e.response?.data?.error || e.message || 'Failed to load local photos');
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ export function LocalPhotoGrid() {
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) { diff > 0 ? nextPhoto() : prevPhoto(); }
+    if (Math.abs(diff) > 50) { if (diff > 0) { nextPhoto(); } else { prevPhoto(); } }
     touchStartX.current = null;
   };
 

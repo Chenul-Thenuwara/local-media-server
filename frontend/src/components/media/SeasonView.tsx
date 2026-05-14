@@ -27,6 +27,8 @@ interface LocalEpisode {
   _id: string;
   filename: string;
   title?: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
   mediaInfo?: { resolution?: string; isHdr?: boolean; audioCodec?: string };
 }
 
@@ -78,10 +80,19 @@ export function SeasonView({ tmdbId, seasons, localEpisodes = [], onSeasonSelect
   }, [tmdbId, selectedSeason]);
 
   // Map local files by season+episode for O(1) lookup
+  // Prefer DB-stored season/episode numbers; fall back to filename parsing
   const localMap = new Map<string, LocalEpisode>();
   for (const ep of localEpisodes) {
-    const code = parseEpisodeCode(ep.filename);
-    if (code) localMap.set(`${code.season}-${code.episode}`, ep);
+    let season: number | undefined = ep.seasonNumber;
+    let episode: number | undefined = ep.episodeNumber;
+    // Fallback: parse from filename if DB fields missing
+    if (season === undefined || episode === undefined) {
+      const code = parseEpisodeCode(ep.filename);
+      if (code) { season = code.season; episode = code.episode; }
+    }
+    if (season !== undefined && episode !== undefined) {
+      localMap.set(`${season}-${episode}`, ep);
+    }
   }
 
   return (
