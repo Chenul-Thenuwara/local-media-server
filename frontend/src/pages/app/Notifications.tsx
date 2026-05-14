@@ -28,7 +28,7 @@ interface TmdbRaw {
 }
 
 interface MediaItem {
-  id: number;
+  id: number | string;
   title: string;
   overview: string;
   posterPath: string;
@@ -277,7 +277,7 @@ export default function Notifications() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const mapTmdb = (item: TmdbRaw, type: 'movie' | 'tv'): MediaItem => ({
-    id: item.id || item.tmdbId || item._id,
+    id: item.id ?? item.tmdbId ?? item._id ?? 0,
     title: item.title || item.name || '',
     overview: item.overview || '',
     posterPath: item.posterPath || item.poster_path || '',
