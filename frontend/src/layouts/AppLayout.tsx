@@ -11,6 +11,14 @@ import { cn } from '../lib/utils';
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
+  let user: Record<string, unknown> | null = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    // ignore parse error
+  }
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative flex">
       {/* Mobile Top Bar */}
@@ -148,22 +156,24 @@ export default function AppLayout() {
             <NavItem to="/libraries/photos" icon={Image} collapsed={!sidebarOpen}>Photos</NavItem>
           </div>
 
-          <div className="space-y-1">
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 whitespace-nowrap"
-                >
-                  System
-                </motion.p>
-              )}
-            </AnimatePresence>
-            <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>Admin Panel</NavItem>
-            <NavItem to="/notifications" icon={Bell} collapsed={!sidebarOpen}>Notifications</NavItem>
-          </div>
+          {isAdmin && (
+            <div className="space-y-1">
+              <AnimatePresence>
+                {sidebarOpen && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 whitespace-nowrap"
+                  >
+                    System
+                  </motion.p>
+                )}
+              </AnimatePresence>
+              <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>Admin Panel</NavItem>
+              <NavItem to="/notifications" icon={Bell} collapsed={!sidebarOpen}>Notifications</NavItem>
+            </div>
+          )}
         </nav>
 
         <div className="p-4 mt-2 border-t border-white/10 space-y-2">

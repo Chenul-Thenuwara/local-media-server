@@ -5,6 +5,7 @@ import Login from './pages/public/Login';
 import Signup from './pages/public/Signup';
 import ForgotPassword from './pages/public/ForgotPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AdminRoute from './components/auth/AdminRoute';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/app/Home';
 import MovieDetail from './pages/app/MovieDetail';
@@ -79,13 +80,15 @@ function App() {
             <Route path="/libraries/photos" element={<Photos />} />
 
             {/* Admin */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/libraries" element={<AdminLibraries />} />
-            <Route path="/admin/tools" element={<MediaTools />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/settings" element={<ServerSettings />} />
-            <Route path="/admin/logs" element={<ServerLogs />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/libraries" element={<AdminLibraries />} />
+              <Route path="/admin/tools" element={<MediaTools />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/settings" element={<ServerSettings />} />
+              <Route path="/admin/logs" element={<ServerLogs />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

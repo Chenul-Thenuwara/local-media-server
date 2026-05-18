@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, Shield, Check, AlertCircle } from 'lucide-react';
+import { X, User, Lock, Shield, Check, AlertCircle, Users } from 'lucide-react';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ interface AddUserModalProps {
 const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
+  const [role, setRole] = useState('viewer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -21,6 +22,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
     if (isOpen) {
       setName('');
       setPin('');
+      setRole('viewer');
       setError('');
       setSuccess(false);
     }
@@ -44,6 +46,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
       await onSubmit({
         name: name.trim(),
         pin: pin || undefined,
+        role,
         managed: true,
       });
       setSuccess(true);
@@ -160,6 +163,24 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }: AddUserModalProps) => {
               <p className="text-[11px] text-gray-600 ml-1">
                 If set, this PIN will be required when switching to this profile.
               </p>
+            </div>
+
+            {/* Role Field */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 tracking-wide">
+                Role <span className="text-apple-blue">*</span>
+              </label>
+              <div className="relative">
+                <Users size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <select
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                  className="w-full bg-gray-800/60 border border-white/10 hover:border-white/20 focus:border-apple-blue/60 focus:ring-1 focus:ring-apple-blue/20 rounded-2xl py-3 pl-10 pr-4 text-sm text-white appearance-none focus:outline-none transition-all"
+                >
+                  <option value="viewer">Viewer (Default)</option>
+                  <option value="guest">Guest</option>
+                </select>
+              </div>
             </div>
 
             {/* Divider */}

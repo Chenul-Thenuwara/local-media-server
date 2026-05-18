@@ -8,6 +8,7 @@ const router = Router();
 
 // Protect all admin routes
 router.use(protect);
+router.use(admin);
 
 router.get('/stats', getSystemStats);
 router.get('/users', getUsers);

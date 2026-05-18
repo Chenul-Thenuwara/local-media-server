@@ -137,7 +137,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, managed, pin, permissions } = req.body;
+    const { name, email, password, managed, pin, permissions, role } = req.body;
 
     // Check if user exists (only if email is provided)
     if (email) {
@@ -148,15 +148,20 @@ export const createUser = async (req: Request, res: Response) => {
       }
     }
 
-    const newUser = new User({
+    const userData: any = {
       name,
-      email: email || undefined,
       password,
       managedBy: managed ? (req as any).user._id : undefined,
-      pin: managed ? pin : undefined,
-      role: 'viewer', // All new users created here should be viewers by default
+      pin: managed && pin ? pin : undefined,
+      role: role || 'viewer', // Use provided role or default to viewer
       permissions: managed ? permissions : undefined
-    });
+    };
+
+    if (email) {
+      userData.email = email;
+    }
+
+    const newUser = new User(userData);
 
     await newUser.save();
 
@@ -170,9 +175,9 @@ export const createUser = async (req: Request, res: Response) => {
         managedBy: newUser.managedBy
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create User Error:', error);
-    res.status(500).json({ message: 'Error creating user', error });
+    res.status(500).json({ message: 'Error creating user: ' + (error.message || error) });
   }
 };
 

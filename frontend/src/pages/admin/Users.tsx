@@ -157,7 +157,7 @@ const UserCard = ({
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isManaged = !!user.managedBy;
-  const roleStyle = getRoleStyle(isManaged ? 'guest' : user.role);
+  const roleStyle = getRoleStyle(user.role);
 
   // Close on outside click
   useEffect(() => {
@@ -220,7 +220,7 @@ const UserCard = ({
       <div className="relative z-10 w-full flex-1 flex flex-col items-center">
         <h3 className="text-base font-bold text-white truncate w-full px-2">{user.name}</h3>
         <p className="text-xs text-gray-500 truncate w-full px-2 mb-3">
-          {user.email || 'Managed Profile'}
+          {isManaged ? 'Managed Profile' : (user.email || 'Managed Profile')}
         </p>
 
         {/* Role Badge — clickable unless managed or self */}
@@ -235,7 +235,7 @@ const UserCard = ({
               (isManaged || isSelf) && 'cursor-default opacity-80'
             )}
           >
-            {isManaged ? 'Managed' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             {!isManaged && !isSelf && <ChevronDown size={11} className={cn('transition-transform', showRoleMenu && 'rotate-180')} />}
           </button>
 
