@@ -33,7 +33,7 @@ export interface IUser extends Document {
 
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
-  email: { type: String, unique: true, sparse: true }, // Sparse allows multiple nulls
+  email: { type: String }, // Uniqueness handled in controllers to allow managed users without emails
   password: { type: String }, // Optional for managed users
   pin: { type: String }, // Hashed PIN for managed users
   role: { type: String, enum: ['admin', 'viewer', 'guest'], default: 'viewer' },

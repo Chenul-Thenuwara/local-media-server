@@ -4,12 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, Search, Bookmark, Bell,
   Film, Tv, Music, Image,
-  Shield, User, LogOut, Play, PanelLeftClose, History, Users, type LucideIcon
+  Shield, User, LogOut, PanelLeftClose, History, Users, MessageSquare, type LucideIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
+
+  let user: Record<string, unknown> | null = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    // ignore parse error
+  }
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="h-screen bg-[#000] text-white font-sans selection:bg-apple-blue selection:text-white overflow-hidden relative flex">
@@ -22,7 +30,7 @@ export default function AppLayout() {
           >
             <PanelLeftClose size={24} className="rotate-180" />
           </button>
-          <span className="font-semibold text-lg">LMS</span>
+          <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500 tracking-wide">Cineora</span>
         </div>
       </div>
 
@@ -34,7 +42,7 @@ export default function AppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/80 z-40 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm"
           />
         )}
       </AnimatePresence>
@@ -61,7 +69,7 @@ export default function AppLayout() {
         // Better approach: Always render aside, but control position via variants based on screen size?
         // Actually, easiest is: Mobile = fixed drawer. Desktop = relative/absolute layout.
         className={cn(
-          "fixed inset-y-0 left-0 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-50 overflow-hidden transition-all duration-300",
+          "fixed inset-y-0 left-0 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col z-[70] overflow-hidden transition-all duration-300",
           "lg:translate-x-0", // Always visible on desktop (width controlled by animate)
           !sidebarOpen && "translate-x-[-100%] lg:translate-x-0"
           // On mobile: if !open, hide. On desktop: always show (collapsed or expanded)
@@ -74,11 +82,8 @@ export default function AppLayout() {
       >
         <div className={cn("flex items-center mb-8 p-6", sidebarOpen ? "justify-between" : "justify-center flex-col gap-6")}>
           <div className="flex items-center gap-3">
-            <motion.div
-              layout
-              className="w-8 h-8 bg-apple-blue rounded-lg text-white flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0"
-            >
-              <Play size={16} fill="currentColor" />
+            <motion.div layout className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-blue-500/20 shrink-0 flex items-center justify-center bg-transparent">
+              <img src="/favicon.png" alt="Cineora Logo" className="w-full h-full object-cover scale-[1.15]" />
             </motion.div>
             <AnimatePresence>
               {sidebarOpen && (
@@ -86,9 +91,9 @@ export default function AppLayout() {
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
-                  className="font-semibold text-xl tracking-tight whitespace-nowrap overflow-hidden"
+                  className="font-bold text-xl tracking-wide whitespace-nowrap overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-apple-blue to-purple-500"
                 >
-                  LMS
+                  Cineora
                 </motion.span>
               )}
             </AnimatePresence>
@@ -129,6 +134,7 @@ export default function AppLayout() {
             <NavItem to="/search" icon={Search} collapsed={!sidebarOpen}>Search</NavItem>
             <NavItem to="/watchlist" icon={Bookmark} collapsed={!sidebarOpen}>Watchlist</NavItem>
             <NavItem to="/history" icon={History} collapsed={!sidebarOpen}>History</NavItem>
+            <NavItem to="/ai-chat" icon={MessageSquare} collapsed={!sidebarOpen}>AI Chat</NavItem>
           </div>
 
           <div className="space-y-1">
@@ -150,22 +156,24 @@ export default function AppLayout() {
             <NavItem to="/libraries/photos" icon={Image} collapsed={!sidebarOpen}>Photos</NavItem>
           </div>
 
-          <div className="space-y-1">
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 whitespace-nowrap"
-                >
-                  System
-                </motion.p>
-              )}
-            </AnimatePresence>
-            <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>Admin Panel</NavItem>
-            <NavItem to="/notifications" icon={Bell} collapsed={!sidebarOpen}>Notifications</NavItem>
-          </div>
+          {isAdmin && (
+            <div className="space-y-1">
+              <AnimatePresence>
+                {sidebarOpen && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 whitespace-nowrap"
+                  >
+                    System
+                  </motion.p>
+                )}
+              </AnimatePresence>
+              <NavItem to="/admin" icon={Shield} collapsed={!sidebarOpen}>Admin Panel</NavItem>
+              <NavItem to="/notifications" icon={Bell} collapsed={!sidebarOpen}>Notifications</NavItem>
+            </div>
+          )}
         </nav>
 
         <div className="p-4 mt-2 border-t border-white/10 space-y-2">

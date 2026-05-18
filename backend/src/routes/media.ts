@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getRecentMedia, getMediaById, getAllMedia } from '../controllers/mediaController';
+import { getRecentMedia, getMediaById, getAllMedia, getEpisodesByTmdbId } from '../controllers/mediaController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -12,6 +12,8 @@ router.get('/test', (req, res) => {
 
 router.get('/', protect, getAllMedia);
 router.get('/recent', protect, getRecentMedia);
+router.get('/tv/:tmdbId/episodes', protect, getEpisodesByTmdbId);
 router.get('/:id', protect, getMediaById);
 
 export default router;
+

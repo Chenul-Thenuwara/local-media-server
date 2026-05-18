@@ -20,7 +20,18 @@ connectDB().then(async () => {
   try {
     const Library = require('./models/Library').default;
     const Device = require('./models/Device').default;
+    const User = require('./models/User').default;
     const { scanLibrary } = require('./services/scannerService');
+
+    // Automatically drop problematic email_1 index if it exists
+    try {
+      await User.collection.dropIndex('email_1');
+      console.log('[DB Fix] Dropped legacy email_1 unique index');
+    } catch (err: any) {
+      if (err.codeName !== 'IndexNotFound') {
+        console.log('[DB Fix] Note: email_1 index not dropped (might not exist)');
+      }
+    }
 
     const deviceId = process.env.DEVICE_ID || 'ANY';
     const tunnelUrl = process.env.TUNNEL_URL || '';

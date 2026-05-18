@@ -30,7 +30,27 @@ export const getRecentMedia = async (req: Request, res: Response): Promise<void>
 
     // Filter by media's own type field
     const mediaQuery: any = { libraryId: { $in: libraryIds } };
-    if (type) mediaQuery.type = toMediaType(String(type));
+    const mappedType = type ? toMediaType(String(type)) : null;
+    if (mappedType) mediaQuery.type = mappedType;
+
+    // For TV Shows, group by tmdbId or title to avoid showing multiple episode cards for one series
+    if (mappedType === 'tv') {
+      const media = await Media.aggregate([
+        { $match: mediaQuery },
+        { $sort: { createdAt: -1 } },
+        {
+          $group: {
+            _id: { $ifNull: ['$tmdbId', '$title'] },
+            doc: { $first: '$$ROOT' }
+          }
+        },
+        { $replaceRoot: { newRoot: '$doc' } },
+        { $sort: { createdAt: -1 } },
+        { $limit: 20 }
+      ]);
+      res.json(media);
+      return;
+    }
 
     const media = await Media.find(mediaQuery)
       .sort({ createdAt: -1 })
@@ -38,6 +58,7 @@ export const getRecentMedia = async (req: Request, res: Response): Promise<void>
 
     res.json(media);
   } catch (error) {
+    console.error('getRecentMedia Error:', error);
     res.status(500).json({ message: 'Error fetching media' });
   }
 };
@@ -70,7 +91,26 @@ export const getAllMedia = async (req: Request, res: Response): Promise<void> =>
 
     // Filter media by its OWN type field (not library type)
     const mediaQuery: any = { libraryId: { $in: targetLibraryIds } };
-    if (type) mediaQuery.type = toMediaType(String(type));
+    const mappedType = type ? toMediaType(String(type)) : null;
+    if (mappedType) mediaQuery.type = mappedType;
+
+    // For TV Shows, group by tmdbId or title to show one card per series
+    if (mappedType === 'tv') {
+      const media = await Media.aggregate([
+        { $match: mediaQuery },
+        { $sort: { title: 1 } },
+        {
+          $group: {
+            _id: { $ifNull: ['$tmdbId', '$title'] },
+            doc: { $first: '$$ROOT' }
+          }
+        },
+        { $replaceRoot: { newRoot: '$doc' } },
+        { $sort: { title: 1 } }
+      ]);
+      res.json(media);
+      return;
+    }
 
     const media = await Media.find(mediaQuery)
       .sort({ title: 1 });
@@ -109,3 +149,38 @@ export const getMediaById = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ message: 'Error fetching media details' });
   }
 };
+
+// Get ALL episodes for a specific TV show by tmdbId (no deduplication)
+export const getEpisodesByTmdbId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tmdbId } = req.params;
+    // @ts-ignore
+    const userId = req.user.id;
+
+    let libQuery: any = { userId };
+    if (process.env.DEVICE_ID) {
+      libQuery.deviceId = process.env.DEVICE_ID;
+    }
+
+    const libraries = await Library.find(libQuery);
+    const libraryIds = libraries.map(lib => lib._id);
+
+    if (libraryIds.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Return ALL episode records — no grouping
+    const episodes = await Media.find({
+      libraryId: { $in: libraryIds },
+      type: 'tv',
+      tmdbId: Number(tmdbId),
+    }).sort({ seasonNumber: 1, episodeNumber: 1, filename: 1 });
+
+    res.json(episodes);
+  } catch (error) {
+    console.error('getEpisodesByTmdbId Error:', error);
+    res.status(500).json({ message: 'Error fetching episodes' });
+  }
+};
+

@@ -66,22 +66,26 @@ export function useSpotifyPlayer(accessToken: string | undefined) {
           volume: 0.5,
         });
 
-        spPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
+        spPlayer.addListener('ready', (data: unknown) => {
+          const { device_id } = data as { device_id: string };
           console.log('Spotify Player Ready with Device ID', device_id);
           setDeviceId(device_id);
           setIsReady(true);
         });
 
-        spPlayer.addListener('not_ready', ({ device_id }: { device_id: string }) => {
+        spPlayer.addListener('not_ready', (data: unknown) => {
+          const { device_id } = data as { device_id: string };
           console.log('Device ID has gone offline', device_id);
           setIsReady(false);
           setDeviceId(null);
         });
 
-        spPlayer.addListener('initialization_error', ({ message }: { message: string }) => {
+        spPlayer.addListener('initialization_error', (data: unknown) => {
+          const { message } = data as { message: string };
           setError(message);
         });
-        spPlayer.addListener('authentication_error', ({ message }: { message: string }) => {
+        spPlayer.addListener('authentication_error', (data: unknown) => {
+          const { message } = data as { message: string };
           setError(message);
         });
         spPlayer.addListener('account_error', () => {

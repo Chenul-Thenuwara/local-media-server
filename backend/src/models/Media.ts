@@ -13,6 +13,8 @@ export interface IMedia extends Document {
   backdropPath?: string;
   releaseDate?: string;
   tmdbId?: number;
+  seasonNumber?: number;
+  episodeNumber?: number;
   // Music Metadata
   artist?: string;
   album?: string;
@@ -44,6 +46,8 @@ const MediaSchema: Schema = new Schema({
   backdropPath: { type: String },
   releaseDate: { type: String },
   tmdbId: { type: Number },
+  seasonNumber: { type: Number },
+  episodeNumber: { type: Number },
   // Music fields
   artist: { type: String },
   album: { type: String },

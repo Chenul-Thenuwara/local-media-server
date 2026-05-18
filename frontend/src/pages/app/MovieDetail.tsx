@@ -117,19 +117,15 @@ export default function MovieDetail() {
         const resolvedType = mediaData.type || (type === 'tv' ? 'tv' : 'movie');
         if (resolvedType === 'tv' && resolvedTmdbId) {
           try {
-            const epRes = await api.get(`/media?type=tv`);
-            const episodes = (epRes.data || []).filter(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (ep: any) => ep.tmdbId === Number(resolvedTmdbId)
-            );
-            // Sort by filename (S01E01 etc)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            episodes.sort((a: any, b: any) => a.filename.localeCompare(b.filename));
+            // Use the dedicated episodes endpoint — avoids the grouped TV query bug
+            const epRes = await api.get(`/media/tv/${resolvedTmdbId}/episodes`);
+            const episodes = epRes.data || [];
             setLocalEpisodes(episodes);
           } catch (e) {
             console.error('Failed to load local episodes', e);
           }
         }
+
       } catch (err) {
         console.error('Failed to fetch media', err);
       } finally {

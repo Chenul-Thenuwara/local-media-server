@@ -255,6 +255,61 @@ router.get('/search', async (req, res) => {
 });
 
 // ---------------------------------------------------------
+// Notifications Aggregate Route
+// ---------------------------------------------------------
+router.get('/notifications', async (req, res) => {
+  try {
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'TMDB API Key missing' });
+
+    const [nowPlayingRes, trendingTVRes, upcomingRes, topRatedMoviesRes] = await Promise.allSettled([
+      axios.get(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US&page=1`),
+      axios.get(`https://api.themoviedb.org/3/trending/tv/week?api_key=${apiKey}`),
+      axios.get(`https://api.themoviedb.org/3/movie/upcoming?api_key=${apiKey}&language=en-US&page=1`),
+      axios.get(`https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}&language=en-US&page=1`),
+    ]);
+
+    const mapMovie = (item: any) => ({
+      id: item.id,
+      title: item.title || item.name,
+      overview: item.overview,
+      posterPath: item.poster_path,
+      backdropPath: item.backdrop_path,
+      releaseDate: item.release_date || item.first_air_date,
+      rating: item.vote_average,
+      voteCount: item.vote_count,
+      mediaType: 'movie',
+    });
+
+    const mapTV = (item: any) => ({
+      id: item.id,
+      title: item.name || item.title,
+      overview: item.overview,
+      posterPath: item.poster_path,
+      backdropPath: item.backdrop_path,
+      releaseDate: item.first_air_date || item.release_date,
+      rating: item.vote_average,
+      voteCount: item.vote_count,
+      mediaType: 'tv',
+    });
+
+    res.json({
+      nowPlaying: nowPlayingRes.status === 'fulfilled'
+        ? nowPlayingRes.value.data.results.slice(0, 12).map(mapMovie) : [],
+      trendingTV: trendingTVRes.status === 'fulfilled'
+        ? trendingTVRes.value.data.results.slice(0, 12).map(mapTV) : [],
+      upcoming: upcomingRes.status === 'fulfilled'
+        ? upcomingRes.value.data.results.slice(0, 8).map(mapMovie) : [],
+      topRatedMovies: topRatedMoviesRes.status === 'fulfilled'
+        ? topRatedMoviesRes.value.data.results.slice(0, 8).map(mapMovie) : [],
+    });
+  } catch (error) {
+    console.error('TMDB Notifications Error:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications data' });
+  }
+});
+
+// ---------------------------------------------------------
 // Person / Actor Routes
 // ---------------------------------------------------------
 router.get('/person/:id', async (req, res) => {

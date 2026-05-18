@@ -25,8 +25,22 @@ function detectMediaType(filename: string): 'video' | 'music' | 'photo' | null {
 
 // Detect if a video file is likely a TV Show based on naming patterns like S01E02 or 1x02
 function detectVideoSubType(filename: string): 'movie' | 'tv' {
-  const tvPattern = /[Ss]\d{1,2}[Ee]\d{1,2}|season\s*\d+|\d+x\d+/i;
+  const tvPattern = /[Ss]\d{1,2}[Ee]\d{1,2}|season\s*\d+|\d+x\d+|\b[Ee]\d{2}\b/i;
   return tvPattern.test(filename) ? 'tv' : 'movie';
+}
+
+// Parse S01E02 or 1x02 → { season: 1, episode: 2 }
+function parseEpisodeNumbers(filename: string): { season: number; episode: number } | null {
+  // Standard SxxExx
+  let m = filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
+  if (m) return { season: parseInt(m[1]), episode: parseInt(m[2]) };
+  // 1x02 format
+  m = filename.match(/(\d{1,2})x(\d{1,2})/i);
+  if (m) return { season: parseInt(m[1]), episode: parseInt(m[2]) };
+  // Standalone E01 — assume season 1
+  m = filename.match(/\b[Ee](\d{2})\b/);
+  if (m) return { season: 1, episode: parseInt(m[1]) };
+  return null;
 }
 
 // Parse basic music tags from filename (before Spotify enrichment)
@@ -172,6 +186,7 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
         const mediaType: 'movie' | 'tv' = metadata?.detectedType || filenameHint;
         const stat = await fs.promises.stat(file);
 
+        const epNums = parseEpisodeNumbers(filename);
         const newMedia = new Media({
           libraryId,
           title: metadata?.title || filename,
@@ -184,11 +199,15 @@ export const scanLibrary = async (libraryId: string, folderPath: string, type: s
           backdropPath: metadata?.backdropPath,
           overview: metadata?.overview,
           releaseDate: metadata?.releaseDate,
-          mediaInfo
+          mediaInfo,
+          ...(mediaType === 'tv' && epNums ? {
+            seasonNumber: epNums.season,
+            episodeNumber: epNums.episode,
+          } : {}),
         });
 
         await newMedia.save();
-        console.log(`[Scanner] Added ${mediaType}: ${filename}`);
+        console.log(`[Scanner] Added ${mediaType}: ${filename}${epNums ? ` (S${epNums.season}E${epNums.episode})` : ''}`);
       } else {
         let update: any = {};
 
