@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Sparkles, Film, Music, Loader2, Trash2, ChevronDown, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-const GEMINI_API_KEY = 'AIzaSyBmtvjkwNgOEw7m_ze95oUDx8wpkh8Jz9c';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `You are CineTune AI, an expert entertainment companion integrated into a personal media server. You specialize in:

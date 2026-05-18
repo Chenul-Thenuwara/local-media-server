@@ -12,22 +12,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const { name, email, password } = req.body;
 
   try {
-    // Check if this is the first user on the server
-    const userCount = await User.countDocuments();
-    
-    if (userCount > 0) {
-      // Public registration is disabled after the server is claimed (first admin created)
-      res.status(403).json({ message: 'Public registration is disabled. Ask the server owner to create an account for you.' });
-      return;
-    }
-
     let user = await User.findOne({ email });
     if (user) {
       res.status(400).json({ message: 'User already exists' });
       return;
     }
 
-    // First user is ALWAYS the admin
+    // All registered users are admins
     user = new User({ name, email, password, role: 'admin' });
     await user.save();
 
