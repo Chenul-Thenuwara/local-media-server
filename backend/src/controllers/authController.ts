@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
+import Device from '../models/Device';
 import jwt from 'jsonwebtoken';
 
 const generateToken = (id: string) => {
@@ -55,12 +56,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    let device = await Device.findOne({ ownerId: user._id });
+    if (!device) {
+      device = await Device.findOne().sort({ lastSeen: -1 });
+    }
+
     res.json({
       _id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
       token: generateToken(user.id),
+      tunnelUrl: device?.tunnelUrl || null,
     });
   } catch (err) {
     console.error(err);

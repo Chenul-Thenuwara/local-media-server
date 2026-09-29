@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 
 const connectDB = async (retries = 5, delay = 5000) => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
   const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/lms';
 
   while (retries > 0) {

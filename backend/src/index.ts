@@ -76,8 +76,13 @@ app.use((req, res, next) => {
 
 app.use('/api', routes);
 
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+app.get(['/health', '/api/health'], (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));

@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Welcome from './pages/public/Welcome';
 
 import Login from './pages/public/Login';
@@ -43,6 +45,8 @@ import ServerLogs from './pages/admin/Logs';
 function App() {
   return (
     <Router>
+      <Analytics />
+      <SpeedInsights />
       <Routes>
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />

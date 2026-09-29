@@ -38,6 +38,8 @@ api.interceptors.request.use(
       config.url.includes('/auth/login') ||
       config.url.includes('/auth/register') ||
       config.url.includes('/auth/profiles') ||
+      config.url.includes('/auth/switch-profile') ||
+      config.url.includes('/health') ||
       config.url.includes('discovery') || 
       config.url.includes('/tmdb/trending') ||
       config.url.includes('/spotify/')

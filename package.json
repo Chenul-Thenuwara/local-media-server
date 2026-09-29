@@ -10,6 +10,7 @@
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
     "build": "npm run build:frontend && npm run build:backend",
+    "vercel-build": "cd frontend && npm install && npm run build",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder"
   },
@@ -20,7 +21,11 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "@vercel/node": "^5.7.5",
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
     "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.3",
     "localtunnel": "^2.0.2",
     "mongoose": "^8.0.0"
   },
