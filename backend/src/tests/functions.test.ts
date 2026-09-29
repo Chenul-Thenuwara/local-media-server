@@ -136,3 +136,36 @@ describe('Media Streaming Error Handling Function', () => {
     expect(res.body.message).toMatch(/Media not found/i);
   });
 });
+
+describe('Scanner Service Helper Functions', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { detectMediaType, detectVideoSubType, parseEpisodeNumbers, parseMusicTitle } = require('../services/scannerService');
+
+  it('should accurately detect media type by extension', () => {
+    expect(detectMediaType('movie.mp4')).toBe('video');
+    expect(detectMediaType('song.flac')).toBe('music');
+    expect(detectMediaType('photo.jpg')).toBe('photo');
+    expect(detectMediaType('document.pdf')).toBeNull();
+  });
+
+  it('should detect TV show vs movie sub-type based on episode patterns', () => {
+    expect(detectVideoSubType('Severance.S01E01.1080p.mkv')).toBe('tv');
+    expect(detectVideoSubType('Dark.2x04.720p.mkv')).toBe('tv');
+    expect(detectVideoSubType('Anime.Episode.03.mp4')).toBe('tv');
+    expect(detectVideoSubType('The.Batman.2022.1080p.mkv')).toBe('movie');
+  });
+
+  it('should extract season and episode numbers accurately', () => {
+    expect(parseEpisodeNumbers('Stranger.Things.S04E07.mkv')).toEqual({ season: 4, episode: 7 });
+    expect(parseEpisodeNumbers('Lost.3x12.avi')).toEqual({ season: 3, episode: 12 });
+    expect(parseEpisodeNumbers('Solo_Episode_E05.mp4')).toEqual({ season: 1, episode: 5 });
+    expect(parseEpisodeNumbers('MovieWithoutEpisode.mp4')).toBeNull();
+  });
+
+  it('should parse artist and song title from music filename formats', () => {
+    expect(parseMusicTitle('Coldplay - Yellow.mp3')).toEqual({ artist: 'Coldplay', title: 'Yellow' });
+    expect(parseMusicTitle('01. Queen - Bohemian Rhapsody.flac')).toEqual({ artist: 'Queen', title: 'Bohemian Rhapsody' });
+    expect(parseMusicTitle('JustASongTitle.mp3')).toEqual({ title: 'JustASongTitle' });
+  });
+});
+

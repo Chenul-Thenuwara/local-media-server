@@ -15,7 +15,7 @@ const MUSIC_EXTENSIONS = new Set(['.mp3', '.flac', '.aac', '.m4a', '.ogg', '.wav
 const PHOTO_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.bmp']);
 
 // Detect media type purely by file extension
-function detectMediaType(filename: string): 'video' | 'music' | 'photo' | null {
+export function detectMediaType(filename: string): 'video' | 'music' | 'photo' | null {
   const ext = path.extname(filename).toLowerCase();
   if (VIDEO_EXTENSIONS.has(ext)) return 'video';
   if (MUSIC_EXTENSIONS.has(ext)) return 'music';
@@ -24,27 +24,27 @@ function detectMediaType(filename: string): 'video' | 'music' | 'photo' | null {
 }
 
 // Detect if a video file is likely a TV Show based on naming patterns like S01E02 or 1x02
-function detectVideoSubType(filename: string): 'movie' | 'tv' {
-  const tvPattern = /[Ss]\d{1,2}[Ee]\d{1,2}|season\s*\d+|\d+x\d+|\b[Ee]\d{2}\b/i;
+export function detectVideoSubType(filename: string): 'movie' | 'tv' {
+  const tvPattern = /[Ss]\d{1,2}[Ee]\d{1,2}|season[\s._-]*\d+|\d+x\d+|(?:^|[\s._\-[\](])(?:[Ee]pisode|[Ee][Pp]?)\.?[\s._-]?\d{1,3}(?:$|[\s._\-[\])])/i;
   return tvPattern.test(filename) ? 'tv' : 'movie';
 }
 
 // Parse S01E02 or 1x02 → { season: 1, episode: 2 }
-function parseEpisodeNumbers(filename: string): { season: number; episode: number } | null {
+export function parseEpisodeNumbers(filename: string): { season: number; episode: number } | null {
   // Standard SxxExx
-  let m = filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
+  let m = filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/i);
   if (m) return { season: parseInt(m[1]), episode: parseInt(m[2]) };
   // 1x02 format
   m = filename.match(/(\d{1,2})x(\d{1,2})/i);
   if (m) return { season: parseInt(m[1]), episode: parseInt(m[2]) };
-  // Standalone E01 — assume season 1
-  m = filename.match(/\b[Ee](\d{2})\b/);
+  // Standalone E01, EP01, Episode 01 — assume season 1
+  m = filename.match(/(?:^|[\s._\-[\](])(?:[Ee]pisode|[Ee][Pp]?)\.?[\s._-]?(\d{1,3})(?:$|[\s._\-[\])])/i);
   if (m) return { season: 1, episode: parseInt(m[1]) };
   return null;
 }
 
 // Parse basic music tags from filename (before Spotify enrichment)
-function parseMusicTitle(filename: string): { title: string; artist?: string } {
+export function parseMusicTitle(filename: string): { title: string; artist?: string } {
   const base = path.basename(filename, path.extname(filename));
   // Common formats: "Artist - Title" or "01. Artist - Title"
   const dashMatch = base.replace(/^\d+[\.\)]\s*/, '').match(/^(.+?)\s[-–]\s(.+)$/);
