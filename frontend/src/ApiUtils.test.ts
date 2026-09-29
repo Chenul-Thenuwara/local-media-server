@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getBaseUrl, getStreamUrl } from './lib/api';
 import healthHandler from '../api/health';
 
@@ -35,12 +36,12 @@ describe('Vercel Serverless Health Function', () => {
     let statusCode = 0;
     const headers: Record<string, string> = {};
 
-    const req: any = {
+    const req = {
       method: 'OPTIONS',
       headers: {},
-    };
+    } as unknown as VercelRequest;
 
-    const res: any = {
+    const res = {
       setHeader: (k: string, v: string) => { headers[k] = v; },
       status: (code: number) => {
         statusCode = code;
@@ -49,7 +50,7 @@ describe('Vercel Serverless Health Function', () => {
           json: () => {}
         };
       },
-    };
+    } as unknown as VercelResponse;
 
     await healthHandler(req, res);
     expect(statusCode).toBe(200);
@@ -58,22 +59,22 @@ describe('Vercel Serverless Health Function', () => {
 
   it('returns valid health payload with timestamp and uptime', async () => {
     let statusCode = 0;
-    let jsonBody: any = null;
+    let jsonBody: Record<string, unknown> | null = null;
 
-    const req: any = {
+    const req = {
       method: 'GET',
       headers: {},
-    };
+    } as unknown as VercelRequest;
 
-    const res: any = {
+    const res = {
       setHeader: () => {},
       status: (code: number) => {
         statusCode = code;
         return {
-          json: (body: any) => { jsonBody = body; }
+          json: (body: unknown) => { jsonBody = body as Record<string, unknown>; }
         };
       },
-    };
+    } as unknown as VercelResponse;
 
     await healthHandler(req, res);
     expect([200, 503]).toContain(statusCode);

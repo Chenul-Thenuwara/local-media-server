@@ -19,8 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 3000 });
       }
       dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'connecting';
-    } catch (err: any) {
-      dbStatus = `error: ${err.message || 'connection failed'}`;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'connection failed';
+      dbStatus = `error: ${message}`;
     }
   } else {
     dbStatus = 'unconfigured (missing MONGO_URI)';

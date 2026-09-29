@@ -103,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         isManaged: !!targetProfile.managedBy,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Vercel Switch Profile Error:', error);
     return res.status(500).json({ message: 'Server Error' });
   }
