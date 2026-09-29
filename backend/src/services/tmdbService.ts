@@ -4,7 +4,7 @@ import path from 'path';
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-function cleanFilename(filename: string): string {
+export function cleanFilename(filename: string): string {
   const name = path.parse(filename).name;
   let cleaned = name
     .replace(/[.\\-_]/g, ' ')

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 interface IUser extends mongoose.Document {
   email: string;

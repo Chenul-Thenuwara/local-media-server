@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
 
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';

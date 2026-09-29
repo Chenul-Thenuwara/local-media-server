@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mongoose from 'mongoose';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
