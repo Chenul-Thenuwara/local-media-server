@@ -23,9 +23,10 @@ export const searchMedia = async (req: Request, res: Response) => {
     };
 
     if (q && typeof q === 'string') {
+      const safeQ = q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
       query.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { original_title: { $regex: q, $options: 'i' } }
+        { title: { $regex: safeQ, $options: 'i' } },
+        { filename: { $regex: safeQ, $options: 'i' } }
       ];
     }
 

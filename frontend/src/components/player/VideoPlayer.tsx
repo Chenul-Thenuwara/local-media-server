@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Play, Pause, Volume2, Volume1, VolumeX, Maximize, Minimize, FastForward, ChevronLeft, ChevronRight } from 'lucide-react';
+import api, { getStreamUrl } from '../../lib/api';
 import { cn } from '../../lib/utils';
-import api from '../../lib/api';
 
 interface VideoPlayerProps {
   mediaId: string;
@@ -45,10 +45,7 @@ function formatTime(seconds: number) {
 export default function VideoPlayer({ mediaId, onClose, title, posterPath, tmdbId, mediaType, isHdr }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
-  const token = localStorage.getItem('token');
-
-
-  const streamUrl = `${import.meta.env.VITE_API_URL || '/api'}/stream/${mediaId}?token=${token}`;
+  const streamUrl = getStreamUrl(mediaId);
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);

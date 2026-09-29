@@ -1,8 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
 
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '005eba4dc9364770a51dd8bd47903ed6';
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || 'c7ee6ab0d021406ea514cca1076d340d';
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '';
 
 let cachedToken: string | null = null;
 let tokenExpiresAt: number = 0;

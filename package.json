@@ -37,14 +37,9 @@
       "backend/node_modules/**/*",
       "frontend/dist/**/*"
     ],
-    "extraResources": [
-      {
-        "from": "backend/.env",
-        "to": ".env",
-        "filter": [
-          "**/*"
-        ]
-      }
+    "asarUnpack": [
+      "**/ffprobe-static/**",
+      "**/ffmpeg-static/**"
     ],
     "win": {
       "target": [

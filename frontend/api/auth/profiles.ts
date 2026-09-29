@@ -26,11 +26,12 @@ const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) return;
-  const mongoURI = process.env.MONGO_URI || 'mongodb+srv://chenul:Helsinki@lms-cluster.cwkzgk5.mongodb.net/?appName=lms-cluster';
+  const mongoURI = process.env.MONGO_URI || '';
+  if (!mongoURI) throw new Error('MONGO_URI environment variable is missing');
   await mongoose.connect(mongoURI);
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || '77536a4cec7993c131b13f18a786c3488da36159dccac301f4b73f0a95965545';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

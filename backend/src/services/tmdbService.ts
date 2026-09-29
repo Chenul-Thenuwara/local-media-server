@@ -6,14 +6,22 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 
 function cleanFilename(filename: string): string {
   const name = path.parse(filename).name;
-  return name
+  let cleaned = name
     .replace(/[.\\-_]/g, ' ')
     .replace(/\b(S\d{1,2}E\d{1,2}|Season\s*\d+|Episode\s*\d+|\d+x\d+)\b.*/gi, '') // Remove episode info
-    .replace(/\s+(19|20)\d{2}.*$/, '') // Remove year onwards
     .replace(/(REPACK|PROPER|EXTENDED|BluRay|WEB|HDTV|4K|2160p|1080p|720p|HDR|DDP|DTS|AAC|x264|x265|HEVC|REMUX|UHD).*/gi, '') // Remove quality tags
     .replace(/(\[.*?\]|\{.*?\}|\(.*?\))/g, '') // Remove brackets
     .replace(/Pahe\.in|YTS|YIFY|RARBG|GalaxyRG/gi, '') // Remove common release groups
     .trim();
+
+  // If there is a year tagged at the end following title text (e.g. "Inception 2010"), strip the year
+  // but preserve titles where the year IS the title (e.g. "1917" or "2012")
+  const yearMatch = cleaned.match(/^(.+?)\s+(19|20)\d{2}(\s+.*)?$/);
+  if (yearMatch && yearMatch[1].trim().length > 1) {
+    cleaned = yearMatch[1].trim();
+  }
+
+  return cleaned.trim();
 }
 
 export interface TMDBMetadata {

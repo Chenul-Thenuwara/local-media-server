@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Play, Disc3, Mic2, Music2, Loader2, ArrowLeft, Clock, Library, Headphones, X } from 'lucide-react';
-import api from '../../../lib/api';
+import api, { getStreamUrl } from '../../../lib/api';
 import { usePlayer, type Track } from '../../../components/music/MiniPlayer';
 import { cn } from '../../../lib/utils';
 import { useSpotifyAuth } from '../../../hooks/useSpotifyAuth';
@@ -73,8 +73,6 @@ function LocalMusicTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [localQuery, setLocalQuery] = useState('');
-  const token = localStorage.getItem('token') || '';
-  const tunnelUrl = localStorage.getItem('tunnelUrl') || '';
 
   useEffect(() => {
     api.get('/media?type=music')
@@ -82,9 +80,6 @@ function LocalMusicTab() {
       .catch(() => setError('Failed to load local music library'))
       .finally(() => setLoading(false));
   }, []);
-
-  const getStreamUrl = (id: string) =>
-    `${tunnelUrl}/api/stream/${id}?token=${token}`;
 
   const toLocalTrack = (t: LocalTrack): Track => ({
     id: t._id,

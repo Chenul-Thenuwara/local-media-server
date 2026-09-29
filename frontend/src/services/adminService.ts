@@ -43,6 +43,11 @@ export const adminService = {
     return response.data;
   },
 
+  deleteLibrary: async (id: string) => {
+    const response = await api.delete(`/libraries/${id}`);
+    return response.data;
+  },
+
   // System Settings
   getSettings: async () => {
     const response = await api.get('/settings');

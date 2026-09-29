@@ -131,15 +131,34 @@ app.whenReady().then(async () => {
   setTimeout(createWindow, 2000);
 });
 
+function killBackend() {
+  if (backendProcess && backendProcess.pid) {
+    try {
+      if (process.platform === 'win32') {
+        spawn('taskkill', ['/pid', backendProcess.pid.toString(), '/T', '/F']);
+      } else {
+        backendProcess.kill('SIGTERM');
+      }
+    } catch (err) {
+      console.error('Error terminating backend process:', err);
+    }
+    backendProcess = null;
+  }
+  if (tunnelInstance) {
+    try {
+      tunnelInstance.close();
+    } catch (e) {
+      // ignore
+    }
+    tunnelInstance = null;
+  }
+}
+
+app.on('before-quit', killBackend);
+
 app.on('window-all-closed', function () {
+  killBackend();
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('quit', () => {
-  if (backendProcess) {
-    backendProcess.kill();
-  }
-  if (tunnelInstance) {
-    tunnelInstance.close();
-  }
-});
+app.on('quit', killBackend);

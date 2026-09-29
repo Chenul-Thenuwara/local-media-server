@@ -21,9 +21,7 @@ services:
       - TMDB_API_KEY=${TMDB_API_KEY}
     volumes:
       - ./backend:/app
-      - /app/node_modules
       - ./media:/media
-      - C:/:/media/c
 
     command: npm run dev
     depends_on:

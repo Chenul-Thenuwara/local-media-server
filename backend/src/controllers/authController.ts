@@ -3,7 +3,8 @@ import User from '../models/User';
 import jwt from 'jsonwebtoken';
 
 const generateToken = (id: string) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret123', {
+  const secret = process.env.JWT_SECRET || 'dev_jwt_secret_change_in_production';
+  return jwt.sign({ id }, secret, {
     expiresIn: '30d',
   });
 };
@@ -18,8 +19,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // All registered users are admins
-    user = new User({ name, email, password, role: 'admin' });
+    // First user to register becomes admin; subsequent users default to viewer
+    const isFirstUser = (await User.countDocuments()) === 0;
+    const role = isFirstUser ? 'admin' : 'viewer';
+
+    user = new User({ name, email, password, role });
     await user.save();
 
     res.status(201).json({

@@ -185,23 +185,38 @@ export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     // @ts-ignore
-    const currentUserId = req.user.id;
+    const currentUserId = req.user.id || req.user._id;
 
     // Prevent self-deletion from the admin panel for safety
-    if (id === currentUserId) {
-      // @ts-ignore
+    if (id.toString() === currentUserId.toString()) {
       return res.status(400).json({ message: 'You cannot delete your own account' });
     }
 
     const userToDelete = await User.findById(id);
     if (!userToDelete) {
-      // @ts-ignore
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only allow deleting managed users or if the current user is a server owner (not managed by anyone)
+    // @ts-ignore
+    const isOwner = !req.user.managedBy;
+    const isManagedByCurrent = userToDelete.managedBy?.toString() === currentUserId.toString();
+
+    if (!isOwner && !isManagedByCurrent) {
+      return res.status(403).json({ message: 'Not authorized to delete this user' });
+    }
+
+    // Cascade delete user libraries and media
+    const userLibs = await Library.find({ userId: id });
+    const libIds = userLibs.map(l => l._id);
+    if (libIds.length > 0) {
+      await Media.deleteMany({ libraryId: { $in: libIds } });
+      await Library.deleteMany({ userId: id });
     }
 
     await User.findByIdAndDelete(id);
 
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'User and associated data deleted successfully' });
   } catch (error) {
     console.error('Delete User Error:', error);
     res.status(500).json({ message: 'Error deleting user', error });
@@ -213,24 +228,29 @@ export const updateUserRole = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { role } = req.body;
     // @ts-ignore
-    const currentUserId = req.user.id;
+    const currentUserId = req.user.id || req.user._id;
 
     const validRoles = ['admin', 'viewer', 'guest'];
     if (!validRoles.includes(role)) {
-      // @ts-ignore
       return res.status(400).json({ message: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
     }
 
     // Can't change your own role
-    if (id === currentUserId) {
-      // @ts-ignore
+    if (id.toString() === currentUserId.toString()) {
       return res.status(400).json({ message: 'You cannot change your own role' });
     }
 
     const userToUpdate = await User.findById(id);
     if (!userToUpdate) {
-      // @ts-ignore
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // @ts-ignore
+    const isOwner = !req.user.managedBy;
+    const isManagedByCurrent = userToUpdate.managedBy?.toString() === currentUserId.toString();
+
+    if (!isOwner && !isManagedByCurrent) {
+      return res.status(403).json({ message: 'Not authorized to modify this user' });
     }
 
     userToUpdate.role = role as 'admin' | 'viewer' | 'guest';

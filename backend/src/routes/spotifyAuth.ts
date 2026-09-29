@@ -8,8 +8,10 @@ const router = Router();
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!;
-const REDIRECT_URI = 'http://localhost:3000/api/spotify/auth/callback';
-const FRONTEND_MUSIC = 'http://localhost:5173/libraries/music';
+const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || `http://localhost:${PORT}/api/spotify/auth/callback`;
+const FRONTEND_MUSIC = `${FRONTEND_URL}/libraries/music`;
 
 const SCOPES = [
   'streaming',
@@ -61,7 +63,8 @@ router.get('/callback', async (req: Request, res: Response) => {
     const lmsToken = decoded.t as string;
 
     // Verify LMS JWT to get userId
-    const payload = jwt.verify(lmsToken, process.env.JWT_SECRET!) as { id: string };
+    const jwtSecret = process.env.JWT_SECRET || 'dev_jwt_secret_change_in_production';
+    const payload = jwt.verify(lmsToken, jwtSecret) as { id: string };
     const userId = payload.id;
 
     // Exchange Spotify code for tokens

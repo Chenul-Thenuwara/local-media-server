@@ -7,8 +7,8 @@ import mongoose from 'mongoose';
 import axios from 'axios';
 import path from 'path';
 
-const MONGO_URI = 'mongodb+srv://chenul:Helsinki@lms-cluster.cwkzgk5.mongodb.net/?appName=lms-cluster';
-const TMDB_API_KEY = '9c9d429b2205ac282101a044bf2e6a2c';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/lms';
+const TMDB_API_KEY = process.env.TMDB_API_KEY || '';
 
 // Minimal schema
 const MediaSchema = new mongoose.Schema({ filename: String, type: String, title: String, posterPath: String, backdropPath: String, overview: String, releaseDate: String, tmdbId: Number }, { strict: false });

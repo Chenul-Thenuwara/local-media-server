@@ -64,7 +64,12 @@ const AdminUsers = () => {
   };
 
   const currentUserId = (() => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}').id; } catch { return ''; }
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u._id || u.id || '';
+    } catch {
+      return '';
+    }
   })();
 
   const filtered = users.filter(u => {

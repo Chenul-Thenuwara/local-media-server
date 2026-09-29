@@ -35,20 +35,32 @@ export const getDrives = async (req: Request, res: Response): Promise<void> => {
 
 export const getDirectories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const dirPath = req.query.path as string;
+    const rawPath = req.query.path as string;
 
-    if (!dirPath) {
+    if (!rawPath) {
       res.status(400).json({ message: 'Path is required' });
       return;
     }
 
-    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    const resolvedPath = path.resolve(rawPath);
+    if (!fs.existsSync(resolvedPath)) {
+      res.status(404).json({ message: 'Directory does not exist' });
+      return;
+    }
+
+    const stat = await fs.promises.stat(resolvedPath);
+    if (!stat.isDirectory()) {
+      res.status(400).json({ message: 'Path is not a directory' });
+      return;
+    }
+
+    const entries = await fs.promises.readdir(resolvedPath, { withFileTypes: true });
 
     const contents = entries
       .filter(entry => entry.isDirectory()) // Only show folders for selection
       .map(entry => ({
         name: entry.name,
-        path: path.join(dirPath, entry.name).replace(/\\/g, '/'), // Windows path normalization
+        path: path.join(resolvedPath, entry.name).replace(/\\/g, '/'), // Windows path normalization
         type: 'folder'
       }));
 

@@ -8,7 +8,6 @@ import path from 'path';
 import connectDB from './db';
 
 import routes from './routes';
-import tmdbRoutes from './routes/tmdb';
 
 
 const app = express();
@@ -76,7 +75,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', routes);
-app.use('/api/tmdb', tmdbRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Server is running' });

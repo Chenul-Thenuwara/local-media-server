@@ -4,7 +4,7 @@ import { Send, Bot, User, Sparkles, Film, Music, Loader2, Trash2, ChevronDown, M
 import { cn } from '../../lib/utils';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `You are CineTune AI, an expert entertainment companion integrated into a personal media server. You specialize in:
 - Movies: recommendations, plot analysis, director/actor info, cinematography, genre deep dives, hidden gems, awards history
@@ -44,8 +44,18 @@ const TOPIC_STARTERS: Record<Topic, string[]> = {
   ],
 };
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function formatMessage(text: string): string {
-  return text
+  const safe = escapeHtml(text);
+  return safe
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code class="bg-white/10 rounded px-1 py-0.5 text-sm font-mono text-apple-blue">$1</code>')
@@ -218,7 +228,7 @@ export default function AiChat() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold text-white tracking-tight">AI Chat</h1>
-                <span className="text-[10px] font-medium px-2 py-0.5 bg-apple-blue/15 text-apple-blue rounded-full border border-apple-blue/20">Gemini 2.5</span>
+                <span className="text-[10px] font-medium px-2 py-0.5 bg-apple-blue/15 text-apple-blue rounded-full border border-apple-blue/20">Gemini 1.5</span>
               </div>
               <p className="text-gray-400 text-sm mt-1">
                 {getUserName() ? `Welcome back, ${getUserName()}` : 'Ask about movies, music & TV shows'}

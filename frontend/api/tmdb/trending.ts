@@ -14,7 +14,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const TMDB_API_KEY = process.env.TMDB_API_KEY || '9c9d429b2205ac282101a044bf2e6a2c'; // Fallback to provided key if missing
+    const TMDB_API_KEY = process.env.TMDB_API_KEY || '';
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ message: 'TMDB_API_KEY is not configured' });
+    }
     
     // Attempt to fetch trending from TMDB
     const response = await axios.get(

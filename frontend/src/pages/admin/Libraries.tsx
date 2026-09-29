@@ -68,6 +68,18 @@ const AdminLibraries = () => {
     }
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete the library "${name}"? All associated media records will be removed.`)) {
+      try {
+        await adminService.deleteLibrary(id);
+        fetchLibraries();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete library');
+      }
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'movie': return <Film size={32} className="text-purple-400" />;
@@ -114,8 +126,11 @@ const AdminLibraries = () => {
                   >
                     <RefreshCw size={18} />
                   </button>
-                  {/* Delete placeholder - would need confirm modal */}
-                  <button className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                  <button
+                    onClick={() => handleDelete(lib._id, lib.name)}
+                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    title="Delete Library"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>

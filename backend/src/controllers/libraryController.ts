@@ -86,3 +86,32 @@ export const refreshLibrary = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: 'Error refreshing library' });
   }
 };
+
+export const deleteLibrary = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    // @ts-ignore
+    const user = req.user;
+    const userId = user.id || user._id;
+
+    const library = await Library.findById(id);
+    if (!library) {
+      res.status(404).json({ message: 'Library not found' });
+      return;
+    }
+
+    if (user.role !== 'admin' && library.userId.toString() !== userId.toString()) {
+      res.status(403).json({ message: 'Not authorized to delete this library' });
+      return;
+    }
+
+    const Media = (await import('../models/Media')).default;
+    await Media.deleteMany({ libraryId: id });
+    await Library.findByIdAndDelete(id);
+
+    res.json({ message: 'Library and associated media deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting library:', error);
+    res.status(500).json({ message: 'Error deleting library' });
+  }
+};

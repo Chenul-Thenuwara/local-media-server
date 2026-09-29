@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Loader2, Image as ImageIcon, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../../lib/api';
+import api, { getStreamUrl } from '../../lib/api';
 
 interface LocalPhotoItem {
   _id: string;
@@ -23,8 +23,7 @@ export function LocalPhotoGrid() {
   const touchStartX = useRef<number | null>(null);
 
   const getImageUrl = (photo: LocalPhotoItem) => {
-    const token = localStorage.getItem('token');
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/stream/${photo._id}?token=${token}`;
+    return getStreamUrl(photo._id);
   };
 
   const fetchPhotos = async () => {

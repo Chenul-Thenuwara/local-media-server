@@ -1,11 +1,18 @@
 import axios from 'axios';
 
-const getBaseUrl = () => {
+export const getBaseUrl = () => {
   const tunnelUrl = localStorage.getItem('tunnelUrl');
   if (tunnelUrl) {
     return `${tunnelUrl}/api`;
   }
   return import.meta.env.VITE_API_URL || '/api';
+};
+
+export const getStreamUrl = (mediaId: string): string => {
+  const token = localStorage.getItem('token') || '';
+  const tunnelUrl = localStorage.getItem('tunnelUrl');
+  const base = tunnelUrl ? `${tunnelUrl}/api` : (import.meta.env.VITE_API_URL || '/api');
+  return `${base}/stream/${mediaId}${token ? `?token=${token}` : ''}`;
 };
 
 const api = axios.create({
@@ -28,7 +35,9 @@ api.interceptors.request.use(
     const tunnelUrl = localStorage.getItem('tunnelUrl');
     // Allow public utility endpoints to bypass tunnel and hit Vercel directly
     const isPublicEndpoint = config.url && (
-      config.url.includes('/auth/') || 
+      config.url.includes('/auth/login') ||
+      config.url.includes('/auth/register') ||
+      config.url.includes('/auth/profiles') ||
       config.url.includes('discovery') || 
       config.url.includes('/tmdb/trending') ||
       config.url.includes('/spotify/')

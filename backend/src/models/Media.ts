@@ -64,4 +64,8 @@ const MediaSchema: Schema = new Schema({
   }
 }, { timestamps: true });
 
+MediaSchema.index({ libraryId: 1, type: 1 });
+MediaSchema.index({ path: 1, libraryId: 1 });
+MediaSchema.index({ libraryId: 1, tmdbId: 1 });
+
 export default mongoose.model<IMedia>('Media', MediaSchema);
